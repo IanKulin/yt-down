@@ -1,0 +1,456 @@
+/* CSS Variables for Light/Dark Theme Support */
+:root {
+  /* Light theme (default) */
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f8f9fa;
+  --bg-quaternary: #e9ecef;
+  --text-primary: #333333;
+  --text-secondary: #555555;
+  --text-muted: #6c757d;
+  --text-code: #495057;
+  --border-light: #ddd;
+  --border-medium: #e9ecef;
+  --border-dark: #dee2e6;
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.3);
+  --accent-primary: #007cba;
+  --accent-primary-hover: #005a87;
+  --accent-success: #28a745;
+  --accent-success-hover: #218838;
+  --accent-danger: #dc3545;
+  --accent-danger-hover: #c82333;
+  --accent-secondary: #6c757d;
+  --accent-secondary-hover: #5a6268;
+  --message-success-bg: #d4edda;
+  --message-success-border: #c3e6cb;
+  --message-success-text: #155724;
+  --message-error-bg: #f8d7da;
+  --message-error-border: #f5c6cb;
+  --message-error-text: #721c24;
+  --badge-video-bg: #e3f2fd;
+  --badge-video-text: #1976d2;
+  --badge-subtitle-bg: #f3e5f5;
+  --badge-subtitle-text: #7b1fa2;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+}
+
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3a3a3a;
+    --bg-quaternary: #404040;
+    --text-primary: #ffffff;
+    --text-secondary: #e0e0e0;
+    --text-muted: #a0a0a0;
+    --text-code: #c0c0c0;
+    --border-light: #555;
+    --border-medium: #444;
+    --border-dark: #333;
+    --shadow-light: rgba(0, 0, 0, 0.3);
+    --shadow-dark: rgba(0, 0, 0, 0.6);
+    --accent-primary: #4a90e2;
+    --accent-primary-hover: #357abd;
+    --accent-success: #4caf50;
+    --accent-success-hover: #45a049;
+    --accent-danger: #f44336;
+    --accent-danger-hover: #da190b;
+    --accent-secondary: #757575;
+    --accent-secondary-hover: #616161;
+    --message-success-bg: #1b4332;
+    --message-success-border: #2d5a3d;
+    --message-success-text: #a7f3d0;
+    --message-error-bg: #4c1d24;
+    --message-error-border: #6b2737;
+    --message-error-text: #fca5a5;
+    --badge-video-bg: #1e3a8a;
+    --badge-video-text: #93c5fd;
+    --badge-subtitle-bg: #581c87;
+    --badge-subtitle-text: #c4b5fd;
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* Base Styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Layout */
+.container {
+  background: var(--bg-secondary);
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px var(--shadow-light);
+}
+
+.container.queue {
+  max-width: 800px;
+}
+
+.container.downloads {
+  max-width: 1000px;
+}
+
+/* Typography */
+h1 {
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+h2 {
+  color: var(--text-primary);
+}
+
+/* Navigation */
+.navigation {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.nav-link {
+  display: inline-block;
+  background-color: var(--accent-primary);
+  color: white;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.nav-link:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+.downloads-nav-link {
+  display: inline-block;
+  background-color: var(--accent-success);
+  color: white;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.downloads-nav-link:hover {
+  background-color: var(--accent-success-hover);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+input[type="url"] {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border-light);
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+input[type="url"]:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+/* Buttons */
+button {
+  background-color: var(--accent-primary);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.3s;
+}
+
+.download-btn {
+  background-color: var(--accent-success);
+  color: white;
+}
+
+.download-btn:hover {
+  background-color: var(--accent-success-hover);
+}
+
+.delete-btn {
+  background-color: var(--accent-danger);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 15px;
+  flex-shrink: 0;
+  transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+  background-color: var(--accent-danger-hover);
+}
+
+/* Messages */
+.message {
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.success {
+  background-color: var(--message-success-bg);
+  border: 1px solid var(--message-success-border);
+  color: var(--message-success-text);
+}
+
+.error {
+  background-color: var(--message-error-bg);
+  border: 1px solid var(--message-error-border);
+  color: var(--message-error-text);
+}
+
+/* Queue Styles */
+.queue-section {
+  margin-top: 40px;
+}
+
+.queue-item {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  word-break: break-all;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.queue-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-item .url {
+  font-family: monospace;
+  color: var(--text-code);
+  word-break: break-all;
+}
+
+.queue-item .hash {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.empty-queue {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 20px;
+}
+
+/* Downloads Styles */
+.downloads-section {
+  margin-top: 20px;
+}
+
+.download-group {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  padding: 20px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+}
+
+.download-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 15px;
+  word-break: break-word;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-dark);
+  border-radius: 4px;
+}
+
+.file-item:last-child {
+  margin-bottom: 0;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-family: monospace;
+  color: var(--text-code);
+  word-break: break-all;
+  font-size: 14px;
+}
+
+.file-details {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.file-type-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.video-badge {
+  background-color: var(--badge-video-bg);
+  color: var(--badge-video-text);
+}
+
+.subtitle-badge {
+  background-color: var(--badge-subtitle-bg);
+  color: var(--badge-subtitle-text);
+}
+
+.file-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.empty-downloads {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 40px;
+}
+
+.stats {
+  background-color: var(--bg-quaternary);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--text-code);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-overlay);
+  z-index: 1000;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-secondary);
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px var(--shadow-dark);
+  max-width: 500px;
+  width: 90%;
+  z-index: 1001;
+}
+
+.modal h3 {
+  margin-top: 0;
+  color: var(--accent-danger);
+}
+
+.modal-url,
+.modal-filename {
+  background-color: var(--bg-tertiary);
+  padding: 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  word-break: break-all;
+  margin: 15px 0;
+  border: 1px solid var(--border-medium);
+  color: var(--text-code);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-cancel {
+  background-color: var(--accent-secondary);
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: var(--accent-secondary-hover);
+}
+
+.btn-delete {
+  background-color: var(--accent-danger);
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: var(--accent-danger-hover);
+}

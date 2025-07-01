@@ -11,7 +11,11 @@
       "Bash(curl:*)",
       "Bash(ls:*)",
       "Bash(timeout 10s npm start)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__playwright__playwright_navigate",
+      "mcp__playwright__playwright_screenshot",
+      "mcp__playwright__playwright_evaluate",
+      "mcp__playwright__playwright_close"
     ],
     "deny": []
   }
