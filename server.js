@@ -21,6 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 const QUEUE_DIR = path.join(__dirname, 'data', 'urls', 'queued');
+const ACTIVE_DIR = path.join(__dirname, 'data', 'urls', 'active');
+const FINISHED_DIR = path.join(__dirname, 'data', 'urls', 'finished');
 
 async function ensureDirectoryExists(dir) {
     try {
@@ -30,14 +32,15 @@ async function ensureDirectoryExists(dir) {
     }
 }
 
-async function getQueuedUrls() {
+async function readUrlsFromDirectory(dir, dirType) {
     try {
-        const files = await fs.readdir(QUEUE_DIR);
+        await ensureDirectoryExists(dir);
+        const files = await fs.readdir(dir);
         const urls = [];
         
         for (const file of files) {
             if (file.endsWith('.txt')) {
-                const filePath = path.join(QUEUE_DIR, file);
+                const filePath = path.join(dir, file);
                 const url = await fs.readFile(filePath, 'utf-8');
                 urls.push({
                     hash: file.replace('.txt', ''),
@@ -48,9 +51,21 @@ async function getQueuedUrls() {
         
         return urls;
     } catch (error) {
-        logger.error('Error reading queued URLs:', error);
+        logger.error(`Error reading ${dirType} URLs:`, error);
         return [];
     }
+}
+
+async function getQueuedUrls() {
+    return await readUrlsFromDirectory(QUEUE_DIR, 'queued');
+}
+
+async function getActiveUrls() {
+    return await readUrlsFromDirectory(ACTIVE_DIR, 'active');
+}
+
+async function getFinishedUrls() {
+    return await readUrlsFromDirectory(FINISHED_DIR, 'finished');
 }
 
 function createUrlHash(url) {
@@ -132,6 +147,38 @@ app.post('/url/delete', async (req, res) => {
     } catch (error) {
         logger.error('Error deleting URL from queue:', error);
         res.redirect('/?error=' + encodeURIComponent('Failed to delete URL from queue'));
+    }
+});
+
+app.get('/api/state', async (req, res) => {
+    try {
+        const [queuedUrls, activeUrls, finishedUrls] = await Promise.all([
+            getQueuedUrls(),
+            getActiveUrls(),
+            getFinishedUrls()
+        ]);
+        
+        const state = {
+            queued: queuedUrls,
+            active: activeUrls,
+            finished: finishedUrls,
+            counts: {
+                queued: queuedUrls.length,
+                active: activeUrls.length,
+                finished: finishedUrls.length,
+                total: queuedUrls.length + activeUrls.length + finishedUrls.length
+            },
+            timestamp: new Date().toISOString()
+        };
+        
+        res.json(state);
+        
+    } catch (error) {
+        logger.error('Error getting state:', error);
+        res.status(500).json({ 
+            error: 'Failed to get state',
+            timestamp: new Date().toISOString()
+        });
     }
 });
 
