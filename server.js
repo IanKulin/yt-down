@@ -104,6 +104,37 @@ app.post('/url/add', async (req, res) => {
     }
 });
 
+app.post('/url/delete', async (req, res) => {
+    try {
+        const { hash } = req.body;
+        
+        if (!hash || !hash.trim()) {
+            return res.redirect('/?error=' + encodeURIComponent('Invalid hash provided'));
+        }
+        
+        const trimmedHash = hash.trim();
+        const filename = `${trimmedHash}.txt`;
+        const filePath = path.join(QUEUE_DIR, filename);
+        
+        try {
+            const url = await fs.readFile(filePath, 'utf-8');
+            await fs.unlink(filePath);
+            logger.info(`Deleted URL from queue: ${url.trim()} (hash: ${trimmedHash})`);
+            
+            res.redirect('/?message=' + encodeURIComponent('URL deleted from queue successfully'));
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                return res.redirect('/?error=' + encodeURIComponent('URL not found in queue'));
+            }
+            throw error;
+        }
+        
+    } catch (error) {
+        logger.error('Error deleting URL from queue:', error);
+        res.redirect('/?error=' + encodeURIComponent('Failed to delete URL from queue'));
+    }
+});
+
 app.listen(PORT, () => {
     logger.info(`yt-dlp queue server running on port ${PORT}`);
 });
