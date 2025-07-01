@@ -10,7 +10,8 @@
       "Bash(rm:*)",
       "Bash(curl:*)",
       "Bash(ls:*)",
-      "Bash(timeout 10s npm start)"
+      "Bash(timeout 10s npm start)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

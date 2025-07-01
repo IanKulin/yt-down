@@ -28,6 +28,7 @@ app.use(express.json());
 const QUEUE_DIR = path.join(__dirname, 'data', 'urls', 'queued');
 const ACTIVE_DIR = path.join(__dirname, 'data', 'urls', 'active');
 const FINISHED_DIR = path.join(__dirname, 'data', 'urls', 'finished');
+const DOWNLOADS_DIR = path.join(__dirname, 'data', 'downloads');
 
 async function ensureDirectoryExists(dir) {
     try {
@@ -75,6 +76,77 @@ async function getFinishedUrls() {
 
 function createUrlHash(url) {
     return crypto.createHash('sha256').update(url).digest('hex');
+}
+
+async function getDownloadedFiles() {
+    try {
+        await ensureDirectoryExists(DOWNLOADS_DIR);
+        const files = await fs.readdir(DOWNLOADS_DIR);
+        const fileData = [];
+        
+        for (const file of files) {
+            if (file === '.DS_Store') continue; // Skip system files
+            
+            const filePath = path.join(DOWNLOADS_DIR, file);
+            const stats = await fs.stat(filePath);
+            
+            // Group files by base name (video + subtitle pairs)
+            const baseName = file.replace(/\.(mkv|mp4|webm|avi|mov|srt|vtt)$/i, '');
+            const extension = path.extname(file).toLowerCase();
+            
+            fileData.push({
+                name: file,
+                baseName,
+                extension,
+                size: stats.size,
+                modified: stats.mtime,
+                isVideo: /\.(mkv|mp4|webm|avi|mov)$/i.test(file),
+                isSubtitle: /\.(srt|vtt)$/i.test(file)
+            });
+        }
+        
+        // Group related files together
+        const groupedFiles = {};
+        fileData.forEach(file => {
+            if (!groupedFiles[file.baseName]) {
+                groupedFiles[file.baseName] = {
+                    baseName: file.baseName,
+                    video: null,
+                    subtitles: []
+                };
+            }
+            
+            if (file.isVideo) {
+                groupedFiles[file.baseName].video = file;
+            } else if (file.isSubtitle) {
+                groupedFiles[file.baseName].subtitles.push(file);
+            } else {
+                // Other files (thumbnails, etc.)
+                if (!groupedFiles[file.baseName].other) {
+                    groupedFiles[file.baseName].other = [];
+                }
+                groupedFiles[file.baseName].other.push(file);
+            }
+        });
+        
+        return Object.values(groupedFiles).sort((a, b) => {
+            const aTime = a.video ? a.video.modified : (a.subtitles[0] ? a.subtitles[0].modified : new Date(0));
+            const bTime = b.video ? b.video.modified : (b.subtitles[0] ? b.subtitles[0].modified : new Date(0));
+            return bTime - aTime; // Most recent first
+        });
+        
+    } catch (error) {
+        logger.error('Error reading downloads directory:', error);
+        return [];
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 async function checkYtDlpExists() {
@@ -161,6 +233,88 @@ app.post('/url/delete', async (req, res) => {
     } catch (error) {
         logger.error('Error deleting URL from queue:', error);
         res.redirect('/?error=' + encodeURIComponent('Failed to delete URL from queue'));
+    }
+});
+
+app.get('/downloads', async (req, res) => {
+    try {
+        const downloadedFiles = await getDownloadedFiles();
+        res.render('downloads', { 
+            downloadedFiles,
+            formatFileSize,
+            message: req.query.message,
+            error: req.query.error
+        });
+    } catch (error) {
+        logger.error('Error rendering downloads page:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/download/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const filePath = path.join(DOWNLOADS_DIR, filename);
+        
+        // Security check: ensure the file is within the downloads directory
+        const resolvedPath = path.resolve(filePath);
+        const resolvedDownloadsDir = path.resolve(DOWNLOADS_DIR);
+        
+        if (!resolvedPath.startsWith(resolvedDownloadsDir)) {
+            return res.status(403).send('Access denied');
+        }
+        
+        // Check if file exists
+        try {
+            await fs.access(filePath);
+        } catch (error) {
+            return res.status(404).send('File not found');
+        }
+        
+        // Set appropriate headers
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.sendFile(filePath);
+        
+    } catch (error) {
+        logger.error('Error downloading file:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.post('/file/delete', async (req, res) => {
+    try {
+        const { filename } = req.body;
+        
+        if (!filename || !filename.trim()) {
+            return res.redirect('/downloads?error=' + encodeURIComponent('Invalid filename provided'));
+        }
+        
+        const trimmedFilename = filename.trim();
+        const filePath = path.join(DOWNLOADS_DIR, trimmedFilename);
+        
+        // Security check: ensure the file is within the downloads directory
+        const resolvedPath = path.resolve(filePath);
+        const resolvedDownloadsDir = path.resolve(DOWNLOADS_DIR);
+        
+        if (!resolvedPath.startsWith(resolvedDownloadsDir)) {
+            return res.redirect('/downloads?error=' + encodeURIComponent('Access denied'));
+        }
+        
+        try {
+            await fs.unlink(filePath);
+            logger.info(`Deleted file: ${trimmedFilename}`);
+            
+            res.redirect('/downloads?message=' + encodeURIComponent('File deleted successfully'));
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                return res.redirect('/downloads?error=' + encodeURIComponent('File not found'));
+            }
+            throw error;
+        }
+        
+    } catch (error) {
+        logger.error('Error deleting file:', error);
+        res.redirect('/downloads?error=' + encodeURIComponent('Failed to delete file'));
     }
 });
 
