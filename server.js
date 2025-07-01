@@ -3,8 +3,12 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
+
+const execAsync = promisify(exec);
 
 const logger = new Logger({ format: 'simple' });
 
@@ -71,6 +75,15 @@ async function getFinishedUrls() {
 
 function createUrlHash(url) {
     return crypto.createHash('sha256').update(url).digest('hex');
+}
+
+async function checkYtDlpExists() {
+    try {
+        await execAsync('yt-dlp --version');
+        return true;
+    } catch (error) {
+        return false;
+    }
 }
 
 app.get('/', async (req, res) => {
@@ -191,6 +204,13 @@ const queueProcessor = new QueueProcessor({
 });
 
 app.listen(PORT, async () => {
+    // Check if yt-dlp is available
+    const ytDlpExists = await checkYtDlpExists();
+    if (!ytDlpExists) {
+        logger.error('yt-dlp not found in PATH. Please install yt-dlp to use this application.');
+        process.exit(1);
+    }
+    
     logger.info(`yt-dlp queue server running on port ${PORT}`);
     
     // Start the queue processor
