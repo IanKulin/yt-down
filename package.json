@@ -1,0 +1,17 @@
+{
+  "name": "yt-down",
+  "version": "0.0.1",
+  "description": "Web app for queueing downloads for yt-dlp",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "author": "IanKulin",
+  "license": "MIT",
+  "dependencies": {
+    "@iankulin/logger": "^1.0.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  }
+}
