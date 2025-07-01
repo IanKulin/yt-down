@@ -44,20 +44,35 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - `GET /` - Main queue interface (renders `queue.ejs`)
 - `POST /url/add` - Add URL to queue
 - `POST /url/delete` - Remove URL by hash
+- `GET /downloads` - Downloads management interface (renders `downloads.ejs`)
+- `GET /download/:filename` - Download individual files to user's machine
+- `POST /file/delete` - Delete downloaded files from server
 - `GET /api/state` - JSON API returning complete queue state
 
 **Core Functions**:
 - `readUrlsFromDirectory(dir, dirType)` - Generic directory reader
 - `createUrlHash(url)` - SHA-256 hash generation
 - `ensureDirectoryExists(dir)` - Auto-create missing directories
+- `getDownloadedFiles()` - Scan downloads directory and group related files
+- `formatFileSize(bytes)` - Human-readable file size formatting
 
-### Frontend (views/queue.ejs)
+### Frontend Templates
 
-Single-page EJS template with inline CSS and JavaScript featuring:
+**Queue Interface (views/queue.ejs)**:
 - **Modal confirmation system** for deletions with overlay and keyboard support
 - **Responsive flex-based layout** with URL content and delete buttons
 - **Client-side form validation** and error/success message display
 - **URL escaping** for JavaScript safety in onclick handlers
+- **Navigation link** to downloads page
+
+**Downloads Interface (views/downloads.ejs)**:
+- **File grouping system** - groups video and subtitle files by base name
+- **File type badges** - visual indicators for video vs subtitle files
+- **Download functionality** - direct download links for each file
+- **Delete functionality** - modal confirmation for file deletion
+- **File metadata display** - file sizes, modification dates
+- **Responsive design** - consistent styling with queue interface
+- **Navigation** - back to queue page
 
 ### Queue Processing System (lib/queueProcessor.js)
 
@@ -119,7 +134,7 @@ The `/api/state` endpoint returns comprehensive queue state:
 
 - **No build process** - direct Node.js execution
 - **Data directory is gitignored** - contains user queue data
-- **Single template file** - all UI in `queue.ejs`
+- **Template-based UI** - queue management (`queue.ejs`) and downloads management (`downloads.ejs`)
 - **No external database** - filesystem serves as persistence layer
 - **Port 3000 default** - configurable via `PORT` environment variable
 - **Background processing** - automatic queue processing starts with server
@@ -148,3 +163,41 @@ The queue processor (`lib/queueProcessor.js`) handles:
 - `start()` - Begin background processing
 - `stop()` - Graceful shutdown with active download completion
 - `getStatus()` - Current processor state for API responses
+
+## Downloads Management
+
+### File Organization System
+
+Downloaded files are automatically organized in `data/downloads/` with intelligent grouping:
+
+- **Video files**: `.mkv`, `.mp4`, `.webm`, `.avi`, `.mov` formats
+- **Subtitle files**: `.srt`, `.vtt` formats  
+- **File grouping**: Related files (video + subtitles) grouped by base filename
+- **Sorting**: Most recently modified files appear first
+
+### Downloads Interface Features
+
+**File Display**:
+- Grouped presentation of related files (video + subtitles)
+- File type badges for easy identification
+- File metadata (size, modification date)
+- Clean, responsive layout matching queue interface
+
+**User Actions**:
+- **Download**: Direct download to user's machine via `/download/:filename`
+- **Delete**: Server-side file deletion with modal confirmation
+- **Navigation**: Seamless movement between queue and downloads pages
+
+**Security Features**:
+- **Path traversal protection**: Prevents access outside downloads directory
+- **File validation**: Only serves files within designated downloads folder
+- **Error handling**: Graceful handling of missing or inaccessible files
+
+### Working with Downloads
+
+When extending downloads functionality:
+1. Use `getDownloadedFiles()` for file discovery and grouping
+2. Implement path security checks for any file operations
+3. Follow existing modal confirmation patterns for destructive actions
+4. Maintain file grouping logic for related video/subtitle pairs
+5. Use `formatFileSize()` for consistent size display
