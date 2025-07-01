@@ -59,6 +59,32 @@ Single-page EJS template with inline CSS and JavaScript featuring:
 - **Client-side form validation** and error/success message display
 - **URL escaping** for JavaScript safety in onclick handlers
 
+### Queue Processing System (lib/queueProcessor.js)
+
+**Automatic Background Processing**:
+- **Polling interval**: 5 seconds (configurable)
+- **Concurrent downloads**: 1 at a time (configurable via `maxConcurrent`)
+- **File movement**: queued → active → finished as downloads progress
+- **Auto-retry**: Failed downloads moved back to queued directory
+- **Graceful shutdown**: Waits for active downloads to complete
+
+**yt-dlp Integration**:
+```bash
+yt-dlp \
+  --fragment-retries 20 \
+  --retries infinite \
+  --socket-timeout 30 \
+  --limit-rate 180K \
+  -o "%(title)s.%(ext)s" \
+  --write-subs \
+  --write-auto-subs \
+  --sub-lang "en" \
+  --convert-subs srt \
+  [URL]
+```
+
+**Download Storage**: All downloaded files stored in `data/downloads/`
+
 ### API Response Format
 
 The `/api/state` endpoint returns comprehensive queue state:
@@ -70,6 +96,12 @@ The `/api/state` endpoint returns comprehensive queue state:
   "finished": [{"hash": "...", "url": "..."}],
   "counts": {
     "queued": 2, "active": 1, "finished": 1, "total": 4
+  },
+  "processor": {
+    "isProcessing": true,
+    "activeDownloads": 1,
+    "maxConcurrent": 1,
+    "pollInterval": 5000
   },
   "timestamp": "2025-07-01T11:45:05.790Z"
 }
@@ -90,6 +122,8 @@ The `/api/state` endpoint returns comprehensive queue state:
 - **Single template file** - all UI in `queue.ejs`
 - **No external database** - filesystem serves as persistence layer
 - **Port 3000 default** - configurable via `PORT` environment variable
+- **Background processing** - automatic queue processing starts with server
+- **yt-dlp dependency** - requires yt-dlp installed on system PATH
 
 ## Working with URLs
 
@@ -99,3 +133,18 @@ When adding URL management features:
 3. Use `ensureDirectoryExists()` before file operations
 4. Handle `ENOENT` errors gracefully for missing files
 5. Trim URLs and validate before processing
+
+## Queue Processing
+
+The queue processor (`lib/queueProcessor.js`) handles:
+- **Automatic polling** of queued directory every 5 seconds
+- **File transitions**: queued → active during download → finished on success
+- **Error handling**: Failed downloads return to queued for retry
+- **Process management**: Spawns yt-dlp child processes with proper cleanup
+- **Concurrent limiting**: Configurable max downloads (default: 1)
+- **Graceful shutdown**: Waits for active downloads before server stop
+
+**Key methods**:
+- `start()` - Begin background processing
+- `stop()` - Graceful shutdown with active download completion
+- `getStatus()` - Current processor state for API responses

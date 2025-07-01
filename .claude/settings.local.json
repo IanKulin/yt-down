@@ -8,7 +8,9 @@
       "Bash(pkill:*)",
       "Bash(node:*)",
       "Bash(rm:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(timeout 10s npm start)"
     ],
     "deny": []
   }

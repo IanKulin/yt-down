@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Logger from '@iankulin/logger';
+import QueueProcessor from './lib/queueProcessor.js';
 
 const logger = new Logger({ format: 'simple' });
 
@@ -168,6 +169,7 @@ app.get('/api/state', async (req, res) => {
                 finished: finishedUrls.length,
                 total: queuedUrls.length + activeUrls.length + finishedUrls.length
             },
+            processor: queueProcessor.getStatus(),
             timestamp: new Date().toISOString()
         };
         
@@ -182,6 +184,28 @@ app.get('/api/state', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// Initialize queue processor
+const queueProcessor = new QueueProcessor({
+    logger,
+    baseDir: __dirname
+});
+
+app.listen(PORT, async () => {
     logger.info(`yt-dlp queue server running on port ${PORT}`);
+    
+    // Start the queue processor
+    await queueProcessor.start();
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    logger.info('Received SIGINT. Gracefully shutting down...');
+    await queueProcessor.stop();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    logger.info('Received SIGTERM. Gracefully shutting down...');
+    await queueProcessor.stop();
+    process.exit(0);
 });
