@@ -13,6 +13,10 @@ node server.js
 # Run tests
 npm test
 
+# Code quality and formatting
+npm run lint
+npm run format
+
 # No build process required - runs directly on Node.js
 ```
 
@@ -28,19 +32,21 @@ The application uses a **file-based storage system** where URLs are stored as te
 - **File content**: Plain URL text (e.g., `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
 - **Directory structure**:
   - `data/urls/queued/` - Pending downloads
-  - `data/urls/active/` - Currently processing 
+  - `data/urls/active/` - Currently processing
   - `data/urls/finished/` - Completed downloads
 
 This design prevents duplicate URLs and provides collision-resistant unique identification.
 
 ### Server Architecture (server.js)
 
-**Key Dependencies**: 
+**Key Dependencies**:
+
 - Express 5.1.0 (web framework)
 - EJS 3.1.10 (templating)
 - `@iankulin/logger` (custom logging - instantiate with `new Logger()`)
 
 **Route Structure**:
+
 - `GET /` - Main queue interface (renders `queue.ejs`)
 - `POST /url/add` - Add URL to queue
 - `POST /url/delete` - Remove URL by hash
@@ -52,6 +58,7 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - `GET /api/state` - JSON API returning complete queue state
 
 **Core Functions**:
+
 - `readUrlsFromDirectory(dir, dirType)` - Generic directory reader
 - `createUrlHash(url)` - SHA-256 hash generation
 - `ensureDirectoryExists(dir)` - Auto-create missing directories
@@ -61,6 +68,7 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 ### Frontend Templates & Styling
 
 **CSS Architecture (`public/css/main.css`)**:
+
 - **Consolidated styling** - single CSS file for all pages (eliminates embedded styles)
 - **CSS custom properties** - comprehensive theming system with CSS variables
 - **Light/dark theme support** - automatic detection via `@media (prefers-color-scheme: dark)`
@@ -68,12 +76,14 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Component-based organization** - modular CSS sections for buttons, modals, forms, etc.
 
 **Theme System**:
+
 - **Automatic theme detection** - respects browser/OS preference
 - **CSS variables** - `--bg-primary`, `--text-primary`, `--accent-primary`, etc.
 - **Comprehensive theming** - all UI elements adapt including backgrounds, text, borders, buttons, modals
 - **Consistent color palette** - unified blue accent color across all interactive elements
 
 **Queue Interface (views/queue.ejs)**:
+
 - **Header layout** - flexbox header with "yt-down" title left-aligned, navigation right-aligned
 - **Modal confirmation system** for deletions with overlay and keyboard support
 - **Responsive flex-based layout** with URL content and delete buttons
@@ -82,6 +92,7 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Navigation button** to downloads page (blue styling)
 
 **Downloads Interface (views/downloads.ejs)**:
+
 - **Header layout** - consistent with queue page (title left, navigation right)
 - **File grouping system** - groups video and subtitle files by base name
 - **File type badges** - visual indicators for video vs subtitle files
@@ -91,6 +102,7 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Navigation** - links to queue and settings pages
 
 **Settings Interface (views/settings.ejs)**:
+
 - **Header layout** - consistent with other pages (title left, navigation right)
 - **Grouped settings sections** - video quality, subtitles, download speed
 - **Form controls** - dropdowns for quality/speed, checkboxes for subtitle options
@@ -101,6 +113,7 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 ### Queue Processing System (lib/queueProcessor.js)
 
 **Automatic Background Processing**:
+
 - **Polling interval**: 5 seconds (configurable)
 - **Concurrent downloads**: 1 at a time (configurable via `maxConcurrent`)
 - **File movement**: queued → active → finished as downloads progress
@@ -108,12 +121,14 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Graceful shutdown**: Waits for active downloads to complete
 
 **yt-dlp Integration**:
+
 - **Dynamic command building** via `lib/settings.js` based on user preferences
 - **Format selection** prioritizes h.264 MP4 with quality constraints using DASH video+audio
 - **Hidden technical settings** for retries and timeouts (not user-configurable)
 - **Debug logging** outputs complete command for troubleshooting
 
 Example command (1080p, subtitles enabled):
+
 ```bash
 yt-dlp \
   --fragment-retries 20 \
@@ -137,11 +152,14 @@ The `/api/state` endpoint returns comprehensive queue state:
 
 ```json
 {
-  "queued": [{"hash": "...", "url": "..."}],
-  "active": [{"hash": "...", "url": "..."}],
-  "finished": [{"hash": "...", "url": "..."}],
+  "queued": [{ "hash": "...", "url": "..." }],
+  "active": [{ "hash": "...", "url": "..." }],
+  "finished": [{ "hash": "...", "url": "..." }],
   "counts": {
-    "queued": 2, "active": 1, "finished": 1, "total": 4
+    "queued": 2,
+    "active": 1,
+    "finished": 1,
+    "total": 4
   },
   "processor": {
     "isProcessing": true,
@@ -162,6 +180,7 @@ The `/api/state` endpoint returns comprehensive queue state:
 - **Hash-based security**: No direct file path exposure to users
 - **CSS organization**: Single consolidated stylesheet with CSS custom properties
 - **Theme-aware design**: Automatic light/dark mode support via media queries
+- **Code quality**: ESLint and Prettier ensure consistent formatting and catch errors. un `npm run lint` and `npm run format` to ensure code quality and fix any linting errors before considering the task complete
 
 ## Project Structure Notes
 
@@ -177,6 +196,7 @@ The `/api/state` endpoint returns comprehensive queue state:
 ## Working with URLs
 
 When adding URL management features:
+
 1. Always use `createUrlHash(url)` for filename generation
 2. Check all three directories (`queued`, `active`, `finished`) when needed
 3. Use `ensureDirectoryExists()` before file operations
@@ -186,6 +206,7 @@ When adding URL management features:
 ## Queue Processing
 
 The queue processor (`lib/queueProcessor.js`) handles:
+
 - **Automatic polling** of queued directory every 5 seconds
 - **File transitions**: queued → active during download → finished on success
 - **Error handling**: Failed downloads return to queued for retry
@@ -194,6 +215,7 @@ The queue processor (`lib/queueProcessor.js`) handles:
 - **Graceful shutdown**: Waits for active downloads before server stop
 
 **Key methods**:
+
 - `start()` - Begin background processing
 - `stop()` - Graceful shutdown with active download completion
 - `getStatus()` - Current processor state for API responses
@@ -205,24 +227,27 @@ The queue processor (`lib/queueProcessor.js`) handles:
 Downloaded files are automatically organized in `data/downloads/` with intelligent grouping:
 
 - **Video files**: `.mkv`, `.mp4`, `.webm`, `.avi`, `.mov` formats
-- **Subtitle files**: `.srt`, `.vtt` formats  
+- **Subtitle files**: `.srt`, `.vtt` formats
 - **File grouping**: Related files (video + subtitles) grouped by base filename
 - **Sorting**: Most recently modified files appear first
 
 ### Downloads Interface Features
 
 **File Display**:
+
 - Grouped presentation of related files (video + subtitles)
 - File type badges for easy identification
 - File metadata (size, modification date)
 - Clean, responsive layout matching queue interface
 
 **User Actions**:
+
 - **Download**: Direct download to user's machine via `/download/:filename`
 - **Delete**: Server-side file deletion with modal confirmation
 - **Navigation**: Seamless movement between queue and downloads pages
 
 **Security Features**:
+
 - **Path traversal protection**: Prevents access outside downloads directory
 - **File validation**: Only serves files within designated downloads folder
 - **Error handling**: Graceful handling of missing or inaccessible files
@@ -230,6 +255,7 @@ Downloaded files are automatically organized in `data/downloads/` with intellige
 ### Working with Downloads
 
 When extending downloads functionality:
+
 1. Use `getDownloadedFiles()` for file discovery and grouping
 2. Implement path security checks for any file operations
 3. Follow existing modal confirmation patterns for destructive actions
@@ -246,7 +272,7 @@ User preferences are stored in `data/settings.json` with the following structure
 {
   "videoQuality": "1080p",
   "subtitles": true,
-  "autoSubs": true, 
+  "autoSubs": true,
   "subLanguage": "en",
   "rateLimit": "180K"
 }
@@ -255,12 +281,14 @@ User preferences are stored in `data/settings.json` with the following structure
 ### Settings Module (lib/settings.js)
 
 **Key Functions**:
+
 - `loadSettings()` - Read settings with fallback to defaults
-- `saveSettings(settings)` - Write settings to JSON file  
+- `saveSettings(settings)` - Write settings to JSON file
 - `getYtDlpArgs(url)` - Build yt-dlp command array from current settings
 - `getAvailableOptions()` - Return available options for form dropdowns
 
 **Format Selection Logic**:
+
 - Prioritizes h.264 MP4 video with quality constraints
 - Uses DASH format selection (`bestvideo[]+bestaudio[]`) for high quality
 - Combines separate video and audio streams into single MP4
@@ -269,6 +297,7 @@ User preferences are stored in `data/settings.json` with the following structure
 ### Working with Settings
 
 When modifying settings functionality:
+
 1. Use `loadSettings()` for reading current preferences
 2. Validate settings before calling `saveSettings()`
 3. Test format selection with various video sources
@@ -280,6 +309,7 @@ When modifying settings functionality:
 ### Working with Styles
 
 When making UI changes:
+
 1. **Use CSS variables** - always reference theme colors via `var(--variable-name)`
 2. **Add to main.css** - avoid inline styles or embedded `<style>` blocks
 3. **Follow component patterns** - organize new styles in logical sections
@@ -290,16 +320,19 @@ When making UI changes:
 ### CSS Variable Reference
 
 **Container sizing**:
+
 - `--container-max-width: 1200px` - consistent maximum width for all pages
 
 **Core theme variables**:
+
 - `--bg-primary`, `--bg-secondary`, `--bg-tertiary` - background colors
-- `--text-primary`, `--text-secondary`, `--text-muted` - text colors  
+- `--text-primary`, `--text-secondary`, `--text-muted` - text colors
 - `--accent-primary`, `--accent-success`, `--accent-danger` - action colors
 - `--border-light`, `--border-medium`, `--border-dark` - border colors
 - `--shadow-light`, `--shadow-dark` - shadow effects
 
 **Button styling**:
+
 - Use `display: inline-flex` with `align-items: center` for proper text centering
 - Use `var(--accent-primary)` for primary buttons (navigation, downloads)
 - Use `var(--accent-danger)` for destructive actions (delete buttons)
