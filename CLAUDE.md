@@ -51,20 +51,24 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 **Route Modules**:
 
 **Queue Routes (`routes/queue.js`)**:
+
 - `GET /` - Main queue interface (renders `queue.ejs`)
 - `POST /url/add` - Add URL to queue
 - `POST /url/delete` - Remove URL by hash
 
 **Downloads Routes (`routes/downloads.js`)**:
+
 - `GET /downloads` - Downloads management interface (renders `downloads.ejs`)
 - `GET /download/:filename` - Download individual files to user's machine
 - `POST /file/delete` - Delete downloaded files from server
 
 **Settings Routes (`routes/settings.js`)**:
+
 - `GET /settings` - Settings configuration interface (renders `settings.ejs`)
 - `POST /settings` - Update download settings
 
 **API Routes (`routes/api.js`)**:
+
 - `GET /api/state` - JSON API returning complete queue state
 
 **Utility Functions (`lib/utils.js`)**:

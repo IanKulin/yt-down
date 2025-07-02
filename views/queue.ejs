@@ -44,7 +44,7 @@
                             <div class="url"><%= item.url %></div>
                             <div class="hash">Hash: <%= item.hash %></div>
                         </div>
-                        <button class="delete-btn" onclick="showDeleteModal('<%= item.hash %>', '<%= item.url.replace(/'/g, "\\'") %>')">
+                        <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>">
                             Delete
                         </button>
                     </div>
@@ -73,6 +73,17 @@
     
     <script>
         let currentDeleteHash = null;
+        
+        // Event delegation for delete buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('delete-btn')) {
+                    const hash = e.target.dataset.hash;
+                    const url = e.target.dataset.url;
+                    showDeleteModal(hash, url);
+                }
+            });
+        });
         
         function showDeleteModal(hash, url) {
             currentDeleteHash = hash;

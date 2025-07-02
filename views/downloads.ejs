@@ -50,7 +50,7 @@
                                 </div>
                                 <div class="file-actions">
                                     <a href="/download/<%= encodeURIComponent(group.video.name) %>" class="btn download-btn">Download</a>
-                                    <button class="btn delete-btn" onclick="showDeleteModal('<%= group.video.name.replace(/'/g, "\\'") %>')">
+                                    <button class="btn delete-btn" data-filename="<%= group.video.name %>">
                                         Delete
                                     </button>
                                 </div>
@@ -71,7 +71,7 @@
                                 </div>
                                 <div class="file-actions">
                                     <a href="/download/<%= encodeURIComponent(subtitle.name) %>" class="btn download-btn">Download</a>
-                                    <button class="btn delete-btn" onclick="showDeleteModal('<%= subtitle.name.replace(/'/g, "\\'") %>')">
+                                    <button class="btn delete-btn" data-filename="<%= subtitle.name %>">
                                         Delete
                                     </button>
                                 </div>
@@ -92,7 +92,7 @@
                                     </div>
                                     <div class="file-actions">
                                         <a href="/download/<%= encodeURIComponent(file.name) %>" class="btn download-btn">Download</a>
-                                        <button class="btn delete-btn" onclick="showDeleteModal('<%= file.name.replace(/'/g, "\\'") %>')">
+                                        <button class="btn delete-btn" data-filename="<%= file.name %>">
                                             Delete
                                         </button>
                                     </div>
@@ -125,6 +125,16 @@
     
     <script>
         let currentDeleteFilename = null;
+        
+        // Event delegation for delete buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('delete-btn')) {
+                    const filename = e.target.dataset.filename;
+                    showDeleteModal(filename);
+                }
+            });
+        });
         
         function showDeleteModal(filename) {
             currentDeleteFilename = filename;
