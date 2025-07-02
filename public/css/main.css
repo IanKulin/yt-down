@@ -88,14 +88,33 @@ body {
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 2px 10px var(--shadow-light);
+  margin: 0 auto;
 }
 
 .container.queue {
-  max-width: 800px;
+  max-width: 1200px;
 }
 
 .container.downloads {
-  max-width: 1000px;
+  max-width: 1200px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.header-nav {
+  display: flex;
+  gap: 10px;
 }
 
 /* Typography */
@@ -109,20 +128,23 @@ h2 {
   color: var(--text-primary);
 }
 
-/* Navigation */
+/* Navigation (legacy - keeping for backward compatibility) */
 .navigation {
   text-align: center;
   margin-bottom: 30px;
 }
 
 .nav-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-color: var(--accent-primary);
   color: white;
   padding: 10px 20px;
   text-decoration: none;
   border-radius: 4px;
   transition: background-color 0.3s;
+  line-height: 1;
 }
 
 .nav-link:hover {
@@ -130,17 +152,20 @@ h2 {
 }
 
 .downloads-nav-link {
-  display: inline-block;
-  background-color: var(--accent-success);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent-primary);
   color: white;
   padding: 10px 20px;
   text-decoration: none;
   border-radius: 4px;
   transition: background-color 0.3s;
+  line-height: 1;
 }
 
 .downloads-nav-link:hover {
-  background-color: var(--accent-success-hover);
+  background-color: var(--accent-primary-hover);
 }
 
 /* Forms */
@@ -194,17 +219,20 @@ button:hover {
   cursor: pointer;
   font-size: 12px;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color 0.3s;
+  line-height: 1;
 }
 
 .download-btn {
-  background-color: var(--accent-success);
+  background-color: var(--accent-primary);
   color: white;
 }
 
 .download-btn:hover {
-  background-color: var(--accent-success-hover);
+  background-color: var(--accent-primary-hover);
 }
 
 .delete-btn {
