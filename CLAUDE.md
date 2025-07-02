@@ -56,22 +56,36 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - `getDownloadedFiles()` - Scan downloads directory and group related files
 - `formatFileSize(bytes)` - Human-readable file size formatting
 
-### Frontend Templates
+### Frontend Templates & Styling
+
+**CSS Architecture (`public/css/main.css`)**:
+- **Consolidated styling** - single CSS file for all pages (eliminates embedded styles)
+- **CSS custom properties** - comprehensive theming system with CSS variables
+- **Light/dark theme support** - automatic detection via `@media (prefers-color-scheme: dark)`
+- **Responsive design** - consistent styling across all interface elements
+- **Component-based organization** - modular CSS sections for buttons, modals, forms, etc.
+
+**Theme System**:
+- **Automatic theme detection** - respects browser/OS preference
+- **CSS variables** - `--bg-primary`, `--text-primary`, `--accent-primary`, etc.
+- **Comprehensive theming** - all UI elements adapt including backgrounds, text, borders, buttons, modals
+- **Consistent color palette** - unified blue accent color across all interactive elements
 
 **Queue Interface (views/queue.ejs)**:
+- **Header layout** - flexbox header with "yt-down" title left-aligned, navigation right-aligned
 - **Modal confirmation system** for deletions with overlay and keyboard support
 - **Responsive flex-based layout** with URL content and delete buttons
 - **Client-side form validation** and error/success message display
 - **URL escaping** for JavaScript safety in onclick handlers
-- **Navigation link** to downloads page
+- **Navigation button** to downloads page (blue styling)
 
 **Downloads Interface (views/downloads.ejs)**:
+- **Header layout** - consistent with queue page (title left, navigation right)
 - **File grouping system** - groups video and subtitle files by base name
 - **File type badges** - visual indicators for video vs subtitle files
-- **Download functionality** - direct download links for each file
+- **Download functionality** - direct download links for each file (blue styling)
 - **Delete functionality** - modal confirmation for file deletion
 - **File metadata display** - file sizes, modification dates
-- **Responsive design** - consistent styling with queue interface
 - **Navigation** - back to queue page
 
 ### Queue Processing System (lib/queueProcessor.js)
@@ -129,6 +143,8 @@ The `/api/state` endpoint returns comprehensive queue state:
 - **Parallel processing**: `Promise.all()` for reading multiple directories
 - **Error boundaries**: Comprehensive try/catch with user-friendly redirects
 - **Hash-based security**: No direct file path exposure to users
+- **CSS organization**: Single consolidated stylesheet with CSS custom properties
+- **Theme-aware design**: Automatic light/dark mode support via media queries
 
 ## Project Structure Notes
 
@@ -201,3 +217,28 @@ When extending downloads functionality:
 3. Follow existing modal confirmation patterns for destructive actions
 4. Maintain file grouping logic for related video/subtitle pairs
 5. Use `formatFileSize()` for consistent size display
+
+## CSS and Theming
+
+### Working with Styles
+
+When making UI changes:
+1. **Use CSS variables** - always reference theme colors via `var(--variable-name)`
+2. **Add to main.css** - avoid inline styles or embedded `<style>` blocks
+3. **Follow component patterns** - organize new styles in logical sections
+4. **Test both themes** - verify changes work in light and dark modes
+5. **Maintain accessibility** - ensure sufficient contrast in both themes
+
+### CSS Variable Reference
+
+**Core theme variables**:
+- `--bg-primary`, `--bg-secondary`, `--bg-tertiary` - background colors
+- `--text-primary`, `--text-secondary`, `--text-muted` - text colors  
+- `--accent-primary`, `--accent-success`, `--accent-danger` - action colors
+- `--border-light`, `--border-medium`, `--border-dark` - border colors
+- `--shadow-light`, `--shadow-dark` - shadow effects
+
+**Button styling**:
+- Use `display: inline-flex` with `align-items: center` for proper text centering
+- Use `var(--accent-primary)` for primary buttons (navigation, downloads)
+- Use `var(--accent-danger)` for destructive actions (delete buttons)
