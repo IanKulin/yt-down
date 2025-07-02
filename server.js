@@ -165,7 +165,7 @@ async function checkYtDlpExists() {
   try {
     await execAsync('yt-dlp --version');
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -271,8 +271,8 @@ app.get('/downloads', async (req, res) => {
       message: req.query.message,
       error: req.query.error,
     });
-  } catch (error) {
-    logger.error('Error rendering downloads page:', error);
+  } catch (_error) {
+    logger.error('Error rendering downloads page:', _error);
     res.status(500).send('Server error');
   }
 });
@@ -293,7 +293,7 @@ app.get('/download/:filename', async (req, res) => {
     // Check if file exists
     try {
       await fs.access(filePath);
-    } catch (error) {
+    } catch {
       return res.status(404).send('File not found');
     }
 
