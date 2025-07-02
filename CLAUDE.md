@@ -37,33 +37,44 @@ The application uses a **file-based storage system** where URLs are stored as te
 
 This design prevents duplicate URLs and provides collision-resistant unique identification.
 
-### Server Architecture (server.js)
+### Server Architecture
 
-**Key Dependencies**:
+**Main Server (server.js)**:
 
 - Express 5.1.0 (web framework)
 - EJS 3.1.10 (templating)
 - `@iankulin/logger` (custom logging - instantiate with `new Logger()`)
+- Route module imports and middleware setup
+- Queue processor initialization and lifecycle management
+- yt-dlp dependency checking
 
-**Route Structure**:
+**Route Modules**:
 
+**Queue Routes (`routes/queue.js`)**:
 - `GET /` - Main queue interface (renders `queue.ejs`)
 - `POST /url/add` - Add URL to queue
 - `POST /url/delete` - Remove URL by hash
+
+**Downloads Routes (`routes/downloads.js`)**:
 - `GET /downloads` - Downloads management interface (renders `downloads.ejs`)
 - `GET /download/:filename` - Download individual files to user's machine
 - `POST /file/delete` - Delete downloaded files from server
+
+**Settings Routes (`routes/settings.js`)**:
 - `GET /settings` - Settings configuration interface (renders `settings.ejs`)
 - `POST /settings` - Update download settings
+
+**API Routes (`routes/api.js`)**:
 - `GET /api/state` - JSON API returning complete queue state
 
-**Core Functions**:
+**Utility Functions (`lib/utils.js`)**:
 
 - `readUrlsFromDirectory(dir, dirType)` - Generic directory reader
 - `createUrlHash(url)` - SHA-256 hash generation
 - `ensureDirectoryExists(dir)` - Auto-create missing directories
 - `getDownloadedFiles()` - Scan downloads directory and group related files
 - `formatFileSize(bytes)` - Human-readable file size formatting
+- `getQueuedUrls()`, `getActiveUrls()`, `getFinishedUrls()` - Directory-specific URL readers
 
 ### Frontend Templates & Styling
 
@@ -173,18 +184,21 @@ The `/api/state` endpoint returns comprehensive queue state:
 
 ## Development Patterns
 
-- **ES modules**: Uses `import`/`export` syntax
+- **ES modules**: Uses `import`/`export` syntax throughout
+- **Modular architecture**: Routes organized in separate modules (`routes/`) with shared utilities (`lib/`)
 - **Async/await**: All file operations are promisified
 - **Parallel processing**: `Promise.all()` for reading multiple directories
 - **Error boundaries**: Comprehensive try/catch with user-friendly redirects
 - **Hash-based security**: No direct file path exposure to users
+- **Middleware pattern**: Logger and queue processor injected via Express middleware
 - **CSS organization**: Single consolidated stylesheet with CSS custom properties
 - **Theme-aware design**: Automatic light/dark mode support via media queries
-- **Code quality**: ESLint and Prettier ensure consistent formatting and catch errors. un `npm run lint` and `npm run format` to ensure code quality and fix any linting errors before considering the task complete
+- **Code quality**: ESLint and Prettier ensure consistent formatting and catch errors. Run `npm run lint` and `npm run format` to ensure code quality and fix any linting errors before considering the task complete
 
 ## Project Structure Notes
 
 - **No build process** - direct Node.js execution
+- **Modular organization** - routes in `routes/` directory, utilities in `lib/` directory
 - **Data directory is gitignored** - contains user queue data
 - **Template-based UI** - queue management (`queue.ejs`), downloads management (`downloads.ejs`), and settings (`settings.ejs`)
 - **JSON settings storage** - user preferences stored in `data/settings.json`
