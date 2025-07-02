@@ -281,7 +281,7 @@ describe('utils.js', () => {
       try {
         const groupedFiles = await getDownloadedFiles(logger);
         assert.ok(Array.isArray(groupedFiles), 'Should return array even if directory is empty/missing');
-      } catch (error) {
+      } catch {
         // Should not throw errors
         assert.fail('Function should not throw errors for missing/empty directory');
       }

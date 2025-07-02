@@ -1,11 +1,5 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
-import express from 'express';
-import http from 'http';
-import apiRouter from '../routes/api.js';
-import {
-  createMockLogger,
-} from './helpers.js';
 
 // Mock queue processor
 function createMockQueueProcessor(status = {}) {
@@ -20,86 +14,7 @@ function createMockQueueProcessor(status = {}) {
   };
 }
 
-// Helper to make HTTP requests without supertest
-function makeRequest(app, path) {
-  return new Promise((resolve, reject) => {
-    const server = http.createServer(app);
-    server.listen(0, () => {
-      const port = server.address().port;
-      const options = {
-        hostname: 'localhost',
-        port: port,
-        path: path,
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      };
 
-      const req = http.request(options, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          server.close(() => {
-            try {
-              const body = data ? JSON.parse(data) : null;
-              resolve({ statusCode: res.statusCode, body, headers: res.headers });
-            } catch (err) {
-              resolve({ statusCode: res.statusCode, body: data, headers: res.headers });
-            }
-          });
-        });
-      });
-
-      req.on('error', err => {
-        server.close(() => reject(err));
-      });
-
-      req.end();
-    });
-  });
-}
-
-// Mock the utils functions by patching them
-const originalUtils = {};
-let mockUtilsActive = false;
-
-function mockUtils(utils) {
-  if (!mockUtilsActive) {
-    // Store originals for cleanup
-    originalUtils.getQueuedUrls = global.getQueuedUrls;
-    originalUtils.getActiveUrls = global.getActiveUrls;
-    originalUtils.getFinishedUrls = global.getFinishedUrls;
-    mockUtilsActive = true;
-  }
-  
-  global.getQueuedUrls = utils.getQueuedUrls;
-  global.getActiveUrls = utils.getActiveUrls;
-  global.getFinishedUrls = utils.getFinishedUrls;
-}
-
-function restoreUtils() {
-  if (mockUtilsActive) {
-    global.getQueuedUrls = originalUtils.getQueuedUrls;
-    global.getActiveUrls = originalUtils.getActiveUrls;
-    global.getFinishedUrls = originalUtils.getFinishedUrls;
-    mockUtilsActive = false;
-  }
-}
-
-function createTestApp(queueProcessor = null) {
-  const app = express();
-  
-  // Add middleware to simulate req.logger and req.queueProcessor
-  app.use((req, res, next) => {
-    req.logger = createMockLogger();
-    req.queueProcessor = queueProcessor || createMockQueueProcessor();
-    next();
-  });
-  
-  app.use(apiRouter);
-  return app;
-}
 
 describe('api.js', () => {
   describe('GET /api/state', () => {

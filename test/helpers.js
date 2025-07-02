@@ -16,7 +16,7 @@ export async function createTestDir() {
 export async function cleanupTestDir() {
   try {
     await fs.rm(TEST_DATA_DIR, { recursive: true, force: true });
-  } catch (error) {
+  } catch {
     // Ignore cleanup errors
   }
 }

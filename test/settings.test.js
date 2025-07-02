@@ -1,19 +1,9 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
-import fs from 'fs/promises';
-import path from 'path';
 import {
-  loadSettings,
-  saveSettings,
   getYtDlpArgs,
   getAvailableOptions,
 } from '../lib/settings.js';
-import {
-  createTestDir,
-  cleanupTestDir,
-  createTestFile,
-  TEST_DATA_DIR,
-} from './helpers.js';
 
 describe('settings.js', () => {
   describe('getAvailableOptions', () => {
