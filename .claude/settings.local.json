@@ -19,7 +19,8 @@
       "Bash(yt-dlp:*)",
       "Bash(npm install:*)",
       "Bash(mv:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npm run format:*)"
     ],
     "deny": []
   }
