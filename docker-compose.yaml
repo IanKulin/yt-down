@@ -1,0 +1,16 @@
+
+
+services:
+  yt-down:
+    image: ghcr.io/iankulin/yt-down
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64 # Specify platform for cross-arch building (e.g., Mac M1 -> Linux)
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the data directory to persist queue and downloads
+      - ./data:/app/data
+    restart: unless-stopped
+    container_name: yt-down

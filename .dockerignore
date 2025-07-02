@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+
+#tests
+test
+
+# Local data (should be mounted as a volume)
+data
+
+# IDE / Editor
+.claude
+.vscode
+.idea
+.*
+eslint*
+
+# Documentation
+CLAUDE.md
+*.md
+
+# OS
+.DS_Store
