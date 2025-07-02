@@ -18,6 +18,10 @@ npm run lint
 npm run format
 
 # No build process required - runs directly on Node.js
+
+# Docker
+npm run docker:build
+npm run docker:push
 ```
 
 ## Architecture Overview
@@ -210,6 +214,39 @@ The `/api/state` endpoint returns comprehensive queue state:
 - **Port 3000 default** - configurable via `PORT` environment variable
 - **Background processing** - automatic queue processing starts with server
 - **yt-dlp dependency** - requires yt-dlp installed on system PATH
+
+## Docker Support
+
+The application includes Docker configuration for containerized deployment:
+
+**Dockerfile Features**:
+- **Multi-stage build** - optimized for production with minimal dependencies
+- **Alpine Linux base** - lightweight Node.js 24 runtime
+- **yt-dlp integration** - Python 3, pip, and yt-dlp pre-installed
+- **ffmpeg support** - video processing capabilities included
+- **Data directory setup** - automatic creation of required directory structure
+
+**Docker Commands**:
+```bash
+# Build the container
+npm run docker:build
+
+# push to github packages
+npm run docker:push
+
+# Run with volume mounting for persistent data
+docker compose up -d
+```
+
+**Volume Mounting**:
+- Mount `./data` to `/app/data` for persistent queue and download storage
+- Ensures data survives container restarts and updates
+- Allows external access to downloaded files
+
+**Environment**:
+- Runs in production mode (`NODE_ENV=production`)
+- Exposes port 3000 for web interface
+- Uses system package manager for yt-dlp installation
 
 ## Working with URLs
 
