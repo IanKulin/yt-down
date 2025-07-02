@@ -47,6 +47,8 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - `GET /downloads` - Downloads management interface (renders `downloads.ejs`)
 - `GET /download/:filename` - Download individual files to user's machine
 - `POST /file/delete` - Delete downloaded files from server
+- `GET /settings` - Settings configuration interface (renders `settings.ejs`)
+- `POST /settings` - Update download settings
 - `GET /api/state` - JSON API returning complete queue state
 
 **Core Functions**:
@@ -86,7 +88,15 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Download functionality** - direct download links for each file (blue styling)
 - **Delete functionality** - modal confirmation for file deletion
 - **File metadata display** - file sizes, modification dates
-- **Navigation** - back to queue page
+- **Navigation** - links to queue and settings pages
+
+**Settings Interface (views/settings.ejs)**:
+- **Header layout** - consistent with other pages (title left, navigation right)
+- **Grouped settings sections** - video quality, subtitles, download speed
+- **Form controls** - dropdowns for quality/speed, checkboxes for subtitle options
+- **Settings persistence** - form values reflect current settings from JSON storage
+- **Success/error messaging** - feedback for settings save operations
+- **Navigation** - links to queue and downloads pages
 
 ### Queue Processing System (lib/queueProcessor.js)
 
@@ -98,17 +108,24 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Graceful shutdown**: Waits for active downloads to complete
 
 **yt-dlp Integration**:
+- **Dynamic command building** via `lib/settings.js` based on user preferences
+- **Format selection** prioritizes h.264 MP4 with quality constraints using DASH video+audio
+- **Hidden technical settings** for retries and timeouts (not user-configurable)
+- **Debug logging** outputs complete command for troubleshooting
+
+Example command (1080p, subtitles enabled):
 ```bash
 yt-dlp \
   --fragment-retries 20 \
   --retries infinite \
   --socket-timeout 30 \
-  --limit-rate 180K \
   -o "%(title)s.%(ext)s" \
+  --format "bestvideo[height<=1080][ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]" \
+  --limit-rate 180K \
   --write-subs \
-  --write-auto-subs \
   --sub-lang "en" \
   --convert-subs srt \
+  --write-auto-subs \
   [URL]
 ```
 
@@ -150,7 +167,8 @@ The `/api/state` endpoint returns comprehensive queue state:
 
 - **No build process** - direct Node.js execution
 - **Data directory is gitignored** - contains user queue data
-- **Template-based UI** - queue management (`queue.ejs`) and downloads management (`downloads.ejs`)
+- **Template-based UI** - queue management (`queue.ejs`), downloads management (`downloads.ejs`), and settings (`settings.ejs`)
+- **JSON settings storage** - user preferences stored in `data/settings.json`
 - **No external database** - filesystem serves as persistence layer
 - **Port 3000 default** - configurable via `PORT` environment variable
 - **Background processing** - automatic queue processing starts with server
@@ -218,6 +236,45 @@ When extending downloads functionality:
 4. Maintain file grouping logic for related video/subtitle pairs
 5. Use `formatFileSize()` for consistent size display
 
+## Settings Management
+
+### Settings Storage System
+
+User preferences are stored in `data/settings.json` with the following structure:
+
+```json
+{
+  "videoQuality": "1080p",
+  "subtitles": true,
+  "autoSubs": true, 
+  "subLanguage": "en",
+  "rateLimit": "180K"
+}
+```
+
+### Settings Module (lib/settings.js)
+
+**Key Functions**:
+- `loadSettings()` - Read settings with fallback to defaults
+- `saveSettings(settings)` - Write settings to JSON file  
+- `getYtDlpArgs(url)` - Build yt-dlp command array from current settings
+- `getAvailableOptions()` - Return available options for form dropdowns
+
+**Format Selection Logic**:
+- Prioritizes h.264 MP4 video with quality constraints
+- Uses DASH format selection (`bestvideo[]+bestaudio[]`) for high quality
+- Combines separate video and audio streams into single MP4
+- Fallback chain ensures compatibility across different video sources
+
+### Working with Settings
+
+When modifying settings functionality:
+1. Use `loadSettings()` for reading current preferences
+2. Validate settings before calling `saveSettings()`
+3. Test format selection with various video sources
+4. Ensure settings persist across server restarts
+5. Follow existing form patterns for UI consistency
+
 ## CSS and Theming
 
 ### Working with Styles
@@ -228,8 +285,12 @@ When making UI changes:
 3. **Follow component patterns** - organize new styles in logical sections
 4. **Test both themes** - verify changes work in light and dark modes
 5. **Maintain accessibility** - ensure sufficient contrast in both themes
+6. **Test with Playwright** - any cosmetic changes should be verified using Playwright automation tools
 
 ### CSS Variable Reference
+
+**Container sizing**:
+- `--container-max-width: 1200px` - consistent maximum width for all pages
 
 **Core theme variables**:
 - `--bg-primary`, `--bg-secondary`, `--bg-tertiary` - background colors

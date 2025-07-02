@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
+import { loadSettings, saveSettings, getAvailableOptions } from './lib/settings.js';
 
 const execAsync = promisify(exec);
 
@@ -315,6 +316,45 @@ app.post('/file/delete', async (req, res) => {
     } catch (error) {
         logger.error('Error deleting file:', error);
         res.redirect('/downloads?error=' + encodeURIComponent('Failed to delete file'));
+    }
+});
+
+app.get('/settings', async (req, res) => {
+    try {
+        const settings = await loadSettings();
+        const options = getAvailableOptions();
+        res.render('settings', { 
+            settings,
+            options,
+            message: req.query.message,
+            error: req.query.error
+        });
+    } catch (error) {
+        logger.error('Error rendering settings page:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.post('/settings', async (req, res) => {
+    try {
+        const { videoQuality, subtitles, autoSubs, subLanguage, rateLimit } = req.body;
+        
+        const settings = {
+            videoQuality: videoQuality || 'no-limit',
+            subtitles: subtitles === 'on',
+            autoSubs: autoSubs === 'on',
+            subLanguage: subLanguage || 'en',
+            rateLimit: rateLimit || 'no-limit'
+        };
+        
+        await saveSettings(settings);
+        logger.info('Settings updated:', settings);
+        
+        res.redirect('/settings?message=' + encodeURIComponent('Settings saved successfully'));
+        
+    } catch (error) {
+        logger.error('Error saving settings:', error);
+        res.redirect('/settings?error=' + encodeURIComponent('Failed to save settings'));
     }
 });
 

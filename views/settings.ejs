@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - yt-down</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <div class="container settings">
+        <div class="header">
+            <h1>yt-down</h1>
+            <div class="header-nav">
+                <a href="/" class="nav-link">Queue</a>
+                <a href="/downloads" class="nav-link">Downloads</a>
+            </div>
+        </div>
+        
+        <% if (typeof message !== 'undefined' && message) { %>
+            <div class="message success"><%= message %></div>
+        <% } %>
+        
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="message error"><%= error %></div>
+        <% } %>
+        
+        <div class="settings-section">
+            <h2>Download Settings</h2>
+            
+            <form action="/settings" method="POST">
+                <div class="settings-group">
+                    <h3>Video Quality</h3>
+                    <div class="form-group">
+                        <label for="videoQuality">Maximum Resolution:</label>
+                        <select id="videoQuality" name="videoQuality">
+                            <% options.videoQualities.forEach(function(option) { %>
+                                <option value="<%= option.value %>" <%= settings.videoQuality === option.value ? 'selected' : '' %>>
+                                    <%= option.label %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>Subtitles</h3>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subtitles" <%= settings.subtitles ? 'checked' : '' %>>
+                            <span class="checkmark"></span>
+                            Download subtitles
+                        </label>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="autoSubs" <%= settings.autoSubs ? 'checked' : '' %>>
+                            <span class="checkmark"></span>
+                            Download auto-generated subtitles
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subLanguage">Subtitle Language:</label>
+                        <select id="subLanguage" name="subLanguage">
+                            <% options.subLanguages.forEach(function(option) { %>
+                                <option value="<%= option.value %>" <%= settings.subLanguage === option.value ? 'selected' : '' %>>
+                                    <%= option.label %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>Download Speed</h3>
+                    <div class="form-group">
+                        <label for="rateLimit">Rate Limit:</label>
+                        <select id="rateLimit" name="rateLimit">
+                            <% options.rateLimits.forEach(function(option) { %>
+                                <option value="<%= option.value %>" <%= settings.rateLimit === option.value ? 'selected' : '' %>>
+                                    <%= option.label %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn save-btn">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
