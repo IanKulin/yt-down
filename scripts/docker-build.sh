@@ -24,7 +24,7 @@ echo -e "${GREEN}Version: ${VERSION}${NC}"
 echo -e "${GREEN}Building image: ${IMAGE_NAME}${NC}"
 
 # Build the image with both latest and version tags
-docker build -t "${IMAGE_NAME}:latest" -t "${IMAGE_NAME}:${VERSION}" .
+docker build --platform linux/x86_64 -t "${IMAGE_NAME}:latest" -t "${IMAGE_NAME}:${VERSION}" .
 
 echo -e "${GREEN}Successfully built Docker images:${NC}"
 echo -e "  - ${IMAGE_NAME}:latest"
