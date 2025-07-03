@@ -132,17 +132,35 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--accent-primary);
-  color: white;
-  padding: 10px 20px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 14px;
   text-decoration: none;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+  border-radius: 6px;
+  transition: all 0.3s ease;
   line-height: 1;
+  min-width: 50px;
+  min-height: 50px;
+  border: 2px solid transparent;
 }
 
 .nav-link:hover {
-  background-color: var(--accent-primary-hover);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.nav-link.current {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: default;
+  pointer-events: none;
+  border: 2px solid white;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.nav-link .icon {
+  width: 28px;
+  height: 28px;
 }
 
 .downloads-nav-link {
@@ -586,4 +604,25 @@ button:hover {
 
 .save-btn:hover {
   background-color: var(--accent-success-hover);
+}
+
+/* Attribution Panel */
+.attribution-panel {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: var(--bg-tertiary);
+  border-radius: 6px;
+  border: 1px solid var(--border-medium);
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.attribution-panel a {
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.attribution-panel a:hover {
+  text-decoration: underline;
 }

@@ -71,3 +71,12 @@ This section provides a brief overview of the project's architecture and develop
 - `npm run format`: Format the code with Prettier.
 - `npm run docker:build`: Build the Docker image.
 - `npm run docker:push`: Push the Docker image to the configured registry.
+
+### License
+
+This app is licensed under the MIT License.
+
+### Third-Party Licenses
+
+SVG symbols used in this app are from [Lucide](https://lucide.dev/), licensed under the [ISC License](https://lucide.dev/license).
+

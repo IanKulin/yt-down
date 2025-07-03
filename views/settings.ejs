@@ -1,28 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - yt-down</title>
-    <link rel="stylesheet" href="/css/main.css">
-</head>
-<body>
-    <div class="container settings">
-        <div class="header">
-            <h1>yt-down</h1>
-            <div class="header-nav">
-                <a href="/" class="nav-link">Queue</a>
-                <a href="/downloads" class="nav-link">Downloads</a>
-            </div>
-        </div>
-        
-        <% if (typeof message !== 'undefined' && message) { %>
-            <div class="message success"><%= message %></div>
-        <% } %>
-        
-        <% if (typeof error !== 'undefined' && error) { %>
-            <div class="message error"><%= error %></div>
-        <% } %>
+<%- include('partials/header', { currentPage: 'settings', pageTitle: 'Settings' }) %>
         
         <div class="settings-section">
             <h2>Download Settings</h2>
@@ -90,6 +66,10 @@
                     <button type="submit" class="btn save-btn">Save Settings</button>
                 </div>
             </form>
+        </div>
+        
+        <div class="attribution-panel">
+            SVG symbols from <a href="https://lucide.dev" target="_blank" rel="noopener noreferrer">Lucide</a>, licensed under the <a href="https://lucide.dev/license" target="_blank" rel="noopener noreferrer">ISC License</a>.
         </div>
     </div>
 </body>

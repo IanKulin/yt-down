@@ -1,28 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Downloads - yt-down</title>
-    <link rel="stylesheet" href="/css/main.css">
-</head>
-<body>
-    <div class="container downloads">
-        <div class="header">
-            <h1>yt-down</h1>
-            <div class="header-nav">
-                <a href="/" class="nav-link">Queue</a>
-                <a href="/settings" class="nav-link">Settings</a>
-            </div>
-        </div>
-        
-        <% if (typeof message !== 'undefined' && message) { %>
-            <div class="message success"><%= message %></div>
-        <% } %>
-        
-        <% if (typeof error !== 'undefined' && error) { %>
-            <div class="message error"><%= error %></div>
-        <% } %>
+<%- include('partials/header', { currentPage: 'downloads', pageTitle: 'Downloads' }) %>
         
         <div class="stats">
             <strong><%= downloadedFiles.length %></strong> download groups found
