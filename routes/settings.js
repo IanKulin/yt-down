@@ -14,8 +14,6 @@ router.get('/settings', async (req, res) => {
     res.render('settings', {
       settings,
       options,
-      message: req.query.message,
-      error: req.query.error,
     });
   } catch (error) {
     req.logger.error('Error rendering settings page:', error);
@@ -39,14 +37,14 @@ router.post('/settings', async (req, res) => {
     await saveSettings(settings);
     req.logger.info('Settings updated:', settings);
 
-    res.redirect(
-      '/settings?message=' + encodeURIComponent('Settings saved successfully')
-    );
+    req.session.flashMessage = 'Settings saved successfully';
+    req.session.flashType = 'success';
+    res.redirect('/settings');
   } catch (error) {
     req.logger.error('Error saving settings:', error);
-    res.redirect(
-      '/settings?error=' + encodeURIComponent('Failed to save settings')
-    );
+    req.session.flashMessage = 'Failed to save settings';
+    req.session.flashType = 'error';
+    res.redirect('/settings');
   }
 });
 

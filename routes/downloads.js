@@ -15,8 +15,6 @@ router.get('/downloads', async (req, res) => {
     res.render('downloads', {
       downloadedFiles,
       formatFileSize,
-      message: req.query.message,
-      error: req.query.error,
     });
   } catch (_error) {
     req.logger.error('Error rendering downloads page:', _error);
@@ -58,9 +56,9 @@ router.post('/file/delete', async (req, res) => {
     const { filename } = req.body;
 
     if (!filename || !filename.trim()) {
-      return res.redirect(
-        '/downloads?error=' + encodeURIComponent('Invalid filename provided')
-      );
+      req.session.flashMessage = 'Invalid filename provided';
+      req.session.flashType = 'error';
+      return res.redirect('/downloads');
     }
 
     const trimmedFilename = filename.trim();
@@ -71,31 +69,31 @@ router.post('/file/delete', async (req, res) => {
     const resolvedDownloadsDir = path.resolve(DOWNLOADS_DIR);
 
     if (!resolvedPath.startsWith(resolvedDownloadsDir)) {
-      return res.redirect(
-        '/downloads?error=' + encodeURIComponent('Access denied')
-      );
+      req.session.flashMessage = 'Access denied';
+      req.session.flashType = 'error';
+      return res.redirect('/downloads');
     }
 
     try {
       await fs.unlink(filePath);
       req.logger.info(`Deleted file: ${trimmedFilename}`);
 
-      res.redirect(
-        '/downloads?message=' + encodeURIComponent('File deleted successfully')
-      );
+      req.session.flashMessage = 'File deleted successfully';
+      req.session.flashType = 'success';
+      res.redirect('/downloads');
     } catch (error) {
       if (error.code === 'ENOENT') {
-        return res.redirect(
-          '/downloads?error=' + encodeURIComponent('File not found')
-        );
+        req.session.flashMessage = 'File not found';
+        req.session.flashType = 'error';
+        return res.redirect('/downloads');
       }
       throw error;
     }
   } catch (error) {
     req.logger.error('Error deleting file:', error);
-    res.redirect(
-      '/downloads?error=' + encodeURIComponent('Failed to delete file')
-    );
+    req.session.flashMessage = 'Failed to delete file';
+    req.session.flashType = 'error';
+    res.redirect('/downloads');
   }
 });
 

@@ -99,6 +99,7 @@ describe('api.js', () => {
           maxConcurrent: 1,
           pollInterval: 5000,
         },
+        notifications: [],
         timestamp: new Date().toISOString(),
       };
 
@@ -122,6 +123,10 @@ describe('api.js', () => {
       assert.ok(
         typeof expectedStructure.processor === 'object',
         'processor should be object'
+      );
+      assert.ok(
+        Array.isArray(expectedStructure.notifications),
+        'notifications should be array'
       );
       assert.ok(
         typeof expectedStructure.timestamp === 'string',

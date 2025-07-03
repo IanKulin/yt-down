@@ -26,7 +26,12 @@
       "Bash(chmod:*)",
       "Bash(npm run docker:build:*)",
       "Bash(rg:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(kill:*)",
+      "Bash(PORT=3001 node server.js)",
+      "mcp__playwright__playwright_fill",
+      "mcp__playwright__playwright_click",
+      "mcp__playwright__playwright_console_logs"
     ],
     "deny": []
   }

@@ -1,4 +1,6 @@
 import express from 'express';
+import session from 'express-session';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
@@ -28,6 +30,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Session configuration for flash messages
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'yt-down-session-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60, // 1 hour
+    },
+  })
+);
+
 // Initialize queue processor
 const queueProcessor = new QueueProcessor({
   logger,
@@ -38,6 +54,17 @@ const queueProcessor = new QueueProcessor({
 app.use((req, res, next) => {
   req.logger = logger;
   req.queueProcessor = queueProcessor;
+  next();
+});
+
+// Flash message middleware
+app.use(async (req, res, next) => {
+  // Handle session flash messages only
+  res.locals.flashMessage = req.session.flashMessage;
+  res.locals.flashType = req.session.flashType;
+  delete req.session.flashMessage;
+  delete req.session.flashType;
+
   next();
 });
 

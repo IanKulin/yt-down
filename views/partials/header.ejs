@@ -43,10 +43,49 @@
             </div>
         </div>
         
-        <% if (typeof message !== 'undefined' && message) { %>
-            <div class="message success"><%= message %></div>
+        <% if (typeof flashMessage !== 'undefined' && flashMessage) { %>
+            <div class="flash-message <%= flashType %>" data-flash-message>
+                <span class="flash-content"><%= flashMessage %></span>
+                <button class="flash-dismiss" aria-label="Dismiss message">&times;</button>
+            </div>
         <% } %>
         
-        <% if (typeof error !== 'undefined' && error) { %>
-            <div class="message error"><%= error %></div>
-        <% } %>
+        <script>
+        // Flash message functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('[data-flash-message]');
+            
+            flashMessages.forEach(function(message) {
+                // Auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    dismissFlashMessage(message);
+                }, 5000);
+                
+                // Handle dismiss button click
+                const dismissBtn = message.querySelector('.flash-dismiss');
+                if (dismissBtn) {
+                    dismissBtn.addEventListener('click', function() {
+                        dismissFlashMessage(message);
+                    });
+                }
+                
+                // Handle keyboard interactions
+                message.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        dismissFlashMessage(message);
+                    }
+                });
+            });
+        });
+        
+        function dismissFlashMessage(message) {
+            if (message.classList.contains('dismissing')) return;
+            
+            message.classList.add('dismissing');
+            setTimeout(function() {
+                if (message.parentElement) {
+                    message.parentElement.removeChild(message);
+                }
+            }, 300);
+        }
+        </script>

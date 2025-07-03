@@ -72,5 +72,83 @@
             SVG symbols from <a href="https://lucide.dev" target="_blank" rel="noopener noreferrer">Lucide</a>, licensed under the <a href="https://lucide.dev/license" target="_blank" rel="noopener noreferrer">ISC License</a>.
         </div>
     </div>
+    
+    <script>
+        // Notification checking functionality
+        function checkForNotifications() {
+            fetch('/api/state')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.notifications && data.notifications.length > 0) {
+                        showCompletionNotification(data.notifications[0]);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking notifications:', error);
+                });
+        }
+        
+        function showCompletionNotification(notification) {
+            const existingFlash = document.querySelector('[data-flash-message]');
+            if (existingFlash) {
+                return;
+            }
+            
+            const flashMessage = document.createElement('div');
+            flashMessage.className = 'flash-message success';
+            flashMessage.setAttribute('data-flash-message', '');
+            flashMessage.innerHTML = `
+                <span class="flash-content">${notification.message}</span>
+                <button class="flash-dismiss" aria-label="Dismiss message">&times;</button>
+            `;
+            
+            const header = document.querySelector('.header');
+            header.parentNode.insertBefore(flashMessage, header.nextSibling);
+            
+            const dismissBtn = flashMessage.querySelector('.flash-dismiss');
+            dismissBtn.addEventListener('click', function() {
+                dismissCompletionNotification(notification.timestamp, flashMessage);
+            });
+            
+            setTimeout(() => {
+                dismissCompletionNotification(notification.timestamp, flashMessage);
+            }, 5000);
+            
+            const escapeHandler = function(e) {
+                if (e.key === 'Escape') {
+                    dismissCompletionNotification(notification.timestamp, flashMessage);
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+        
+        function dismissCompletionNotification(notificationId, flashElement) {
+            if (!flashElement || flashElement.classList.contains('dismissing')) return;
+            
+            flashElement.classList.add('dismissing');
+            setTimeout(() => {
+                if (flashElement.parentElement) {
+                    flashElement.parentElement.removeChild(flashElement);
+                }
+            }, 300);
+            
+            fetch('/api/notifications/dismiss', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ notificationId: notificationId })
+            }).catch(error => {
+                console.error('Error dismissing notification:', error);
+            });
+        }
+        
+        // Start checking for notifications
+        document.addEventListener('DOMContentLoaded', function() {
+            checkForNotifications();
+            setInterval(checkForNotifications, 3000); // Check every 3 seconds
+        });
+    </script>
 </body>
 </html>

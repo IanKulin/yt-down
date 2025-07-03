@@ -5,6 +5,7 @@ import {
   QUEUE_DIR,
   ensureDirectoryExists,
   getQueuedUrls,
+  getActiveUrls,
   createUrlHash,
 } from '../lib/utils.js';
 
@@ -12,11 +13,13 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const queuedUrls = await getQueuedUrls(req.logger);
+    const [queuedUrls, activeUrls] = await Promise.all([
+      getQueuedUrls(req.logger),
+      getActiveUrls(req.logger),
+    ]);
     res.render('queue', {
       queuedUrls,
-      message: req.query.message,
-      error: req.query.error,
+      activeUrls,
     });
   } catch (error) {
     req.logger.error('Error rendering queue page:', error);
@@ -29,9 +32,9 @@ router.post('/url/add', async (req, res) => {
     const { url } = req.body;
 
     if (!url || !url.trim()) {
-      return res.redirect(
-        '/?error=' + encodeURIComponent('Please enter a valid URL')
-      );
+      req.session.flashMessage = 'Please enter a valid URL';
+      req.session.flashType = 'error';
+      return res.redirect('/');
     }
 
     const trimmedUrl = url.trim();
@@ -43,9 +46,9 @@ router.post('/url/add', async (req, res) => {
 
     try {
       await fs.access(filePath);
-      return res.redirect(
-        '/?error=' + encodeURIComponent('URL already exists in queue')
-      );
+      req.session.flashMessage = 'URL already exists in queue';
+      req.session.flashType = 'error';
+      return res.redirect('/');
     } catch {
       // File doesn't exist, we can proceed
     }
@@ -53,12 +56,14 @@ router.post('/url/add', async (req, res) => {
     await fs.writeFile(filePath, trimmedUrl, 'utf-8');
     req.logger.info(`Added URL to queue: ${trimmedUrl} (hash: ${urlHash})`);
 
-    res.redirect(
-      '/?message=' + encodeURIComponent('URL added to queue successfully')
-    );
+    req.session.flashMessage = 'URL added to queue successfully';
+    req.session.flashType = 'success';
+    res.redirect('/');
   } catch (error) {
     req.logger.error('Error adding URL to queue:', error);
-    res.redirect('/?error=' + encodeURIComponent('Failed to add URL to queue'));
+    req.session.flashMessage = 'Failed to add URL to queue';
+    req.session.flashType = 'error';
+    res.redirect('/');
   }
 });
 
@@ -67,9 +72,9 @@ router.post('/url/delete', async (req, res) => {
     const { hash } = req.body;
 
     if (!hash || !hash.trim()) {
-      return res.redirect(
-        '/?error=' + encodeURIComponent('Invalid hash provided')
-      );
+      req.session.flashMessage = 'Invalid hash provided';
+      req.session.flashType = 'error';
+      return res.redirect('/');
     }
 
     const trimmedHash = hash.trim();
@@ -83,22 +88,22 @@ router.post('/url/delete', async (req, res) => {
         `Deleted URL from queue: ${url.trim()} (hash: ${trimmedHash})`
       );
 
-      res.redirect(
-        '/?message=' + encodeURIComponent('URL deleted from queue successfully')
-      );
+      req.session.flashMessage = 'URL deleted from queue successfully';
+      req.session.flashType = 'success';
+      res.redirect('/');
     } catch (error) {
       if (error.code === 'ENOENT') {
-        return res.redirect(
-          '/?error=' + encodeURIComponent('URL not found in queue')
-        );
+        req.session.flashMessage = 'URL not found in queue';
+        req.session.flashType = 'error';
+        return res.redirect('/');
       }
       throw error;
     }
   } catch (error) {
     req.logger.error('Error deleting URL from queue:', error);
-    res.redirect(
-      '/?error=' + encodeURIComponent('Failed to delete URL from queue')
-    );
+    req.session.flashMessage = 'Failed to delete URL from queue';
+    req.session.flashType = 'error';
+    res.redirect('/');
   }
 });
 
