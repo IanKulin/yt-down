@@ -27,7 +27,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 # Create data directories for the application
 RUN mkdir -p /app/data/urls/queued /app/data/urls/active /app/data/urls/finished /app/data/downloads
 
-EXPOSE 3000
+EXPOSE 3001
 
 ENV NODE_ENV=production
 

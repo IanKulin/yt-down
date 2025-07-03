@@ -211,7 +211,7 @@ The `/api/state` endpoint returns comprehensive queue state:
 - **Template-based UI** - queue management (`queue.ejs`), downloads management (`downloads.ejs`), and settings (`settings.ejs`)
 - **JSON settings storage** - user preferences stored in `data/settings.json`
 - **No external database** - filesystem serves as persistence layer
-- **Port 3000 default** - configurable via `PORT` environment variable
+- **Port 3001 default** - configurable via `PORT` environment variable
 - **Background processing** - automatic queue processing starts with server
 - **yt-dlp dependency** - requires yt-dlp installed on system PATH
 
@@ -245,7 +245,7 @@ docker compose up -d
 
 **Environment**:
 - Runs in production mode (`NODE_ENV=production`)
-- Exposes port 3000 for web interface
+- Exposes port 3001 for web interface
 - Uses system package manager for yt-dlp installation
 
 ## Working with URLs
