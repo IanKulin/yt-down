@@ -50,7 +50,6 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - `@iankulin/logger` (custom logging - instantiate with `new Logger()`)
 - Route module imports and middleware setup
 - Queue processor initialization and lifecycle management
-- yt-dlp dependency checking
 
 **Route Modules**:
 
@@ -87,47 +86,16 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 ### Frontend Templates & Styling
 
 **CSS Architecture (`public/css/main.css`)**:
+- Single consolidated CSS file with CSS custom properties for theming
+- Automatic light/dark theme support via `@media (prefers-color-scheme: dark)`
+- Responsive design with consistent styling across all interface elements
 
-- **Consolidated styling** - single CSS file for all pages (eliminates embedded styles)
-- **CSS custom properties** - comprehensive theming system with CSS variables
-- **Light/dark theme support** - automatic detection via `@media (prefers-color-scheme: dark)`
-- **Responsive design** - consistent styling across all interface elements
-- **Component-based organization** - modular CSS sections for buttons, modals, forms, etc.
-
-**Theme System**:
-
-- **Automatic theme detection** - respects browser/OS preference
-- **CSS variables** - `--bg-primary`, `--text-primary`, `--accent-primary`, etc.
-- **Comprehensive theming** - all UI elements adapt including backgrounds, text, borders, buttons, modals
-- **Consistent color palette** - unified blue accent color across all interactive elements
-
-**Queue Interface (views/queue.ejs)**:
-
-- **Header layout** - flexbox header with "yt-down" title left-aligned, navigation right-aligned
-- **Modal confirmation system** for deletions with overlay and keyboard support
-- **Responsive flex-based layout** with URL content and delete buttons
-- **Client-side form validation** and error/success message display
-- **URL escaping** for JavaScript safety in onclick handlers
-- **Navigation button** to downloads page (blue styling)
-
-**Downloads Interface (views/downloads.ejs)**:
-
-- **Header layout** - consistent with queue page (title left, navigation right)
-- **File grouping system** - groups video and subtitle files by base name
-- **File type badges** - visual indicators for video vs subtitle files
-- **Download functionality** - direct download links for each file (blue styling)
-- **Delete functionality** - modal confirmation for file deletion
-- **File metadata display** - file sizes, modification dates
-- **Navigation** - links to queue and settings pages
-
-**Settings Interface (views/settings.ejs)**:
-
-- **Header layout** - consistent with other pages (title left, navigation right)
-- **Grouped settings sections** - video quality, subtitles, download speed
-- **Form controls** - dropdowns for quality/speed, checkboxes for subtitle options
-- **Settings persistence** - form values reflect current settings from JSON storage
-- **Success/error messaging** - feedback for settings save operations
-- **Navigation** - links to queue and downloads pages
+**UI Template Patterns**:
+- **Consistent header layout** - flexbox with title left-aligned, navigation right-aligned
+- **Modal confirmation system** - overlay with keyboard support for destructive actions
+- **File grouping** - intelligent grouping of related video/subtitle files
+- **Form validation** - client-side validation with error/success messaging
+- **Security** - URL escaping for JavaScript safety, path traversal protection
 
 ### Queue Processing System (lib/queueProcessor.js)
 
@@ -140,27 +108,10 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Graceful shutdown**: Waits for active downloads to complete
 
 **yt-dlp Integration**:
-
-- **Dynamic command building** via `lib/settings.js` based on user preferences
-- **Format selection** prioritizes h.264 MP4 with quality constraints using DASH video+audio
-- **Hidden technical settings** for retries and timeouts (not user-configurable)
-- **Debug logging** outputs complete command for troubleshooting
-
-Example command (1080p, subtitles enabled):
-
-```bash
-yt-dlp \
-  --fragment-retries 20 \
-  --retries infinite \
-  --socket-timeout 30 \
-  -o "%(title)s.%(ext)s" \
-  --format "bestvideo[height<=1080][ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]" \
-  --limit-rate 180K \
-  --write-subs \
-  --sub-lang "en" \
-  --write-auto-subs \
-  [URL]
-```
+- Dynamic command building via `lib/settings.js` based on user preferences
+- Format selection prioritizes h.264 MP4 with quality constraints using DASH video+audio
+- Hidden technical settings for retries and timeouts (not user-configurable)
+- Debug logging outputs complete command for troubleshooting
 
 **Download Storage**: All downloaded files stored in `data/downloads/`
 
@@ -200,7 +151,7 @@ The `/api/state` endpoint returns comprehensive queue state:
 - **Middleware pattern**: Logger and queue processor injected via Express middleware
 - **CSS organization**: Single consolidated stylesheet with CSS custom properties
 - **Theme-aware design**: Automatic light/dark mode support via media queries
-- **Code quality**: ESLint and Prettier ensure consistent formatting and catch errors. Run `npm run lint` and `npm run format` to ensure code quality and fix any linting errors before considering the task complete
+- **Code quality**: ESLint and Prettier ensure consistent formatting and catch errors. Run `npm run lint`, `npm run format` and `npm test` to ensure code quality and fix any errors before considering the task complete
 
 ## Project Structure Notes
 
@@ -216,116 +167,43 @@ The `/api/state` endpoint returns comprehensive queue state:
 
 ## Docker Support
 
-The application includes Docker configuration for containerized deployment:
-
-**Dockerfile Features**:
-
-- **Multi-stage build** - optimized for production with minimal dependencies
-- **Alpine Linux base** - lightweight Node.js 24 runtime
-- **yt-dlp integration** - Python 3, pip, and yt-dlp pre-installed
-- **ffmpeg support** - video processing capabilities included
-- **Data directory setup** - automatic creation of required directory structure
-
-**Docker Commands**:
-
+**Commands**:
 ```bash
-# Build the container
-npm run docker:build
-
-# push to github packages
-npm run docker:push
-
-# Run with volume mounting for persistent data
-docker compose up -d
+npm run docker:build    # Build container
+npm run docker:push     # Push to registry
+docker compose up -d    # Run with volume mounting
 ```
 
-**Volume Mounting**:
+**Configuration**:
+- Alpine Linux base with Node.js 24, yt-dlp, and ffmpeg
+- Mount `./data` to `/app/data` for persistent storage
+- Exposes port 3001, runs in production mode
 
-- Mount `./data` to `/app/data` for persistent queue and download storage
-- Ensures data survives container restarts and updates
-- Allows external access to downloaded files
+## Development Guidelines
 
-**Environment**:
+### Core Patterns
 
-- Runs in production mode (`NODE_ENV=production`)
-- Exposes port 3001 for web interface
-- Uses system package manager for yt-dlp installation
+**File Operations**:
+- Use `createUrlHash(url)` for filename generation
+- Use `ensureDirectoryExists()` before file operations
+- Handle `ENOENT` errors gracefully for missing files
+- Check all three directories (`queued`, `active`, `finished`) when needed
 
-## Working with URLs
+**Security**:
+- Implement path traversal protection for file operations
+- No direct file path exposure to users (use hash-based references)
+- Validate and trim URLs before processing
 
-When adding URL management features:
+**UI Consistency**:
+- Follow existing modal confirmation patterns for destructive actions
+- Maintain file grouping logic for related video/subtitle pairs
+- Use `formatFileSize()` for consistent size display
+- Test both light and dark themes for UI changes
+- Use Playwright tool for checking UI changes
 
-1. Always use `createUrlHash(url)` for filename generation
-2. Check all three directories (`queued`, `active`, `finished`) when needed
-3. Use `ensureDirectoryExists()` before file operations
-4. Handle `ENOENT` errors gracefully for missing files
-5. Trim URLs and validate before processing
+### Key System Components
 
-## Queue Processing
-
-The queue processor (`lib/queueProcessor.js`) handles:
-
-- **Automatic polling** of queued directory every 5 seconds
-- **File transitions**: queued → active during download → finished on success
-- **Error handling**: Failed downloads return to queued for retry
-- **Process management**: Spawns yt-dlp child processes with proper cleanup
-- **Concurrent limiting**: Configurable max downloads (default: 1)
-- **Graceful shutdown**: Waits for active downloads before server stop
-
-**Key methods**:
-
-- `start()` - Begin background processing
-- `stop()` - Graceful shutdown with active download completion
-- `getStatus()` - Current processor state for API responses
-
-## Downloads Management
-
-### File Organization System
-
-Downloaded files are automatically organized in `data/downloads/` with intelligent grouping:
-
-- **Video files**: `.mkv`, `.mp4`, `.webm`, `.avi`, `.mov` formats
-- **Subtitle files**: `.srt`, `.vtt` formats
-- **File grouping**: Related files (video + subtitles) grouped by base filename
-- **Sorting**: Most recently modified files appear first
-
-### Downloads Interface Features
-
-**File Display**:
-
-- Grouped presentation of related files (video + subtitles)
-- File type badges for easy identification
-- File metadata (size, modification date)
-- Clean, responsive layout matching queue interface
-
-**User Actions**:
-
-- **Download**: Direct download to user's machine via `/download/:filename`
-- **Delete**: Server-side file deletion with modal confirmation
-- **Navigation**: Seamless movement between queue and downloads pages
-
-**Security Features**:
-
-- **Path traversal protection**: Prevents access outside downloads directory
-- **File validation**: Only serves files within designated downloads folder
-- **Error handling**: Graceful handling of missing or inaccessible files
-
-### Working with Downloads
-
-When extending downloads functionality:
-
-1. Use `getDownloadedFiles()` for file discovery and grouping
-2. Implement path security checks for any file operations
-3. Follow existing modal confirmation patterns for destructive actions
-4. Maintain file grouping logic for related video/subtitle pairs
-5. Use `formatFileSize()` for consistent size display
-
-## Settings Management
-
-### Settings Storage System
-
-User preferences are stored in `data/settings.json` with the following structure:
-
+**Settings Storage** (`data/settings.json`):
 ```json
 {
   "videoQuality": "1080p",
@@ -336,61 +214,28 @@ User preferences are stored in `data/settings.json` with the following structure
 }
 ```
 
-### Settings Module (lib/settings.js)
+**Queue Processor** (`lib/queueProcessor.js`):
+- Automatic polling every 5 seconds
+- File transitions: queued → active → finished
+- Key methods: `start()`, `stop()`, `getStatus()`
 
-**Key Functions**:
-
-- `loadSettings()` - Read settings with fallback to defaults
-- `saveSettings(settings)` - Write settings to JSON file
-- `getYtDlpArgs(url)` - Build yt-dlp command array from current settings
-- `getAvailableOptions()` - Return available options for form dropdowns
-
-**Format Selection Logic**:
-
-- Prioritizes h.264 MP4 video with quality constraints
-- Uses DASH format selection (`bestvideo[]+bestaudio[]`) for high quality
-- Combines separate video and audio streams into single MP4
-- Fallback chain ensures compatibility across different video sources
-
-### Working with Settings
-
-When modifying settings functionality:
-
-1. Use `loadSettings()` for reading current preferences
-2. Validate settings before calling `saveSettings()`
-3. Test format selection with various video sources
-4. Ensure settings persist across server restarts
-5. Follow existing form patterns for UI consistency
+**Downloads Organization**:
+- Files grouped by base filename (video + subtitles)
+- Supported formats: `.mkv`, `.mp4`, `.webm`, `.avi`, `.mov` (video), `.srt`, `.vtt` (subtitles)
+- Sorted by modification date
+- Fragments of in-process download hidden
 
 ## CSS and Theming
 
-### Working with Styles
+**Key Variables**:
+- `--container-max-width: 1200px`
+- `--bg-primary`, `--bg-secondary`, `--bg-tertiary`
+- `--text-primary`, `--text-secondary`, `--text-muted`
+- `--accent-primary`, `--accent-success`, `--accent-danger`
+- `--border-light`, `--border-medium`, `--border-dark`
 
-When making UI changes:
-
-1. **Use CSS variables** - always reference theme colors via `var(--variable-name)`
-2. **Add to main.css** - avoid inline styles or embedded `<style>` blocks
-3. **Follow component patterns** - organize new styles in logical sections
-4. **Test both themes** - verify changes work in light and dark modes
-5. **Maintain accessibility** - ensure sufficient contrast in both themes
-6. **Test with Playwright** - any cosmetic changes should be verified using Playwright automation tools
-
-### CSS Variable Reference
-
-**Container sizing**:
-
-- `--container-max-width: 1200px` - consistent maximum width for all pages
-
-**Core theme variables**:
-
-- `--bg-primary`, `--bg-secondary`, `--bg-tertiary` - background colors
-- `--text-primary`, `--text-secondary`, `--text-muted` - text colors
-- `--accent-primary`, `--accent-success`, `--accent-danger` - action colors
-- `--border-light`, `--border-medium`, `--border-dark` - border colors
-- `--shadow-light`, `--shadow-dark` - shadow effects
-
-**Button styling**:
-
-- Use `display: inline-flex` with `align-items: center` for proper text centering
-- Use `var(--accent-primary)` for primary buttons (navigation, downloads)
-- Use `var(--accent-danger)` for destructive actions (delete buttons)
+**Guidelines**:
+- Always use CSS variables via `var(--variable-name)`
+- Add styles to main.css, avoid inline styles
+- Test both light and dark themes
+- Use `var(--accent-primary)` for primary buttons, `var(--accent-danger)` for destructive actions
