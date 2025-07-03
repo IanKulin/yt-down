@@ -97,6 +97,7 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Modal confirmation system** - overlay with keyboard support for destructive actions
 - **File grouping** - intelligent grouping of related video/subtitle files
 - **Form validation** - client-side validation with error/success messaging
+- **Current download panel** - real-time progress display with filename, progress bar, speed, and ETA
 - **Security** - URL escaping for JavaScript safety, path traversal protection
 
 ### Queue Processing System (lib/queueProcessor.js)
@@ -115,6 +116,14 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - Format selection prioritizes h.264 MP4 with quality constraints using DASH video+audio
 - Hidden technical settings for retries and timeouts (not user-configurable)
 - Debug logging outputs complete command for troubleshooting
+
+**Download Progress Tracking**:
+
+- Real-time progress parsing from yt-dlp stdout (`parseProgressLine()` method)
+- Tracks filename, percentage, file size, download speed, and ETA
+- Progress data stored in `downloadProgress` Map keyed by hash
+- Supports both regular and fragment-based downloads
+- Progress automatically cleaned up when downloads complete
 
 **Download Storage**: All downloaded files stored in `data/downloads/`
 
@@ -137,7 +146,17 @@ The `/api/state` endpoint returns comprehensive queue state:
     "isProcessing": true,
     "activeDownloads": 1,
     "maxConcurrent": 1,
-    "pollInterval": 5000
+    "pollInterval": 5000,
+    "currentDownloads": [
+      {
+        "hash": "...",
+        "filename": "Video Title.mp4",
+        "percentage": 45.2,
+        "fileSize": "123.45MB",
+        "speed": "456.78KiB/s",
+        "eta": "02:15"
+      }
+    ]
   },
   "timestamp": "2025-07-01T11:45:05.790Z"
 }
@@ -228,6 +247,15 @@ docker compose up -d    # Run with volume mounting
 - Automatic polling every 5 seconds
 - File transitions: queued → active → finished
 - Key methods: `start()`, `stop()`, `getStatus()`
+- Progress tracking via `downloadProgress` Map
+- Real-time progress parsing from yt-dlp output
+
+**Current Download Panel** (`queue.ejs`):
+
+- Dynamically shows/hides based on active downloads
+- Updates every 2 seconds via `/api/state` endpoint
+- Displays filename, progress bar, percentage, speed, and ETA
+- Automatic cleanup when downloads complete
 
 **Downloads Organization**:
 
