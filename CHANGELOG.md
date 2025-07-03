@@ -1,3 +1,3 @@
 
 1.0.0 - MVP
-1.0.1 - default port 3001
+1.0.1 - default port 3001, don't force srt subs

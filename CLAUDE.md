@@ -158,7 +158,6 @@ yt-dlp \
   --limit-rate 180K \
   --write-subs \
   --sub-lang "en" \
-  --convert-subs srt \
   --write-auto-subs \
   [URL]
 ```
