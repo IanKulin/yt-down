@@ -25,7 +25,8 @@
       "Bash(npm test:*)",
       "Bash(chmod:*)",
       "Bash(npm run docker:build:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

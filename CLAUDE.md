@@ -86,11 +86,13 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 ### Frontend Templates & Styling
 
 **CSS Architecture (`public/css/main.css`)**:
+
 - Single consolidated CSS file with CSS custom properties for theming
 - Automatic light/dark theme support via `@media (prefers-color-scheme: dark)`
 - Responsive design with consistent styling across all interface elements
 
 **UI Template Patterns**:
+
 - **Consistent header layout** - flexbox with title left-aligned, navigation right-aligned
 - **Modal confirmation system** - overlay with keyboard support for destructive actions
 - **File grouping** - intelligent grouping of related video/subtitle files
@@ -108,6 +110,7 @@ This design prevents duplicate URLs and provides collision-resistant unique iden
 - **Graceful shutdown**: Waits for active downloads to complete
 
 **yt-dlp Integration**:
+
 - Dynamic command building via `lib/settings.js` based on user preferences
 - Format selection prioritizes h.264 MP4 with quality constraints using DASH video+audio
 - Hidden technical settings for retries and timeouts (not user-configurable)
@@ -168,6 +171,7 @@ The `/api/state` endpoint returns comprehensive queue state:
 ## Docker Support
 
 **Commands**:
+
 ```bash
 npm run docker:build    # Build container
 npm run docker:push     # Push to registry
@@ -175,6 +179,7 @@ docker compose up -d    # Run with volume mounting
 ```
 
 **Configuration**:
+
 - Alpine Linux base with Node.js 24, yt-dlp, and ffmpeg
 - Mount `./data` to `/app/data` for persistent storage
 - Exposes port 3001, runs in production mode
@@ -184,17 +189,20 @@ docker compose up -d    # Run with volume mounting
 ### Core Patterns
 
 **File Operations**:
+
 - Use `createUrlHash(url)` for filename generation
 - Use `ensureDirectoryExists()` before file operations
 - Handle `ENOENT` errors gracefully for missing files
 - Check all three directories (`queued`, `active`, `finished`) when needed
 
 **Security**:
+
 - Implement path traversal protection for file operations
 - No direct file path exposure to users (use hash-based references)
 - Validate and trim URLs before processing
 
 **UI Consistency**:
+
 - Follow existing modal confirmation patterns for destructive actions
 - Maintain file grouping logic for related video/subtitle pairs
 - Use `formatFileSize()` for consistent size display
@@ -204,6 +212,7 @@ docker compose up -d    # Run with volume mounting
 ### Key System Components
 
 **Settings Storage** (`data/settings.json`):
+
 ```json
 {
   "videoQuality": "1080p",
@@ -215,11 +224,13 @@ docker compose up -d    # Run with volume mounting
 ```
 
 **Queue Processor** (`lib/queueProcessor.js`):
+
 - Automatic polling every 5 seconds
 - File transitions: queued → active → finished
 - Key methods: `start()`, `stop()`, `getStatus()`
 
 **Downloads Organization**:
+
 - Files grouped by base filename (video + subtitles)
 - Supported formats: `.mkv`, `.mp4`, `.webm`, `.avi`, `.mov` (video), `.srt`, `.vtt` (subtitles)
 - Sorted by modification date
@@ -228,6 +239,7 @@ docker compose up -d    # Run with volume mounting
 ## CSS and Theming
 
 **Key Variables**:
+
 - `--container-max-width: 1200px`
 - `--bg-primary`, `--bg-secondary`, `--bg-tertiary`
 - `--text-primary`, `--text-secondary`, `--text-muted`
@@ -235,6 +247,7 @@ docker compose up -d    # Run with volume mounting
 - `--border-light`, `--border-medium`, `--border-dark`
 
 **Guidelines**:
+
 - Always use CSS variables via `var(--variable-name)`
 - Add styles to main.css, avoid inline styles
 - Test both light and dark themes

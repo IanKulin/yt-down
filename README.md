@@ -79,4 +79,3 @@ This app is licensed under the MIT License.
 ### Third-Party Licenses
 
 SVG symbols used in this app are from [Lucide](https://lucide.dev/), licensed under the [ISC License](https://lucide.dev/license).
-

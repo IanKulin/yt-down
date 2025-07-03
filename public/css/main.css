@@ -283,6 +283,95 @@ button:hover {
   color: var(--message-error-text);
 }
 
+/* Current Download Panel Styles */
+.current-download-panel {
+  margin-top: 30px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+.current-download-panel h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.download-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.download-filename {
+  font-family: monospace;
+  color: var(--text-code);
+  font-size: 14px;
+  word-break: break-all;
+  background-color: var(--bg-secondary);
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+}
+
+.download-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: var(--bg-quaternary);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  transition: width 0.3s ease;
+  border-radius: 10px;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-align: center;
+}
+
+.download-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.download-speed,
+.download-eta {
+  background-color: var(--bg-secondary);
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+}
+
+.download-speed::before {
+  content: 'Speed: ';
+  font-weight: 500;
+}
+
+.download-eta::before {
+  content: 'ETA: ';
+  font-weight: 500;
+}
+
 /* Queue Styles */
 .queue-section {
   margin-top: 40px;
