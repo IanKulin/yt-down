@@ -83,12 +83,31 @@ body {
   color: var(--text-primary);
 }
 
-/* Layout */
-.container {
+/* Card-like Container Base Class */
+.card,
+.container,
+.settings-section {
   background: var(--bg-secondary);
-  padding: 30px;
   border-radius: 8px;
   box-shadow: 0 2px 10px var(--shadow-light);
+}
+
+.card-padding,
+.container,
+.settings-section {
+  padding: 30px;
+}
+
+.card-border,
+.current-download-panel,
+.queue-item,
+.download-group,
+.settings-group {
+  border: 1px solid var(--border-medium);
+}
+
+/* Layout */
+.container {
   margin: 0 auto;
   max-width: var(--container-max-width);
 }
@@ -112,14 +131,13 @@ body {
 }
 
 /* Typography */
-h1 {
+h1, h2 {
   color: var(--text-primary);
-  text-align: center;
-  margin-bottom: 30px;
 }
 
-h2 {
-  color: var(--text-primary);
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 /* Navigation (legacy - keeping for backward compatibility) */
@@ -163,17 +181,18 @@ h2 {
   height: 28px;
 }
 
+/* Legacy classes - maintain compatibility */
 .downloads-nav-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  line-height: 1;
   background-color: var(--accent-primary);
   color: white;
   padding: 10px 20px;
-  text-decoration: none;
   border-radius: 4px;
-  transition: background-color 0.3s;
-  line-height: 1;
 }
 
 .downloads-nav-link:hover {
@@ -190,6 +209,28 @@ label {
   margin-bottom: 5px;
   font-weight: bold;
   color: var(--text-secondary);
+}
+
+/* Monospace Text Display Base Class */
+.monospace-text,
+.download-filename,
+.queue-item .url,
+.file-name,
+.modal-url,
+.modal-filename {
+  font-family: monospace;
+  color: var(--text-code);
+  word-break: break-all;
+}
+
+.monospace-text,
+.download-filename,
+.modal-url,
+.modal-filename {
+  background-color: var(--bg-secondary);
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
 }
 
 input[type='url'] {
@@ -209,59 +250,53 @@ input[type='url']:focus {
 }
 
 /* Buttons */
-button {
-  background-color: var(--accent-primary);
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: var(--accent-primary-hover);
-}
-
-.btn {
-  padding: 6px 12px;
+.btn, button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.3s;
   line-height: 1;
-}
-
-.download-btn {
-  background-color: var(--accent-primary);
   color: white;
 }
 
-.download-btn:hover {
+.btn {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.btn-primary, .download-btn, button:not([class]) {
+  background-color: var(--accent-primary);
+}
+
+.btn-primary:hover, .download-btn:hover, button:not([class]):hover {
   background-color: var(--accent-primary-hover);
 }
 
-.delete-btn {
+.btn-danger, .delete-btn {
   background-color: var(--accent-danger);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-left: 15px;
-  flex-shrink: 0;
-  transition: background-color 0.3s;
 }
 
-.delete-btn:hover {
+.btn-danger:hover, .delete-btn:hover {
   background-color: var(--accent-danger-hover);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.delete-btn {
+  margin-left: 15px;
+  flex-shrink: 0;
 }
 
 /* Flash Messages */
@@ -360,16 +395,12 @@ button:hover {
 .current-download-panel {
   margin-top: 30px;
   background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-medium);
   padding: 20px;
-  border-radius: 8px;
   box-shadow: 0 2px 4px var(--shadow-light);
 }
 
 .current-download-panel h2 {
-  margin-top: 0;
   margin-bottom: 20px;
-  color: var(--text-primary);
   font-size: 18px;
 }
 
@@ -380,14 +411,7 @@ button:hover {
 }
 
 .download-filename {
-  font-family: monospace;
-  color: var(--text-code);
   font-size: 14px;
-  word-break: break-all;
-  background-color: var(--bg-secondary);
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid var(--border-light);
 }
 
 .download-progress {
@@ -452,7 +476,6 @@ button:hover {
 
 .queue-item {
   background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-medium);
   padding: 15px;
   margin-bottom: 10px;
   border-radius: 4px;
@@ -467,11 +490,6 @@ button:hover {
   min-width: 0;
 }
 
-.queue-item .url {
-  font-family: monospace;
-  color: var(--text-code);
-  word-break: break-all;
-}
 
 .queue-item .hash {
   font-size: 12px;
@@ -517,10 +535,8 @@ button:hover {
 
 .download-group {
   background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-medium);
   padding: 20px;
   margin-bottom: 15px;
-  border-radius: 8px;
 }
 
 .download-title {
@@ -552,9 +568,6 @@ button:hover {
 }
 
 .file-name {
-  font-family: monospace;
-  color: var(--text-code);
-  word-break: break-all;
   font-size: 14px;
 }
 
@@ -636,16 +649,17 @@ button:hover {
   color: var(--accent-danger);
 }
 
+.current-download-panel h2,
+.settings-section h2,
+.settings-group h3 {
+  margin-top: 0;
+}
+
 .modal-url,
 .modal-filename {
   background-color: var(--bg-tertiary);
-  padding: 10px;
-  border-radius: 4px;
-  font-family: monospace;
-  word-break: break-all;
   margin: 15px 0;
   border: 1px solid var(--border-medium);
-  color: var(--text-code);
 }
 
 .modal-buttons {
@@ -684,15 +698,10 @@ button:hover {
 /* Settings Page Styles */
 .settings-section {
   background-color: var(--bg-secondary);
-  border-radius: 8px;
-  padding: 30px;
-  box-shadow: 0 2px 10px var(--shadow-light);
 }
 
 .settings-section h2 {
-  margin-top: 0;
   margin-bottom: 30px;
-  color: var(--text-primary);
   border-bottom: 2px solid var(--accent-primary);
   padding-bottom: 10px;
 }
@@ -702,11 +711,9 @@ button:hover {
   padding: 20px;
   background-color: var(--bg-tertiary);
   border-radius: 6px;
-  border: 1px solid var(--border-medium);
 }
 
 .settings-group h3 {
-  margin-top: 0;
   margin-bottom: 20px;
   color: var(--text-secondary);
   font-size: 18px;
@@ -798,7 +805,6 @@ button:hover {
   padding: 15px;
   background-color: var(--bg-tertiary);
   border-radius: 6px;
-  border: 1px solid var(--border-medium);
   text-align: center;
   font-size: 14px;
   color: var(--text-muted);

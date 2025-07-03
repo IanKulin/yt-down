@@ -31,7 +31,8 @@
       "Bash(PORT=3001 node server.js)",
       "mcp__playwright__playwright_fill",
       "mcp__playwright__playwright_click",
-      "mcp__playwright__playwright_console_logs"
+      "mcp__playwright__playwright_console_logs",
+      "mcp__playwright__playwright_hover"
     ],
     "deny": []
   }
