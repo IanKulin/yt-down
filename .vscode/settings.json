@@ -17,6 +17,7 @@
     "parseable",
     "promisified",
     "vcodec",
+    "ytdl",
     "ytdlp"
   ]
 }

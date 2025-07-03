@@ -219,6 +219,7 @@ The `/api/state` endpoint returns comprehensive queue state:
 The application includes Docker configuration for containerized deployment:
 
 **Dockerfile Features**:
+
 - **Multi-stage build** - optimized for production with minimal dependencies
 - **Alpine Linux base** - lightweight Node.js 24 runtime
 - **yt-dlp integration** - Python 3, pip, and yt-dlp pre-installed
@@ -226,6 +227,7 @@ The application includes Docker configuration for containerized deployment:
 - **Data directory setup** - automatic creation of required directory structure
 
 **Docker Commands**:
+
 ```bash
 # Build the container
 npm run docker:build
@@ -238,11 +240,13 @@ docker compose up -d
 ```
 
 **Volume Mounting**:
+
 - Mount `./data` to `/app/data` for persistent queue and download storage
 - Ensures data survives container restarts and updates
 - Allows external access to downloaded files
 
 **Environment**:
+
 - Runs in production mode (`NODE_ENV=production`)
 - Exposes port 3001 for web interface
 - Uses system package manager for yt-dlp installation
