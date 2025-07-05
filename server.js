@@ -14,7 +14,19 @@ import apiRoutes from './routes/api.js';
 
 const execAsync = promisify(exec);
 
-const logger = new Logger({ format: 'simple' });
+// Valid log levels for @iankulin/logger (from most to least verbose)
+const validLogLevels = ['silent', 'error', 'warn', 'info', 'debug'];
+const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'info';
+
+// Validate log level
+if (!validLogLevels.includes(logLevel)) {
+  console.warn(`Invalid LOG_LEVEL "${process.env.LOG_LEVEL}". Using default "info" level. Valid levels: ${validLogLevels.join(', ')}`);
+}
+
+const logger = new Logger({ 
+  format: 'simple',
+  level: validLogLevels.includes(logLevel) ? logLevel : 'info'
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,6 +87,10 @@ async function checkYtDlpExists() {
     return false;
   }
 }
+
+logger.debug('isTTY:', process.stdout.isTTY);
+logger.debug('Platform:', process.platform);
+logger.debug('Node version:', process.version);
 
 // Use route modules
 app.use('/', queueRoutes);

@@ -7,3 +7,6 @@ services:
       - ./data:/app/data
     restart: unless-stopped
     container_name: yt-down
+    environment:
+      # Set logging level - valid values: silent, error, warn, info, debug
+      LOG_LEVEL: debug
