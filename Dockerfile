@@ -15,8 +15,8 @@ WORKDIR /app
 # Install OS-level dependencies for yt-dlp and video processing
 RUN apk add --no-cache python3 py3-pip ffmpeg
 
-# Install yt-dlp, breaking past the system packages protection
-RUN pip install yt-dlp --break-system-packages
+# Install yt-dlp and pycryptodomex for AES-128 decryption support
+RUN pip install yt-dlp pycryptodomex --break-system-packages
 
 # Copy application code
 COPY . .
