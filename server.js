@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
+import { cleanupActiveDownloads } from './lib/utils.js';
 
 import queueRoutes from './routes/queue.js';
 import downloadsRoutes from './routes/downloads.js';
@@ -111,6 +112,9 @@ app.listen(PORT, async () => {
   }
 
   logger.info(`yt-dlp queue server running on port ${PORT}`);
+
+  // Clean up any abandoned downloads from previous runs
+  await cleanupActiveDownloads(logger);
 
   // Start the queue processor
   await queueProcessor.start();

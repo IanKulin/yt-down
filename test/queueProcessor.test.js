@@ -89,8 +89,12 @@ describe('queueProcessor.js', () => {
         path.join(baseDir, 'data', 'urls', 'finished')
       );
       assert.equal(
-        processor.downloadsDir,
-        path.join(baseDir, 'data', 'downloads')
+        processor.downloadsActiveDir,
+        path.join(baseDir, 'data', 'downloads', 'active')
+      );
+      assert.equal(
+        processor.downloadsFinishedDir,
+        path.join(baseDir, 'data', 'downloads', 'finished')
       );
     });
 
@@ -432,8 +436,12 @@ describe('queueProcessor.js', () => {
           path.join(baseDir, 'data', 'urls', 'finished')
         );
         assert.equal(
-          processor.downloadsDir,
-          path.join(baseDir, 'data', 'downloads')
+          processor.downloadsActiveDir,
+          path.join(baseDir, 'data', 'downloads', 'active')
+        );
+        assert.equal(
+          processor.downloadsFinishedDir,
+          path.join(baseDir, 'data', 'downloads', 'finished')
         );
       }
     });
@@ -456,8 +464,12 @@ describe('queueProcessor.js', () => {
         'Finished dir should be absolute'
       );
       assert.ok(
-        path.isAbsolute(processor.downloadsDir),
-        'Downloads dir should be absolute'
+        path.isAbsolute(processor.downloadsActiveDir),
+        'Downloads active dir should be absolute'
+      );
+      assert.ok(
+        path.isAbsolute(processor.downloadsFinishedDir),
+        'Downloads finished dir should be absolute'
       );
     });
   });

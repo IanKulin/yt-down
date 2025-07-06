@@ -15,6 +15,7 @@
     "libstdc",
     "libz",
     "parseable",
+    "pkill",
     "promisified",
     "pycryptodomex",
     "vcodec",

@@ -45,7 +45,8 @@ This is a Node.js web application that provides a queue-based system for downloa
 - `data/urls/queued/` - Pending downloads (hash.txt files containing URLs)
 - `data/urls/active/` - Currently downloading
 - `data/urls/finished/` - Completed downloads
-- `data/downloads/` - Downloaded video/subtitle files
+- `data/downloads/active` - Currently downloading
+- `data/downloads/finished` - Downloaded video/subtitle files
 - URLs are hashed (SHA256) to prevent duplicates
 
 ### Routes Structure

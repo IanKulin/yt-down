@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import {
-  DOWNLOADS_DIR,
+  DOWNLOADS_FINISHED_DIR,
   getDownloadedFiles,
   formatFileSize,
 } from '../lib/utils.js';
@@ -25,11 +25,11 @@ router.get('/downloads', async (req, res) => {
 router.get('/download/:filename', async (req, res) => {
   try {
     const filename = req.params.filename;
-    const filePath = path.join(DOWNLOADS_DIR, filename);
+    const filePath = path.join(DOWNLOADS_FINISHED_DIR, filename);
 
     // Security check: ensure the file is within the downloads directory
     const resolvedPath = path.resolve(filePath);
-    const resolvedDownloadsDir = path.resolve(DOWNLOADS_DIR);
+    const resolvedDownloadsDir = path.resolve(DOWNLOADS_FINISHED_DIR);
 
     if (!resolvedPath.startsWith(resolvedDownloadsDir)) {
       return res.status(403).send('Access denied');
@@ -62,11 +62,11 @@ router.post('/file/delete', async (req, res) => {
     }
 
     const trimmedFilename = filename.trim();
-    const filePath = path.join(DOWNLOADS_DIR, trimmedFilename);
+    const filePath = path.join(DOWNLOADS_FINISHED_DIR, trimmedFilename);
 
     // Security check: ensure the file is within the downloads directory
     const resolvedPath = path.resolve(filePath);
-    const resolvedDownloadsDir = path.resolve(DOWNLOADS_DIR);
+    const resolvedDownloadsDir = path.resolve(DOWNLOADS_FINISHED_DIR);
 
     if (!resolvedPath.startsWith(resolvedDownloadsDir)) {
       req.session.flashMessage = 'Access denied';

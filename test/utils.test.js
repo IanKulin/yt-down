@@ -8,7 +8,6 @@ import {
   ensureDirectoryExists,
   readUrlsFromDirectory,
   getDownloadedFiles,
-  isInProgressFile,
 } from '../lib/utils.js';
 import {
   createTestDir,
@@ -96,48 +95,6 @@ describe('utils.js', () => {
     });
   });
 
-  describe('isInProgressFile', () => {
-    test('should detect .part files', () => {
-      assert.equal(isInProgressFile('video.mp4.part'), true);
-      assert.equal(isInProgressFile('video.mkv.part'), true);
-      assert.equal(isInProgressFile('video.mp4'), false);
-    });
-
-    test('should detect fragment files', () => {
-      assert.equal(isInProgressFile('video.frag'), true);
-      assert.equal(isInProgressFile('video.temp'), true);
-      assert.equal(isInProgressFile('video.tmp'), true);
-      assert.equal(isInProgressFile('video.ytdl'), true);
-    });
-
-    test('should detect format ID files', () => {
-      assert.equal(isInProgressFile('video.f137'), true);
-      assert.equal(isInProgressFile('video.f140'), true);
-      assert.equal(isInProgressFile('video.f999'), true);
-      assert.equal(isInProgressFile('video.f1'), true);
-    });
-
-    test('should detect part pattern files', () => {
-      assert.equal(isInProgressFile('video.part-001'), true);
-      assert.equal(isInProgressFile('video.temp-123'), true);
-      assert.equal(isInProgressFile('video.mp4.part-001'), true);
-    });
-
-    test('should not detect complete files', () => {
-      assert.equal(isInProgressFile('video.mp4'), false);
-      assert.equal(isInProgressFile('video.mkv'), false);
-      assert.equal(isInProgressFile('video.webm'), false);
-      assert.equal(isInProgressFile('video.srt'), false);
-      assert.equal(isInProgressFile('video.vtt'), false);
-    });
-
-    test('should handle edge cases', () => {
-      assert.equal(isInProgressFile(''), false);
-      assert.equal(isInProgressFile('file.txt'), false);
-      assert.equal(isInProgressFile('file.pdf'), false);
-      assert.equal(isInProgressFile('video.fragmented'), false); // Not exactly .frag
-    });
-  });
 
   describe('ensureDirectoryExists', () => {
     test('should create directory if it does not exist', async () => {
