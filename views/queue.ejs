@@ -29,37 +29,39 @@
         <div class="queue-section">
             <h2>Current Queue (<%= queuedUrls.length + activeUrls.length %> items)</h2>
             
-            <% if (queuedUrls.length === 0 && activeUrls.length === 0) { %>
-                <div class="empty-queue">No URLs in queue</div>
-            <% } else { %>
-                <!-- Active Downloads -->
-                <% activeUrls.forEach(function(item) { %>
-                    <div class="queue-item active">
-                        <div class="queue-item-content">
-                            <div class="url"><%= item.url %></div>
-                            <div class="hash">Hash: <%= item.hash %></div>
-                            <div class="status downloading">Downloading...</div>
+            <div class="queue-container">
+                <% if (queuedUrls.length === 0 && activeUrls.length === 0) { %>
+                    <div class="empty-queue">No URLs in queue</div>
+                <% } else { %>
+                    <!-- Active Downloads -->
+                    <% activeUrls.forEach(function(item) { %>
+                        <div class="queue-item active" data-hash="<%= item.hash %>">
+                            <div class="queue-item-content">
+                                <div class="url"><%= item.url %></div>
+                                <div class="hash">Hash: <%= item.hash %></div>
+                                <div class="status downloading">Downloading...</div>
+                            </div>
+                            <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>">
+                                Delete
+                            </button>
                         </div>
-                        <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>">
-                            Delete
-                        </button>
-                    </div>
-                <% }) %>
-                
-                <!-- Queued Downloads -->
-                <% queuedUrls.forEach(function(item) { %>
-                    <div class="queue-item">
-                        <div class="queue-item-content">
-                            <div class="url"><%= item.url %></div>
-                            <div class="hash">Hash: <%= item.hash %></div>
-                            <div class="status queued">Waiting...</div>
+                    <% }) %>
+                    
+                    <!-- Queued Downloads -->
+                    <% queuedUrls.forEach(function(item) { %>
+                        <div class="queue-item" data-hash="<%= item.hash %>">
+                            <div class="queue-item-content">
+                                <div class="url"><%= item.url %></div>
+                                <div class="hash">Hash: <%= item.hash %></div>
+                                <div class="status queued">Waiting...</div>
+                            </div>
+                            <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>">
+                                Delete
+                            </button>
                         </div>
-                        <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>">
-                            Delete
-                        </button>
-                    </div>
-                <% }) %>
-            <% } %>
+                    <% }) %>
+                <% } %>
+            </div>
         </div>
     </div>
     
@@ -165,6 +167,9 @@
                         panel.style.display = 'none';
                     }
                     
+                    // Update queue list in real-time
+                    updateQueueList(data.queued || [], data.active || []);
+                    
                     // Check for completion notifications
                     if (data.notifications && data.notifications.length > 0) {
                         showCompletionNotification(data.notifications[0]);
@@ -172,7 +177,106 @@
                 })
                 .catch(error => {
                     console.error('Error fetching download status:', error);
+                    // Show error state in UI
+                    showApiError('Failed to fetch download status. Please refresh the page.');
                 });
+        }
+        
+        function updateQueueList(queuedUrls, activeUrls) {
+            const queueSection = document.querySelector('.queue-section');
+            if (!queueSection) return;
+            
+            // Update queue count
+            const queueCountElement = queueSection.querySelector('h2');
+            const totalCount = queuedUrls.length + activeUrls.length;
+            queueCountElement.textContent = `Current Queue (${totalCount} items)`;
+            
+            // Find or create the queue container
+            let queueContainer = queueSection.querySelector('.queue-container');
+            if (!queueContainer) {
+                // Create container if it doesn't exist
+                queueContainer = document.createElement('div');
+                queueContainer.className = 'queue-container';
+                queueSection.appendChild(queueContainer);
+            }
+            
+            // Clear existing items
+            queueContainer.innerHTML = '';
+            
+            // Show empty state if no items
+            if (totalCount === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-queue';
+                emptyDiv.textContent = 'No URLs in queue';
+                queueContainer.appendChild(emptyDiv);
+                return;
+            }
+            
+            // Add active downloads first
+            activeUrls.forEach(item => {
+                const queueItem = createQueueItem(item, 'active', 'Downloading...');
+                queueContainer.appendChild(queueItem);
+            });
+            
+            // Add queued downloads
+            queuedUrls.forEach(item => {
+                const queueItem = createQueueItem(item, 'queued', 'Waiting...');
+                queueContainer.appendChild(queueItem);
+            });
+        }
+        
+        function createQueueItem(item, status, statusText) {
+            const queueItem = document.createElement('div');
+            queueItem.className = status === 'active' ? 'queue-item active' : 'queue-item';
+            queueItem.dataset.hash = item.hash;
+            
+            queueItem.innerHTML = `
+                <div class="queue-item-content">
+                    <div class="url">${escapeHtml(item.url)}</div>
+                    <div class="hash">Hash: ${escapeHtml(item.hash)}</div>
+                    <div class="status ${status}">${statusText}</div>
+                </div>
+                <button class="delete-btn" data-hash="${escapeHtml(item.hash)}" data-url="${escapeHtml(item.url)}">
+                    Delete
+                </button>
+            `;
+            
+            return queueItem;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showApiError(message) {
+            // Remove any existing error messages
+            const existingError = document.querySelector('.api-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Create error element
+            const errorElement = document.createElement('div');
+            errorElement.className = 'flash-message error api-error';
+            errorElement.innerHTML = `
+                <span class="flash-content">${escapeHtml(message)}</span>
+                <button class="flash-dismiss" onclick="this.parentElement.remove()" aria-label="Dismiss message">&times;</button>
+            `;
+            
+            // Insert after the header
+            const header = document.querySelector('.header');
+            if (header) {
+                header.parentNode.insertBefore(errorElement, header.nextSibling);
+            }
+            
+            // Auto-dismiss after 10 seconds
+            setTimeout(() => {
+                if (errorElement.parentElement) {
+                    errorElement.remove();
+                }
+            }, 10000);
         }
         
         function showCompletionNotification(notification) {

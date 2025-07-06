@@ -95,7 +95,6 @@ describe('utils.js', () => {
     });
   });
 
-
   describe('ensureDirectoryExists', () => {
     test('should create directory if it does not exist', async () => {
       await createTestDir();
