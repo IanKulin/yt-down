@@ -35,7 +35,8 @@
       "mcp__playwright__playwright_hover",
       "Bash(docker logs:*)",
       "Bash(docker stop:*)",
-      "Bash(docker rm:*)"
+      "Bash(docker rm:*)",
+      "WebFetch(domain:www.npmjs.com)"
     ],
     "deny": []
   }
