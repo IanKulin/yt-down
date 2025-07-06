@@ -4,279 +4,100 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-```bash
-# Start the application
-npm start
-# or
-node server.js
-
-# Run tests
-npm test
-
-# Code quality and formatting
-npm run lint
-npm run format
-
-# No build process required - runs directly on Node.js
-
-# Docker
-npm run docker:build
-npm run docker:push
-```
+- `npm install` - Install dependencies
+- `npm test` - Run test suite using Node.js built-in test runner
+- `npm run lint` - Lint codebase with ESLint (max 0 warnings)
+- `npm run format` - Format code with Prettier
+- `npm run docker:build` - Build Docker image using script
+- `npm run docker:push` - Push Docker image to registry
+- `LOG_LEVEL=debug npm start` - start app with debugging logs
 
 ## Architecture Overview
 
-This is a file-based yt-dlp queue management web application built with Express.js and EJS templating.
+This is a Node.js web application that provides a queue-based system for downloading videos using `yt-dlp`. The application uses a file-based storage system and processes downloads in the background.
 
-### Core URL Management System
+### Core Components
 
-The application uses a **file-based storage system** where URLs are stored as text files with SHA-256 hash filenames:
+**Server (`server.js`)**
 
-- **File naming**: `{sha256-hash}.txt` (e.g., `0424974c68530290458c8d58674e2637f65abc127057957d7b3acbd24c208f93.txt`)
-- **File content**: Plain URL text (e.g., `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
-- **Directory structure**:
-  - `data/urls/queued/` - Pending downloads
-  - `data/urls/active/` - Currently processing
-  - `data/urls/finished/` - Completed downloads
+- Express.js application with session management for flash messages
+- Initializes QueueProcessor and attaches logger/processor to requests
+- Graceful shutdown handling for SIGINT/SIGTERM
+- Validates `yt-dlp` availability on startup
 
-This design prevents duplicate URLs and provides collision-resistant unique identification.
+**QueueProcessor (`lib/queueProcessor.js`)**
 
-### Server Architecture
+- Background service that polls for queued downloads every 5 seconds
+- Manages download states: queued → active → finished
+- Spawns `yt-dlp` processes and parses progress output
+- Handles retry logic (moves failed downloads back to queue)
+- Tracks real-time download progress and generates notifications
 
-**Main Server (server.js)**:
+**Settings System (`lib/settings.js`)**
 
-- Express 5.1.0 (web framework)
-- EJS 3.1.10 (templating)
-- `@iankulin/logger` (custom logging - instantiate with `new Logger()`)
-- Route module imports and middleware setup
-- Queue processor initialization and lifecycle management
+- File-based configuration stored in `data/settings.json`
+- Builds `yt-dlp` command arguments based on user preferences
+- Supports video quality limits, subtitles, rate limiting
+- Prefers h.264 MP4 format with fallback chains
 
-**Route Modules**:
+**File-Based Queue System**
 
-**Queue Routes (`routes/queue.js`)**:
+- `data/urls/queued/` - Pending downloads (hash.txt files containing URLs)
+- `data/urls/active/` - Currently downloading
+- `data/urls/finished/` - Completed downloads
+- `data/downloads/` - Downloaded video/subtitle files
+- URLs are hashed (SHA256) to prevent duplicates
 
-- `GET /` - Main queue interface (renders `queue.ejs`)
-- `POST /url/add` - Add URL to queue
-- `POST /url/delete` - Remove URL by hash
+### Routes Structure
 
-**Downloads Routes (`routes/downloads.js`)**:
+- `/` - Queue management interface (queue.js)
+- `/downloads` - Downloaded files browser (downloads.js)
+- `/settings` - Configuration page (settings.js)
+- `/api/state` - Real-time application state (api.js)
+- `/api/notifications/dismiss` - Notification management (api.js)
 
-- `GET /downloads` - Downloads management interface (renders `downloads.ejs`)
-- `GET /download/:filename` - Download individual files to user's machine
-- `POST /file/delete` - Delete downloaded files from server
+### View Templates (`views/`)
 
-**Settings Routes (`routes/settings.js`)**:
+- `queue.ejs` - Main queue interface with real-time progress updates
+- `downloads.ejs` - Downloaded files management interface
+- `settings.ejs` - Settings configuration interface
+- `partials/header.ejs` - Shared header partial with navigation
 
-- `GET /settings` - Settings configuration interface (renders `settings.ejs`)
-- `POST /settings` - Update download settings
+### Key Patterns
 
-**API Routes (`routes/api.js`)**:
-
-- `GET /api/state` - JSON API returning complete queue state
-
-**Utility Functions (`lib/utils.js`)**:
-
-- `readUrlsFromDirectory(dir, dirType)` - Generic directory reader
-- `createUrlHash(url)` - SHA-256 hash generation
-- `ensureDirectoryExists(dir)` - Auto-create missing directories
-- `getDownloadedFiles()` - Scan downloads directory and group related files
-- `formatFileSize(bytes)` - Human-readable file size formatting
-- `getQueuedUrls()`, `getActiveUrls()`, `getFinishedUrls()` - Directory-specific URL readers
-
-### Frontend Templates & Styling
-
-**CSS Architecture (`public/css/main.css`)**:
-
-- Single consolidated CSS file with CSS custom properties for theming
-- Automatic light/dark theme support via `@media (prefers-color-scheme: dark)`
-- Responsive design with consistent styling across all interface elements
-
-**UI Template Patterns**:
-
-- **Consistent header layout** - flexbox with title left-aligned, navigation right-aligned
-- **Modal confirmation system** - overlay with keyboard support for destructive actions
-- **File grouping** - intelligent grouping of related video/subtitle files
-- **Form validation** - client-side validation with error/success messaging
-- **Current download panel** - real-time progress display with filename, progress bar, speed, and ETA
-- **Security** - URL escaping for JavaScript safety, path traversal protection
-
-### Queue Processing System (lib/queueProcessor.js)
-
-**Automatic Background Processing**:
-
-- **Polling interval**: 5 seconds (configurable)
-- **Concurrent downloads**: 1 at a time (configurable via `maxConcurrent`)
-- **File movement**: queued → active → finished as downloads progress
-- **Auto-retry**: Failed downloads moved back to queued directory
-- **Graceful shutdown**: Waits for active downloads to complete
+**Error Handling**: All routes use try-catch with logger.error() and flash messages
+**File Operations**: Utils module provides helpers for directory operations and file grouping
+**Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection
+**Notification System**: Completion events stored in `data/notifications.json`
 
-**yt-dlp Integration**:
+### Environment Variables
 
-- Dynamic command building via `lib/settings.js` based on user preferences
-- Format selection prioritizes h.264 MP4 with quality constraints using DASH video+audio
-- Hidden technical settings for retries and timeouts (not user-configurable)
-- Debug logging outputs complete command for troubleshooting
+- `PORT` - Server port (default: 3001)
+- `LOG_LEVEL` - Logging level: silent, error, warn, info, debug (default: info)
 
-**Download Progress Tracking**:
+### Docker Deployment
 
-- Real-time progress parsing from yt-dlp stdout (`parseProgressLine()` method)
-- Tracks filename, percentage, file size, download speed, and ETA
-- Progress data stored in `downloadProgress` Map keyed by hash
-- Supports both regular and fragment-based downloads
-- Progress automatically cleaned up when downloads complete
+The application is designed for Docker deployment with docker-compose.yaml. The Docker image includes yt-dlp and all necessary dependencies.
 
-**Download Storage**: All downloaded files stored in `data/downloads/`
+## Testing & Debugging
 
-### API Response Format
-
-The `/api/state` endpoint returns comprehensive queue state:
-
-```json
-{
-  "queued": [{ "hash": "...", "url": "..." }],
-  "active": [{ "hash": "...", "url": "..." }],
-  "finished": [{ "hash": "...", "url": "..." }],
-  "counts": {
-    "queued": 2,
-    "active": 1,
-    "finished": 1,
-    "total": 4
-  },
-  "processor": {
-    "isProcessing": true,
-    "activeDownloads": 1,
-    "maxConcurrent": 1,
-    "pollInterval": 5000,
-    "currentDownloads": [
-      {
-        "hash": "...",
-        "filename": "Video Title.mp4",
-        "percentage": 45.2,
-        "fileSize": "123.45MB",
-        "speed": "456.78KiB/s",
-        "eta": "02:15"
-      }
-    ]
-  },
-  "timestamp": "2025-07-01T11:45:05.790Z"
-}
-```
-
-## Development Patterns
-
-- **ES modules**: Uses `import`/`export` syntax throughout
-- **Modular architecture**: Routes organized in separate modules (`routes/`) with shared utilities (`lib/`)
-- **Async/await**: All file operations are promisified
-- **Parallel processing**: `Promise.all()` for reading multiple directories
-- **Error boundaries**: Comprehensive try/catch with user-friendly redirects
-- **Hash-based security**: No direct file path exposure to users
-- **Middleware pattern**: Logger and queue processor injected via Express middleware
-- **CSS organization**: Single consolidated stylesheet with CSS custom properties
-- **Theme-aware design**: Automatic light/dark mode support via media queries
-- **Code quality**: ESLint and Prettier ensure consistent formatting and catch errors. Run `npm run lint`, `npm run format` and `npm test` to ensure code quality and fix any errors before considering the task complete
-
-## Project Structure Notes
-
-- **No build process** - direct Node.js execution
-- **Modular organization** - routes in `routes/` directory, utilities in `lib/` directory
-- **Data directory is gitignored** - contains user queue data
-- **Template-based UI** - queue management (`queue.ejs`), downloads management (`downloads.ejs`), and settings (`settings.ejs`)
-- **JSON settings storage** - user preferences stored in `data/settings.json`
-- **No external database** - filesystem serves as persistence layer
-- **Port 3001 default** - configurable via `PORT` environment variable
-- **Background processing** - automatic queue processing starts with server
-- **yt-dlp dependency** - requires yt-dlp installed on system PATH
-
-## Docker Support
-
-**Commands**:
-
-```bash
-npm run docker:build    # Build container
-npm run docker:push     # Push to registry
-docker compose up -d    # Run with volume mounting
-```
-
-**Configuration**:
-
-- Alpine Linux base with Node.js 24, yt-dlp, and ffmpeg
-- Mount `./data` to `/app/data` for persistent storage
-- Exposes port 3001, runs in production mode
-
-## Development Guidelines
-
-### Core Patterns
-
-**File Operations**:
-
-- Use `createUrlHash(url)` for filename generation
-- Use `ensureDirectoryExists()` before file operations
-- Handle `ENOENT` errors gracefully for missing files
-- Check all three directories (`queued`, `active`, `finished`) when needed
-
-**Security**:
-
-- Implement path traversal protection for file operations
-- No direct file path exposure to users (use hash-based references)
-- Validate and trim URLs before processing
-
-**UI Consistency**:
-
-- Follow existing modal confirmation patterns for destructive actions
-- Maintain file grouping logic for related video/subtitle pairs
-- Use `formatFileSize()` for consistent size display
-- Test both light and dark themes for UI changes
-- Use Playwright tool for checking UI changes
-
-### Key System Components
-
-**Settings Storage** (`data/settings.json`):
-
-```json
-{
-  "videoQuality": "1080p",
-  "subtitles": true,
-  "autoSubs": true,
-  "subLanguage": "en",
-  "rateLimit": "180K"
-}
-```
-
-**Queue Processor** (`lib/queueProcessor.js`):
-
-- Automatic polling every 5 seconds
-- File transitions: queued → active → finished
-- Key methods: `start()`, `stop()`, `getStatus()`
-- Progress tracking via `downloadProgress` Map
-- Real-time progress parsing from yt-dlp output
-
-**Current Download Panel** (`queue.ejs`):
-
-- Dynamically shows/hides based on active downloads
-- Updates every 2 seconds via `/api/state` endpoint
-- Displays filename, progress bar, percentage, speed, and ETA
-- Automatic cleanup when downloads complete
-
-**Downloads Organization**:
-
-- Files grouped by base filename (video + subtitles)
-- Supported formats: `.mkv`, `.mp4`, `.webm`, `.avi`, `.mov` (video), `.srt`, `.vtt` (subtitles)
-- Sorted by modification date
-- Fragments of in-process download hidden
-
-## CSS and Theming
-
-**Key Variables**:
-
-- `--container-max-width: 1200px`
-- `--bg-primary`, `--bg-secondary`, `--bg-tertiary`
-- `--text-primary`, `--text-secondary`, `--text-muted`
-- `--accent-primary`, `--accent-success`, `--accent-danger`
-- `--border-light`, `--border-medium`, `--border-dark`
-
-**Guidelines**:
-
-- Always use CSS variables via `var(--variable-name)`
-- Add styles to main.css, avoid inline styles
-- Test both light and dark themes
-- Use `var(--accent-primary)` for primary buttons, `var(--accent-danger)` for destructive actions
+### Tests
+
+Tests are located in `test/` directory and use Node.js built-in test runner. Key test files:
+
+- `queueProcessor.test.js` - Core download processing logic
+- `settings.test.js` - Configuration system
+- `utils.test.js` - Utility functions
+- `api.test.js` - API endpoints
+  Running tests:
+- `npm test` - Run all tests
+- `npm test -- test/api.test.js` - Run specific test file
+  Debug logging
+- `LOG_LEVEL=debug node server.js 2>&1 | tee temp/app.log`
+
+### Tool use
+
+- use the `temp` directory to store logs
+- use the `temp` directory to write any disposable node or bash scripts you need
+- assume a MacOS environment for CLI tools
+- Playwright MCP is available for screenshots of the UI
