@@ -16,6 +16,7 @@
     "libz",
     "parseable",
     "promisified",
+    "pycryptodomex",
     "vcodec",
     "ytdl",
     "ytdlp"
