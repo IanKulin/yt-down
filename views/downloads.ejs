@@ -1,80 +1,35 @@
 <%- include('partials/header', { currentPage: 'downloads', pageTitle: 'Downloads' }) %>
         
         <div class="stats">
-            <strong><%= downloadedFiles.length %></strong> download groups found
+            <strong><%= downloadedFiles.length %></strong> files found
         </div>
         
         <div class="downloads-section">
             <% if (downloadedFiles.length === 0) { %>
                 <div class="empty-downloads">No downloaded files found</div>
             <% } else { %>
-                <% downloadedFiles.forEach(function(group) { %>
-                    <div class="download-group">
-                        <div class="download-title"><%= group.baseName %></div>
-                        
-                        <% if (group.video) { %>
-                            <div class="file-item">
-                                <div class="file-info">
-                                    <div class="file-name">
-                                        <span class="file-type-badge video-badge">VIDEO</span>
-                                        <%= group.video.name %>
-                                    </div>
-                                    <div class="file-details">
-                                        Size: <%= formatFileSize(group.video.size) %> | 
-                                        Modified: <%= group.video.modified.toLocaleString() %>
-                                    </div>
-                                </div>
-                                <div class="file-actions">
-                                    <a href="/download/<%= encodeURIComponent(group.video.name) %>" class="btn download-btn">Download</a>
-                                    <button class="btn delete-btn" data-filename="<%= group.video.name %>">
-                                        Delete
-                                    </button>
-                                </div>
+                <% downloadedFiles.forEach(function(file) { %>
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-name">
+                                <% if (file.isVideo) { %>
+                                    <span class="file-type-badge video-badge">VIDEO</span>
+                                <% } else if (file.isSubtitle) { %>
+                                    <span class="file-type-badge subtitle-badge">SUBTITLE</span>
+                                <% } %>
+                                <%= file.name %>
                             </div>
-                        <% } %>
-                        
-                        <% group.subtitles.forEach(function(subtitle) { %>
-                            <div class="file-item">
-                                <div class="file-info">
-                                    <div class="file-name">
-                                        <span class="file-type-badge subtitle-badge">SUBTITLE</span>
-                                        <%= subtitle.name %>
-                                    </div>
-                                    <div class="file-details">
-                                        Size: <%= formatFileSize(subtitle.size) %> | 
-                                        Modified: <%= subtitle.modified.toLocaleString() %>
-                                    </div>
-                                </div>
-                                <div class="file-actions">
-                                    <a href="/download/<%= encodeURIComponent(subtitle.name) %>" class="btn download-btn">Download</a>
-                                    <button class="btn delete-btn" data-filename="<%= subtitle.name %>">
-                                        Delete
-                                    </button>
-                                </div>
+                            <div class="file-details">
+                                Size: <%= formatFileSize(file.size) %> | 
+                                Modified: <%= file.modified.toLocaleString() %>
                             </div>
-                        <% }) %>
-                        
-                        <% if (group.other && group.other.length > 0) { %>
-                            <% group.other.forEach(function(file) { %>
-                                <div class="file-item">
-                                    <div class="file-info">
-                                        <div class="file-name">
-                                            <%= file.name %>
-                                        </div>
-                                        <div class="file-details">
-                                            Size: <%= formatFileSize(file.size) %> | 
-                                            Modified: <%= file.modified.toLocaleString() %>
-                                        </div>
-                                    </div>
-                                    <div class="file-actions">
-                                        <a href="/download/<%= encodeURIComponent(file.name) %>" class="btn download-btn">Download</a>
-                                        <button class="btn delete-btn" data-filename="<%= file.name %>">
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            <% }) %>
-                        <% } %>
+                        </div>
+                        <div class="file-actions">
+                            <a href="/download/<%= encodeURIComponent(file.name) %>" class="btn download-btn">Download</a>
+                            <button class="btn delete-btn" data-filename="<%= file.name %>">
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 <% }) %>
             <% } %>

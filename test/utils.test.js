@@ -259,68 +259,30 @@ describe('utils.js', () => {
   });
 
   describe('getDownloadedFiles', () => {
-    test('should return some files from actual downloads directory', async () => {
+    test('should return flat array of files from actual downloads directory', async () => {
       const logger = createMockLogger();
 
       // Test the actual function but don't make assumptions about specific content
-      const groupedFiles = await getDownloadedFiles(logger);
+      const files = await getDownloadedFiles(logger);
 
       // Basic structure validation
-      assert.ok(Array.isArray(groupedFiles), 'Should return an array');
+      assert.ok(Array.isArray(files), 'Should return an array');
 
       // If there are files, they should have the correct structure
-      for (const group of groupedFiles) {
-        assert.ok(typeof group === 'object', 'Group should be object');
-        assert.ok('baseName' in group, 'Group should have baseName');
-        assert.ok('video' in group, 'Group should have video property');
-        assert.ok('subtitles' in group, 'Group should have subtitles property');
-        assert.ok(Array.isArray(group.subtitles), 'Subtitles should be array');
+      for (const file of files) {
+        assert.ok(typeof file === 'object', 'File should be object');
+        assert.ok('name' in file, 'File should have name');
+        assert.ok('extension' in file, 'File should have extension');
+        assert.ok('size' in file, 'File should have size');
+        assert.ok('modified' in file, 'File should have modified');
+        assert.ok('isVideo' in file, 'File should have isVideo');
+        assert.ok('isSubtitle' in file, 'File should have isSubtitle');
 
-        if (group.video) {
-          assert.ok('name' in group.video, 'Video should have name');
-          assert.ok('baseName' in group.video, 'Video should have baseName');
-          assert.ok('extension' in group.video, 'Video should have extension');
-          assert.ok('size' in group.video, 'Video should have size');
-          assert.ok('modified' in group.video, 'Video should have modified');
-          assert.ok('isVideo' in group.video, 'Video should have isVideo');
-          assert.ok(
-            'isSubtitle' in group.video,
-            'Video should have isSubtitle'
-          );
-          assert.equal(
-            group.video.isVideo,
-            true,
-            'Video should be marked as video'
-          );
-          assert.equal(
-            group.video.isSubtitle,
-            false,
-            'Video should not be marked as subtitle'
-          );
-        }
-
-        for (const subtitle of group.subtitles) {
-          assert.ok('name' in subtitle, 'Subtitle should have name');
-          assert.ok('baseName' in subtitle, 'Subtitle should have baseName');
-          assert.ok('extension' in subtitle, 'Subtitle should have extension');
-          assert.ok('size' in subtitle, 'Subtitle should have size');
-          assert.ok('modified' in subtitle, 'Subtitle should have modified');
-          assert.ok('isVideo' in subtitle, 'Subtitle should have isVideo');
-          assert.ok(
-            'isSubtitle' in subtitle,
-            'Subtitle should have isSubtitle'
-          );
-          assert.equal(
-            subtitle.isVideo,
-            false,
-            'Subtitle should not be marked as video'
-          );
-          assert.equal(
-            subtitle.isSubtitle,
-            true,
-            'Subtitle should be marked as subtitle'
-          );
-        }
+        // File should be either video or subtitle (or neither), but not both
+        assert.ok(
+          !(file.isVideo && file.isSubtitle),
+          'File should not be both video and subtitle'
+        );
       }
     });
 
@@ -354,41 +316,15 @@ describe('utils.js', () => {
       }
     });
 
-    test('should test baseName extraction logic', () => {
-      const testCases = [
-        { filename: 'video.mp4', expectedBaseName: 'video' },
-        { filename: 'movie.mkv', expectedBaseName: 'movie' },
-        { filename: 'video.srt', expectedBaseName: 'video' },
-        {
-          filename: 'long-filename-with-dashes.webm',
-          expectedBaseName: 'long-filename-with-dashes',
-        },
-        { filename: 'file.with.dots.avi', expectedBaseName: 'file.with.dots' },
-        { filename: 'UPPERCASE.MP4', expectedBaseName: 'UPPERCASE' },
-      ];
-
-      for (const testCase of testCases) {
-        const baseName = testCase.filename.replace(
-          /\.(mkv|mp4|webm|avi|mov|srt|vtt)$/i,
-          ''
-        );
-        assert.equal(
-          baseName,
-          testCase.expectedBaseName,
-          `BaseName extraction failed for ${testCase.filename}`
-        );
-      }
-    });
-
     test('should handle empty downloads directory gracefully', async () => {
       // Test that the function handles missing or empty directory
       const logger = createMockLogger();
 
       // The function should handle errors gracefully and return empty array
       try {
-        const groupedFiles = await getDownloadedFiles(logger);
+        const files = await getDownloadedFiles(logger);
         assert.ok(
-          Array.isArray(groupedFiles),
+          Array.isArray(files),
           'Should return array even if directory is empty/missing'
         );
       } catch {

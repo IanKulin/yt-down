@@ -3,4 +3,4 @@
 1.0.2 - Lucide symbols, refactor CLAUDE.md, downloads sorted by filename
 1.1.0 - download progress
 1.1.1 - Flash messages, css refactor, progress bar on linux change
-1.1.2 - LOG_LEVEL environment variable
+1.1.2 - LOG_LEVEL environment variable, yt-dlp detailed debugging, remove download 'groups'

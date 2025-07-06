@@ -20,12 +20,14 @@ const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'info';
 
 // Validate log level
 if (!validLogLevels.includes(logLevel)) {
-  console.warn(`Invalid LOG_LEVEL "${process.env.LOG_LEVEL}". Using default "info" level. Valid levels: ${validLogLevels.join(', ')}`);
+  console.warn(
+    `Invalid LOG_LEVEL "${process.env.LOG_LEVEL}". Using default "info" level. Valid levels: ${validLogLevels.join(', ')}`
+  );
 }
 
-const logger = new Logger({ 
+const logger = new Logger({
   format: 'simple',
-  level: validLogLevels.includes(logLevel) ? logLevel : 'info'
+  level: validLogLevels.includes(logLevel) ? logLevel : 'info',
 });
 
 const __filename = fileURLToPath(import.meta.url);
