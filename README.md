@@ -49,6 +49,7 @@ This section provides a brief overview of the project's architecture and develop
 - `server.js`: The main application entry point. Initializes the Express server, middleware, and queue processor.
 - `lib/`: Contains the core application logic.
   - `queueProcessor.js`: Manages the background download queue.
+  - `jobs.js`: Provides Job class and JobManager for structured job management.
   - `settings.js`: Handles loading and saving application settings.
   - `utils.js`: Provides utility functions for file operations, hashing, etc.
 - `routes/`: Defines the application's routes.
@@ -59,7 +60,7 @@ This section provides a brief overview of the project's architecture and develop
 - `views/`: EJS templates for the web interface.
 - `public/`: Static assets (CSS).
 - `data/`: (Git-ignored) Stores the application's data.
-  - `urls/`: Contains the queue files (queued, active, finished).
+  - `jobs/`: Contains the queue files (queued, active, finished).
   - `downloads/`: Stores the downloaded video and subtitle files.
   - `settings.json`: Stores user-defined settings.
 

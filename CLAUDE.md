@@ -40,6 +40,14 @@ This is a Node.js web application that provides a queue-based system for downloa
 - Supports video quality limits, subtitles, rate limiting
 - Prefers h.264 MP4 format with fallback chains
 
+**Jobs System (`lib/jobs.js`)**
+
+- Provides Job class for structured download job management with validation
+- JobManager handles job lifecycle, state transitions, and atomic file operations
+- Manages job retry logic with configurable retry limits
+- Supports job metadata, title updates, and duplicate prevention
+- Provides cleanup functionality for interrupted jobs on application restart
+
 **File-Based Queue System**
 
 Each "Download Job" is a small JSON file containing the URL. They are moved through these directories to represent the app state.
@@ -92,6 +100,7 @@ The application is designed for Docker deployment with docker-compose.yaml. The 
 Tests are located in `test/` directory and use Node.js built-in test runner. Key test files:
 
 - `queueProcessor.test.js` - Core download processing logic
+- `jobs.test.js` - Job system and management
 - `settings.test.js` - Configuration system
 - `utils.test.js` - Utility functions
 - `api.test.js` - API endpoints
