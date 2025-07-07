@@ -8,7 +8,7 @@ router.get(
   '/downloads',
   asyncHandler(async (req, res) => {
     const downloadedFiles = await req.services.downloads.getDownloadedFiles();
-    
+
     res.render('downloads', {
       downloadedFiles,
       formatFileSize,

@@ -8,11 +8,11 @@ import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
 import { JobManager } from './lib/jobs.js';
 import { cleanupActiveDownloads } from './lib/utils.js';
-import { 
-  JobService, 
-  DownloadService, 
-  NotificationService, 
-  SettingsService 
+import {
+  JobService,
+  DownloadService,
+  NotificationService,
+  SettingsService,
 } from './lib/services/index.js';
 
 import queueRoutes from './routes/queue.js';
@@ -100,7 +100,7 @@ const settingsService = new SettingsService({
 // Middleware to attach logger, services, and legacy objects to requests
 app.use((req, res, next) => {
   req.logger = logger;
-  
+
   // Inject services
   req.services = {
     jobs: jobService,
@@ -108,11 +108,11 @@ app.use((req, res, next) => {
     notifications: notificationService,
     settings: settingsService,
   };
-  
+
   // Keep existing objects for backward compatibility during transition
   req.queueProcessor = queueProcessor;
   req.jobManager = jobManager;
-  
+
   next();
 });
 

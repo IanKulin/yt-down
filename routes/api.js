@@ -31,7 +31,8 @@ router.post(
   asyncHandler(async (req, res) => {
     const { notificationId } = req.body;
 
-    const result = await req.services.notifications.dismissNotification(notificationId);
+    const result =
+      await req.services.notifications.dismissNotification(notificationId);
 
     res.json({ success: result.success });
   })

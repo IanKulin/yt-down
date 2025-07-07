@@ -6,8 +6,9 @@ const router = express.Router();
 router.get(
   '/settings',
   asyncHandler(async (req, res) => {
-    const { settings, options } = await req.services.settings.getSettingsForDisplay();
-    
+    const { settings, options } =
+      await req.services.settings.getSettingsForDisplay();
+
     res.render('settings', {
       settings,
       options,

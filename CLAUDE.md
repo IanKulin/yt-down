@@ -73,7 +73,7 @@ The "currently downloading" and "finished downloading" locations are split up to
 ### Routes Structure
 
 - `/` - Queue management interface (queue.js) - uses JobService
-- `/downloads` - Downloaded files browser (downloads.js) - uses DownloadService  
+- `/downloads` - Downloaded files browser (downloads.js) - uses DownloadService
 - `/settings` - Configuration page (settings.js) - uses SettingsService
 - `/api/state` - Real-time application state (api.js) - uses JobService and NotificationService
 - `/api/notifications/dismiss` - Notification management (api.js) - uses NotificationService
@@ -120,11 +120,13 @@ Tests are located in `test/` directory and use Node.js built-in test runner. Key
 - `helpers.js` - Test utilities and shared testing functions
 
 **Running tests:**
+
 - `npm test` - Run all tests
 - `npm test -- test/api.test.js` - Run specific test file
 - Tests use Node.js built-in test runner with concurrency set to 1
 
 **Debug logging:**
+
 - `LOG_LEVEL=debug node server.js 2>&1 | tee temp/app.log`
 
 ### Tool use
