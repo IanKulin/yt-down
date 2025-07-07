@@ -1,19 +1,12 @@
 import express from 'express';
-import { JobManager } from '../lib/jobs.js';
 
 const router = express.Router();
 
-// Create job manager instance
-const jobManager = new JobManager();
-
 router.get('/', async (req, res) => {
   try {
-    // Set logger on job manager
-    jobManager.logger = req.logger;
-
     const [queuedJobs, activeJobs] = await Promise.all([
-      jobManager.getQueuedJobs(),
-      jobManager.getActiveJobs(),
+      req.jobManager.getQueuedJobs(),
+      req.jobManager.getActiveJobs(),
     ]);
 
     // Convert Job objects to the format expected by the template
@@ -57,11 +50,8 @@ router.post('/job/add', async (req, res) => {
 
     const trimmedUrl = url.trim();
 
-    // Set logger on job manager
-    jobManager.logger = req.logger;
-
     // Create job using JobManager
-    await jobManager.createJob(trimmedUrl);
+    await req.jobManager.createJob(trimmedUrl);
 
     req.session.flashMessage = 'Download job added to queue successfully';
     req.session.flashType = 'success';
@@ -91,11 +81,8 @@ router.post('/job/delete', async (req, res) => {
 
     const trimmedHash = hash.trim();
 
-    // Set logger on job manager
-    jobManager.logger = req.logger;
-
     // Delete job using JobManager
-    await jobManager.deleteJob(trimmedHash);
+    await req.jobManager.deleteJob(trimmedHash);
 
     req.session.flashMessage = 'Download job deleted from queue successfully';
     req.session.flashType = 'success';

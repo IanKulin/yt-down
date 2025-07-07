@@ -2,7 +2,6 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { JobManager } from '../lib/jobs.js';
 import { saveSettings } from '../lib/settings.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,18 +9,12 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Create job manager instance
-const jobManager = new JobManager();
-
 router.get('/api/state', async (req, res) => {
   try {
-    // Set logger on job manager
-    jobManager.logger = req.logger;
-
     const [queuedJobs, activeJobs, finishedJobs] = await Promise.all([
-      jobManager.getQueuedJobs(),
-      jobManager.getActiveJobs(),
-      jobManager.getFinishedJobs(),
+      req.jobManager.getQueuedJobs(),
+      req.jobManager.getActiveJobs(),
+      req.jobManager.getFinishedJobs(),
     ]);
 
     // Convert Job objects to the format expected by the API

@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
+import { JobManager } from './lib/jobs.js';
 import { cleanupActiveDownloads } from './lib/utils.js';
 
 import queueRoutes from './routes/queue.js';
@@ -58,16 +59,22 @@ app.use(
   })
 );
 
-// Initialize queue processor
+// Initialize queue processor and job manager
 const queueProcessor = new QueueProcessor({
   logger,
   baseDir: __dirname,
 });
 
-// Middleware to attach logger and queueProcessor to requests
+const jobManager = new JobManager({
+  logger,
+  baseDir: __dirname,
+});
+
+// Middleware to attach logger, queueProcessor, and jobManager to requests
 app.use((req, res, next) => {
   req.logger = logger;
   req.queueProcessor = queueProcessor;
+  req.jobManager = jobManager;
   next();
 });
 
@@ -114,7 +121,7 @@ app.listen(PORT, async () => {
   logger.info(`yt-dlp queue server running on port ${PORT}`);
 
   // Clean up any abandoned downloads from previous runs
-  await cleanupActiveDownloads(logger);
+  await cleanupActiveDownloads(logger, jobManager);
 
   // Start the queue processor
   await queueProcessor.start();
