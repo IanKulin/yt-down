@@ -42,12 +42,15 @@ This is a Node.js web application that provides a queue-based system for downloa
 
 **File-Based Queue System**
 
-- `data/urls/queued/` - Pending downloads (hash.txt files containing URLs)
+Each "Download Job" is a small JSON file containing the URL. They are moved through these directories to represent the app state.
+- `data/urls/queued/` - Pending downloads
 - `data/urls/active/` - Currently downloading
 - `data/urls/finished/` - Completed downloads
+
+**Download Progress System**
+The "currently downloading" and "finished downloading" locations are split up to facilitate cleanups of partially downloaded media
 - `data/downloads/active` - Currently downloading
 - `data/downloads/finished` - Downloaded video/subtitle files
-- URLs are hashed (SHA256) to prevent duplicates
 
 ### Routes Structure
 

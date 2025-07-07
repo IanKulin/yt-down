@@ -145,40 +145,68 @@ describe('utils.js', () => {
   });
 
   describe('readUrlsFromDirectory', () => {
-    test('should read URLs from txt files', async () => {
+    test('should read URLs from json files', async () => {
       await createTestDir();
       const testDir = path.join(TEST_DATA_DIR, 'urls');
       const logger = createMockLogger();
 
       await createTestFile(
-        'urls/hash1.txt',
-        'https://www.youtube.com/watch?v=video1'
+        'urls/hash1.json',
+        JSON.stringify({
+          url: 'https://www.youtube.com/watch?v=video1',
+          title: 'Test Video 1',
+          retryCount: 0,
+          timestamp: '2023-01-01T00:00:00Z',
+          sortOrder: 1
+        })
       );
       await createTestFile(
-        'urls/hash2.txt',
-        'https://www.youtube.com/watch?v=video2'
+        'urls/hash2.json',
+        JSON.stringify({
+          url: 'https://www.youtube.com/watch?v=video2',
+          title: 'Test Video 2',
+          retryCount: 0,
+          timestamp: '2023-01-01T00:01:00Z',
+          sortOrder: 2
+        })
       );
-      await createTestFile('urls/not-txt.md', 'should be ignored');
+      await createTestFile('urls/not-json.md', 'should be ignored');
 
       const urls = await readUrlsFromDirectory(testDir, 'test', logger);
 
       assert.equal(urls.length, 2);
       assert.equal(urls[0].hash, 'hash1');
       assert.equal(urls[0].url, 'https://www.youtube.com/watch?v=video1');
+      assert.equal(urls[0].title, 'Test Video 1');
+      assert.equal(urls[0].retryCount, 0);
+      assert.equal(urls[0].sortOrder, 1);
       assert.equal(urls[1].hash, 'hash2');
       assert.equal(urls[1].url, 'https://www.youtube.com/watch?v=video2');
+      assert.equal(urls[1].title, 'Test Video 2');
+      assert.equal(urls[1].retryCount, 0);
+      assert.equal(urls[1].sortOrder, 2);
 
       await cleanupTestDir();
     });
 
-    test('should trim whitespace from URLs', async () => {
+    test('should handle malformed JSON files gracefully', async () => {
       await createTestDir();
       const testDir = path.join(TEST_DATA_DIR, 'urls');
       const logger = createMockLogger();
 
       await createTestFile(
-        'urls/hash1.txt',
-        '  https://www.youtube.com/watch?v=video1  \n'
+        'urls/hash1.json',
+        JSON.stringify({
+          url: 'https://www.youtube.com/watch?v=video1',
+          title: 'Test Video 1',
+          retryCount: 0,
+          timestamp: '2023-01-01T00:00:00Z',
+          sortOrder: 1
+        })
+      );
+      await createTestFile(
+        'urls/malformed.json',
+        '{ invalid json'
       );
 
       const urls = await readUrlsFromDirectory(testDir, 'test', logger);

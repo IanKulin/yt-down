@@ -7,6 +7,8 @@ import {
   getQueuedUrls,
   getActiveUrls,
   createUrlHash,
+  createQueueItem,
+  writeQueueFile,
 } from '../lib/utils.js';
 
 const router = express.Router();
@@ -39,7 +41,7 @@ router.post('/url/add', async (req, res) => {
 
     const trimmedUrl = url.trim();
     const urlHash = createUrlHash(trimmedUrl);
-    const filename = `${urlHash}.txt`;
+    const filename = `${urlHash}.json`;
     const filePath = path.join(QUEUE_DIR, filename);
 
     await ensureDirectoryExists(QUEUE_DIR);
@@ -53,7 +55,9 @@ router.post('/url/add', async (req, res) => {
       // File doesn't exist, we can proceed
     }
 
-    await fs.writeFile(filePath, trimmedUrl, 'utf-8');
+    // Create queue item with metadata
+    const queueItem = await createQueueItem(trimmedUrl);
+    await writeQueueFile(filePath, queueItem);
     req.logger.info(`Added URL to queue: ${trimmedUrl} (hash: ${urlHash})`);
 
     req.session.flashMessage = 'URL added to queue successfully';
@@ -78,14 +82,15 @@ router.post('/url/delete', async (req, res) => {
     }
 
     const trimmedHash = hash.trim();
-    const filename = `${trimmedHash}.txt`;
+    const filename = `${trimmedHash}.json`;
     const filePath = path.join(QUEUE_DIR, filename);
 
     try {
-      const url = await fs.readFile(filePath, 'utf-8');
+      const data = await fs.readFile(filePath, 'utf-8');
+      const queueItem = JSON.parse(data);
       await fs.unlink(filePath);
       req.logger.info(
-        `Deleted URL from queue: ${url.trim()} (hash: ${trimmedHash})`
+        `Deleted URL from queue: ${queueItem.url} (hash: ${trimmedHash})`
       );
 
       req.session.flashMessage = 'URL deleted from queue successfully';
