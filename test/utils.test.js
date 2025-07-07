@@ -245,7 +245,7 @@ describe('utils.js', () => {
     test('should detect file types correctly with regex patterns', () => {
       // Test the regex patterns used by the function
       const videoExtensions = ['mp4', 'mkv', 'webm', 'avi', 'mov'];
-      const subtitleExtensions = ['srt', 'vtt'];
+      const subtitleExtensions = ['srt', 'vtt', 'dfxp', 'ass', 'ttml', 'sbv', 'lrc'];
 
       for (const ext of videoExtensions) {
         const filename = `test.${ext}`;
@@ -254,7 +254,7 @@ describe('utils.js', () => {
           `${ext} should match video pattern`
         );
         assert.ok(
-          !/\.(srt|vtt)$/i.test(filename),
+          !/\.(srt|vtt|dfxp|ass|ttml|sbv|lrc)$/i.test(filename),
           `${ext} should not match subtitle pattern`
         );
       }
@@ -262,7 +262,7 @@ describe('utils.js', () => {
       for (const ext of subtitleExtensions) {
         const filename = `test.${ext}`;
         assert.ok(
-          /\.(srt|vtt)$/i.test(filename),
+          /\.(srt|vtt|dfxp|ass|ttml|sbv|lrc)$/i.test(filename),
           `${ext} should match subtitle pattern`
         );
         assert.ok(

@@ -3,4 +3,4 @@
 1.0.2 - Lucide symbols, refactor CLAUDE.md, downloads sorted by filename
 1.1.0 - download progress
 1.1.1 - Flash messages, css refactor, LOG_LEVEL environment variable, remove download 'groups', +pycryptodomex in container
-1.1.2 - Auto cleanup of aborted downlands on start up, queue display fixes
+1.1.2 - Auto cleanup of aborted downlands on start up, queue display fixes, recognise .dfxp subtitles
