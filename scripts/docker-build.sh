@@ -23,9 +23,21 @@ fi
 echo -e "${GREEN}Version: ${VERSION}${NC}"
 echo -e "${GREEN}Building image: ${IMAGE_NAME}${NC}"
 
-# Build the image with both latest and version tags
-docker build --platform linux/x86_64 -t "${IMAGE_NAME}:latest" -t "${IMAGE_NAME}:${VERSION}" .
+# Extract major and minor versions
+MAJOR_VERSION="${VERSION%%.*}"
+MINOR_VERSION="${VERSION%.*}"
+
+echo -e "${GREEN}Tags: latest, ${VERSION}, ${MINOR_VERSION}, ${MAJOR_VERSION}${NC}"
+
+# Build the image with all tags
+docker build --platform linux/x86_64 \
+  -t "${IMAGE_NAME}:latest" \
+  -t "${IMAGE_NAME}:${VERSION}" \
+  -t "${IMAGE_NAME}:${MINOR_VERSION}" \
+  -t "${IMAGE_NAME}:${MAJOR_VERSION}" .
 
 echo -e "${GREEN}Successfully built Docker images:${NC}"
 echo -e "  - ${IMAGE_NAME}:latest"
 echo -e "  - ${IMAGE_NAME}:${VERSION}"
+echo -e "  - ${IMAGE_NAME}:${MINOR_VERSION}"
+echo -e "  - ${IMAGE_NAME}:${MAJOR_VERSION}"
