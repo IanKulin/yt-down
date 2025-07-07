@@ -21,9 +21,8 @@ This is a Node.js web application that provides a queue-based system for downloa
 **Server (`server.js`)**
 
 - Express.js application with session management for flash messages
-- Initializes QueueProcessor and attaches logger/processor to requests
-- Graceful shutdown handling for SIGINT/SIGTERM
-- Validates `yt-dlp` availability on startup
+- Initializes QueueProcessor, JobManager, and service layer
+- Injects services into request context for route handlers
 
 **QueueProcessor (`lib/queueProcessor.js`)**
 
@@ -48,6 +47,14 @@ This is a Node.js web application that provides a queue-based system for downloa
 - Supports job metadata, title updates, and duplicate prevention
 - Provides cleanup functionality for interrupted jobs on application restart
 
+**Service Layer (`lib/services/`)**
+
+- **JobService**: Abstracts job operations from route handlers - job creation, deletion, cancellation, and status retrieval
+- **DownloadService**: Handles file operations with security validation, download preparation, and file management
+- **NotificationService**: Centralizes notification management - creation, retrieval, and dismissal of notifications
+- **SettingsService**: Manages settings validation, normalization, and persistence with support for different input formats
+- Services are injected into route handlers via `req.services` for clean separation of concerns
+
 **File-Based Queue System**
 
 Each "Download Job" is a small JSON file containing the URL. They are moved through these directories to represent the app state.
@@ -57,6 +64,7 @@ Each "Download Job" is a small JSON file containing the URL. They are moved thro
 - `data/jobs/finished/` - Completed downloads
 
 **Download Progress System**
+
 The "currently downloading" and "finished downloading" locations are split up to facilitate cleanups of partially downloaded media
 
 - `data/downloads/active` - Currently downloading
@@ -64,11 +72,11 @@ The "currently downloading" and "finished downloading" locations are split up to
 
 ### Routes Structure
 
-- `/` - Queue management interface (queue.js)
-- `/downloads` - Downloaded files browser (downloads.js)
-- `/settings` - Configuration page (settings.js)
-- `/api/state` - Real-time application state (api.js)
-- `/api/notifications/dismiss` - Notification management (api.js)
+- `/` - Queue management interface (queue.js) - uses JobService
+- `/downloads` - Downloaded files browser (downloads.js) - uses DownloadService  
+- `/settings` - Configuration page (settings.js) - uses SettingsService
+- `/api/state` - Real-time application state (api.js) - uses JobService and NotificationService
+- `/api/notifications/dismiss` - Notification management (api.js) - uses NotificationService
 
 ### View Templates (`views/`)
 
@@ -79,10 +87,12 @@ The "currently downloading" and "finished downloading" locations are split up to
 
 ### Key Patterns
 
-**Error Handling**: All routes use try-catch with logger.error() and flash messages
-**File Operations**: Utils module provides helpers for directory operations and file grouping
+**Service Layer Architecture**: Business logic separated from HTTP concerns using service classes
+**Error Handling**: Services handle business logic errors; routes handle HTTP responses and flash messages
+**File Operations**: DownloadService centralizes security validation and file operations
 **Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection
-**Notification System**: Completion events stored in `data/notifications.json`
+**Notification System**: NotificationService manages completion events stored in `data/notifications.json`
+**Dependency Injection**: Services injected via `req.services` for clean testability
 
 ### Environment Variables
 
@@ -99,15 +109,22 @@ The application is designed for Docker deployment with docker-compose.yaml. The 
 
 Tests are located in `test/` directory and use Node.js built-in test runner. Key test files:
 
-- `queueProcessor.test.js` - Core download processing logic
-- `jobs.test.js` - Job system and management
-- `settings.test.js` - Configuration system
-- `utils.test.js` - Utility functions
-- `api.test.js` - API endpoints
-  Running tests:
+- `queueProcessor.test.js` - Core download processing logic and configuration
+- `jobs.test.js` - Job system, JobManager, and lifecycle management
+- `settings.test.js` - Configuration system and yt-dlp argument building
+- `utils.test.js` - Utility functions, file operations, and helpers
+- `api.test.js` - API endpoints and state management
+- `errorHandler.test.js` - Error handling middleware and response formatting
+- `errors.test.js` - Custom error classes and error structures
+- `validators.test.js` - Input validation functions
+- `helpers.js` - Test utilities and shared testing functions
+
+**Running tests:**
 - `npm test` - Run all tests
 - `npm test -- test/api.test.js` - Run specific test file
-  Debug logging
+- Tests use Node.js built-in test runner with concurrency set to 1
+
+**Debug logging:**
 - `LOG_LEVEL=debug node server.js 2>&1 | tee temp/app.log`
 
 ### Tool use

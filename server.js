@@ -8,6 +8,12 @@ import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
 import { JobManager } from './lib/jobs.js';
 import { cleanupActiveDownloads } from './lib/utils.js';
+import { 
+  JobService, 
+  DownloadService, 
+  NotificationService, 
+  SettingsService 
+} from './lib/services/index.js';
 
 import queueRoutes from './routes/queue.js';
 import downloadsRoutes from './routes/downloads.js';
@@ -71,11 +77,42 @@ const jobManager = new JobManager({
   baseDir: __dirname,
 });
 
-// Middleware to attach logger, queueProcessor, and jobManager to requests
+// Initialize services
+const jobService = new JobService({
+  jobManager,
+  queueProcessor,
+  logger,
+});
+
+const downloadService = new DownloadService({
+  logger,
+});
+
+const notificationService = new NotificationService({
+  logger,
+  baseDir: __dirname,
+});
+
+const settingsService = new SettingsService({
+  logger,
+});
+
+// Middleware to attach logger, services, and legacy objects to requests
 app.use((req, res, next) => {
   req.logger = logger;
+  
+  // Inject services
+  req.services = {
+    jobs: jobService,
+    downloads: downloadService,
+    notifications: notificationService,
+    settings: settingsService,
+  };
+  
+  // Keep existing objects for backward compatibility during transition
   req.queueProcessor = queueProcessor;
   req.jobManager = jobManager;
+  
   next();
 });
 
