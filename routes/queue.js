@@ -64,11 +64,32 @@ router.post(
     const trimmedHash = hash.trim();
 
     try {
-      // Delete job using JobManager
-      await req.jobManager.deleteJob(trimmedHash);
+      // First, check if the job exists and get its current state
+      const job = await req.jobManager.getJob(trimmedHash);
+      if (!job) {
+        throw new NotFoundError('Download job not found in queue');
+      }
 
-      req.session.flashMessage = 'Download job deleted from queue successfully';
-      req.session.flashType = 'success';
+      // If the job is active, cancel the download process (which also deletes the job)
+      if (job.state === 'active') {
+        try {
+          await req.queueProcessor.cancelDownload(trimmedHash);
+          req.session.flashMessage = 'Download cancelled successfully';
+          req.session.flashType = 'success';
+        } catch (cancelError) {
+          req.logger?.error(`Failed to cancel download for ${trimmedHash}:`, cancelError);
+          // If cancellation fails, still try to delete the job
+          await req.jobManager.deleteJob(trimmedHash);
+          req.session.flashMessage = 'Download job deleted (cancellation failed, but job removed)';
+          req.session.flashType = 'warning';
+        }
+      } else {
+        // Job is not active, just delete it normally
+        await req.jobManager.deleteJob(trimmedHash);
+        req.session.flashMessage = 'Download job deleted from queue successfully';
+        req.session.flashType = 'success';
+      }
+
       res.redirect('/');
     } catch (error) {
       if (error.message.includes('Job not found')) {

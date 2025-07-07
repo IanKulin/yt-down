@@ -687,6 +687,15 @@ button:not([class]):hover {
   background-color: var(--accent-danger-hover);
 }
 
+.btn-cancel-download {
+  background-color: var(--accent-danger);
+  color: white;
+}
+
+.btn-cancel-download:hover {
+  background-color: var(--accent-danger-hover);
+}
+
 /* Settings Page Styles */
 .settings-section {
   background-color: var(--bg-secondary);
