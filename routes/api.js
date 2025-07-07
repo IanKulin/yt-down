@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { JobManager } from '../lib/jobs.js';
+import { saveSettings } from '../lib/settings.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -125,6 +126,36 @@ router.post('/api/notifications/dismiss', async (req, res) => {
     req.logger.error('Error dismissing notification:', error);
     res.status(500).json({
       error: 'Failed to dismiss notification',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+router.post('/api/settings', async (req, res) => {
+  try {
+    const { videoQuality, subtitles, autoSubs, subLanguage, rateLimit } =
+      req.body;
+
+    const settings = {
+      videoQuality: videoQuality || 'no-limit',
+      subtitles: subtitles === true || subtitles === 'on',
+      autoSubs: autoSubs === true || autoSubs === 'on',
+      subLanguage: subLanguage || 'en',
+      rateLimit: rateLimit || 'no-limit',
+    };
+
+    await saveSettings(settings);
+    req.logger.debug('Settings updated via API:', settings);
+
+    res.json({
+      success: true,
+      settings: settings,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    req.logger.error('Error saving settings via API:', error);
+    res.status(500).json({
+      error: 'Failed to save settings',
       timestamp: new Date().toISOString(),
     });
   }

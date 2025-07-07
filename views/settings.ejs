@@ -3,12 +3,12 @@
         <div class="settings-section">
             <h2>Download Settings</h2>
             
-            <form action="/settings" method="POST">
+            <form id="settingsForm" data-auto-save="true">
                 <div class="settings-group">
                     <h3>Video Quality</h3>
                     <div class="form-group">
                         <label for="videoQuality">Maximum Resolution:</label>
-                        <select id="videoQuality" name="videoQuality">
+                        <select id="videoQuality" name="videoQuality" data-auto-save="true">
                             <% options.videoQualities.forEach(function(option) { %>
                                 <option value="<%= option.value %>" <%= settings.videoQuality === option.value ? 'selected' : '' %>>
                                     <%= option.label %>
@@ -22,7 +22,7 @@
                     <h3>Subtitles</h3>
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="subtitles" <%= settings.subtitles ? 'checked' : '' %>>
+                            <input type="checkbox" name="subtitles" data-auto-save="true" <%= settings.subtitles ? 'checked' : '' %>>
                             <span class="checkmark"></span>
                             Download subtitles
                         </label>
@@ -30,7 +30,7 @@
                     
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="autoSubs" <%= settings.autoSubs ? 'checked' : '' %>>
+                            <input type="checkbox" name="autoSubs" data-auto-save="true" <%= settings.autoSubs ? 'checked' : '' %>>
                             <span class="checkmark"></span>
                             Download auto-generated subtitles
                         </label>
@@ -38,7 +38,7 @@
                     
                     <div class="form-group">
                         <label for="subLanguage">Subtitle Language:</label>
-                        <select id="subLanguage" name="subLanguage">
+                        <select id="subLanguage" name="subLanguage" data-auto-save="true">
                             <% options.subLanguages.forEach(function(option) { %>
                                 <option value="<%= option.value %>" <%= settings.subLanguage === option.value ? 'selected' : '' %>>
                                     <%= option.label %>
@@ -52,7 +52,7 @@
                     <h3>Download Speed</h3>
                     <div class="form-group">
                         <label for="rateLimit">Rate Limit:</label>
-                        <select id="rateLimit" name="rateLimit">
+                        <select id="rateLimit" name="rateLimit" data-auto-save="true">
                             <% options.rateLimits.forEach(function(option) { %>
                                 <option value="<%= option.value %>" <%= settings.rateLimit === option.value ? 'selected' : '' %>>
                                     <%= option.label %>
@@ -63,7 +63,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="submit" class="btn save-btn">Save Settings</button>
+                    <!-- Auto-save feedback provided by field glow effect -->
                 </div>
             </form>
         </div>
@@ -74,6 +74,88 @@
     </div>
     
     <script>
+        // Auto-save functionality
+        let saveTimeout;
+        let isSaving = false;
+        
+        function debounceAutoSave(callback, delay) {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(callback, delay);
+        }
+        
+        function showSaveStatus(changedField, isError = false) {
+            if (!changedField) return;
+            
+            // Remove any existing glow classes
+            changedField.classList.remove('auto-save-glow', 'auto-save-error');
+            
+            // Add the appropriate glow class
+            const glowClass = isError ? 'auto-save-error' : 'auto-save-glow';
+            changedField.classList.add(glowClass);
+            
+            // Remove the glow class after animation completes
+            setTimeout(() => {
+                changedField.classList.remove(glowClass);
+            }, 1500);
+        }
+        
+        function getFormData() {
+            const form = document.getElementById('settingsForm');
+            const formData = new FormData(form);
+            const data = {};
+            
+            data.videoQuality = formData.get('videoQuality');
+            data.subtitles = formData.get('subtitles') === 'on';
+            data.autoSubs = formData.get('autoSubs') === 'on';
+            data.subLanguage = formData.get('subLanguage');
+            data.rateLimit = formData.get('rateLimit');
+            
+            return data;
+        }
+        
+        function saveSettings(changedField) {
+            if (isSaving) return;
+            
+            isSaving = true;
+            
+            const data = getFormData();
+            
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to save settings');
+                }
+                return response.json();
+            })
+            .then(result => {
+                showSaveStatus(changedField, false);
+                isSaving = false;
+            })
+            .catch(error => {
+                console.error('Error saving settings:', error);
+                showSaveStatus(changedField, true);
+                isSaving = false;
+            });
+        }
+        
+        function initAutoSave() {
+            const form = document.getElementById('settingsForm');
+            const autoSaveFields = form.querySelectorAll('[data-auto-save="true"]');
+            
+            autoSaveFields.forEach(field => {
+                field.addEventListener('change', function() {
+                    const changedField = this;
+                    debounceAutoSave(() => saveSettings(changedField), 300);
+                });
+            });
+        }
+        
         // Notification checking functionality
         function checkForNotifications() {
             fetch('/api/state')
@@ -144,8 +226,9 @@
             });
         }
         
-        // Start checking for notifications
+        // Initialize everything when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            initAutoSave();
             checkForNotifications();
             setInterval(checkForNotifications, 3000); // Check every 3 seconds
         });

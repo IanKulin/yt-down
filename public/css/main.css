@@ -772,6 +772,41 @@ button:not([class]):hover {
   text-align: center;
 }
 
+/* Auto-save glow effects */
+.auto-save-glow {
+  animation: saveGlow 1.5s ease-out;
+  transition: box-shadow 0.3s ease;
+}
+
+.auto-save-error {
+  animation: errorGlow 1.5s ease-out;
+  transition: box-shadow 0.3s ease;
+}
+
+@keyframes saveGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(40, 167, 69, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+}
+
+@keyframes errorGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 53, 69, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
 .save-btn {
   background-color: var(--accent-success);
   color: white;
