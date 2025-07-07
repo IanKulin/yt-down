@@ -13,6 +13,7 @@ import queueRoutes from './routes/queue.js';
 import downloadsRoutes from './routes/downloads.js';
 import settingsRoutes from './routes/settings.js';
 import apiRoutes from './routes/api.js';
+import { handleError, notFoundHandler } from './lib/errorHandler.js';
 
 const execAsync = promisify(exec);
 
@@ -107,6 +108,10 @@ app.use('/', queueRoutes);
 app.use('/', downloadsRoutes);
 app.use('/', settingsRoutes);
 app.use('/', apiRoutes);
+
+// Error handling middleware (must be after all routes)
+app.use(notFoundHandler);
+app.use(handleError);
 
 app.listen(PORT, async () => {
   // Check if yt-dlp is available

@@ -1,9 +1,17 @@
 import express from 'express';
+import { asyncHandler } from '../lib/errorHandler.js';
+import { validateUrl } from '../lib/validators.js';
+import {
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+} from '../lib/errors.js';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-  try {
+router.get(
+  '/',
+  asyncHandler(async (req, res) => {
     const [queuedJobs, activeJobs] = await Promise.all([
       req.jobManager.getQueuedJobs(),
       req.jobManager.getActiveJobs(),
@@ -17,72 +25,58 @@ router.get('/', async (req, res) => {
       queuedJobs: formattedQueuedJobs,
       activeJobs: formattedActiveJobs,
     });
-  } catch (error) {
-    req.logger.error('Error rendering queue page:', error);
-    res.status(500).send('Server error');
-  }
-});
+  })
+);
 
-router.post('/job/add', async (req, res) => {
-  try {
+router.post(
+  '/job/add',
+  asyncHandler(async (req, res) => {
     const { url } = req.body;
 
-    if (!url || !url.trim()) {
-      req.session.flashMessage = 'Please enter a valid URL';
-      req.session.flashType = 'error';
-      return res.redirect('/');
+    // Validate URL
+    const validatedUrl = validateUrl(url);
+
+    try {
+      // Create job using JobManager
+      await req.jobManager.createJob(validatedUrl);
+
+      req.session.flashMessage = 'Download job added to queue successfully';
+      req.session.flashType = 'success';
+      res.redirect('/');
+    } catch (error) {
+      if (error.message === 'Job already exists') {
+        throw new ConflictError('Download job already exists in queue');
+      }
+      throw error;
     }
+  })
+);
 
-    const trimmedUrl = url.trim();
-
-    // Create job using JobManager
-    await req.jobManager.createJob(trimmedUrl);
-
-    req.session.flashMessage = 'Download job added to queue successfully';
-    req.session.flashType = 'success';
-    res.redirect('/');
-  } catch (error) {
-    if (error.message === 'Job already exists') {
-      req.session.flashMessage = 'Download job already exists in queue';
-      req.session.flashType = 'error';
-    } else {
-      req.logger.error('Error adding URL to queue:', error);
-      req.session.flashMessage = 'Failed to add download job to queue';
-      req.session.flashType = 'error';
-    }
-    res.redirect('/');
-  }
-});
-
-router.post('/job/delete', async (req, res) => {
-  try {
+router.post(
+  '/job/delete',
+  asyncHandler(async (req, res) => {
     const { hash } = req.body;
 
     if (!hash || !hash.trim()) {
-      req.session.flashMessage = 'Invalid hash provided';
-      req.session.flashType = 'error';
-      return res.redirect('/');
+      throw new ValidationError('Invalid hash provided');
     }
 
     const trimmedHash = hash.trim();
 
-    // Delete job using JobManager
-    await req.jobManager.deleteJob(trimmedHash);
+    try {
+      // Delete job using JobManager
+      await req.jobManager.deleteJob(trimmedHash);
 
-    req.session.flashMessage = 'Download job deleted from queue successfully';
-    req.session.flashType = 'success';
-    res.redirect('/');
-  } catch (error) {
-    if (error.message.includes('Job not found')) {
-      req.session.flashMessage = 'Download job not found in queue';
-      req.session.flashType = 'error';
-    } else {
-      req.logger.error('Error deleting URL from queue:', error);
-      req.session.flashMessage = 'Failed to delete download job from queue';
-      req.session.flashType = 'error';
+      req.session.flashMessage = 'Download job deleted from queue successfully';
+      req.session.flashType = 'success';
+      res.redirect('/');
+    } catch (error) {
+      if (error.message.includes('Job not found')) {
+        throw new NotFoundError('Download job not found in queue');
+      }
+      throw error;
     }
-    res.redirect('/');
-  }
-});
+  })
+);
 
 export default router;

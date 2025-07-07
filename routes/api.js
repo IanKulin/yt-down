@@ -3,14 +3,18 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { saveSettings } from '../lib/settings.js';
+import { asyncHandler } from '../lib/errorHandler.js';
+import { validateSettings } from '../lib/validators.js';
+import { ValidationError } from '../lib/errors.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-router.get('/api/state', async (req, res) => {
-  try {
+router.get(
+  '/api/state',
+  asyncHandler(async (req, res) => {
     const [queuedJobs, activeJobs, finishedJobs] = await Promise.all([
       req.jobManager.getQueuedJobs(),
       req.jobManager.getActiveJobs(),
@@ -56,18 +60,18 @@ router.get('/api/state', async (req, res) => {
     };
 
     res.json(state);
-  } catch (error) {
-    req.logger.error('Error getting state:', error);
-    res.status(500).json({
-      error: 'Failed to get state',
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
+  })
+);
 
-router.post('/api/notifications/dismiss', async (req, res) => {
-  try {
+router.post(
+  '/api/notifications/dismiss',
+  asyncHandler(async (req, res) => {
     const { notificationId } = req.body;
+
+    if (!notificationId) {
+      throw new ValidationError('Notification ID is required');
+    }
+
     const notificationsFile = path.join(
       __dirname,
       '..',
@@ -92,17 +96,12 @@ router.post('/api/notifications/dismiss', async (req, res) => {
     );
 
     res.json({ success: true });
-  } catch (error) {
-    req.logger.error('Error dismissing notification:', error);
-    res.status(500).json({
-      error: 'Failed to dismiss notification',
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
+  })
+);
 
-router.post('/api/settings', async (req, res) => {
-  try {
+router.post(
+  '/api/settings',
+  asyncHandler(async (req, res) => {
     const { videoQuality, subtitles, autoSubs, subLanguage, rateLimit } =
       req.body;
 
@@ -114,21 +113,16 @@ router.post('/api/settings', async (req, res) => {
       rateLimit: rateLimit || 'no-limit',
     };
 
-    await saveSettings(settings);
-    req.logger.debug('Settings updated via API:', settings);
+    const validatedSettings = validateSettings(settings);
+    await saveSettings(validatedSettings);
+    req.logger.debug('Settings updated via API:', validatedSettings);
 
     res.json({
       success: true,
-      settings: settings,
+      settings: validatedSettings,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    req.logger.error('Error saving settings via API:', error);
-    res.status(500).json({
-      error: 'Failed to save settings',
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
+  })
+);
 
 export default router;

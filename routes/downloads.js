@@ -6,95 +6,83 @@ import {
   getDownloadedFiles,
   formatFileSize,
 } from '../lib/utils.js';
+import { asyncHandler } from '../lib/errorHandler.js';
+import { validateFilename } from '../lib/validators.js';
+import { NotFoundError, ForbiddenError } from '../lib/errors.js';
 
 const router = express.Router();
 
-router.get('/downloads', async (req, res) => {
-  try {
+router.get(
+  '/downloads',
+  asyncHandler(async (req, res) => {
     const downloadedFiles = await getDownloadedFiles(req.logger);
     res.render('downloads', {
       downloadedFiles,
       formatFileSize,
     });
-  } catch (_error) {
-    req.logger.error('Error rendering downloads page:', _error);
-    res.status(500).send('Server error');
-  }
-});
+  })
+);
 
-router.get('/download/:filename', async (req, res) => {
-  try {
+router.get(
+  '/download/:filename',
+  asyncHandler(async (req, res) => {
     const filename = req.params.filename;
-    const filePath = path.join(DOWNLOADS_FINISHED_DIR, filename);
+    const validatedFilename = validateFilename(filename);
+    const filePath = path.join(DOWNLOADS_FINISHED_DIR, validatedFilename);
 
     // Security check: ensure the file is within the downloads directory
     const resolvedPath = path.resolve(filePath);
     const resolvedDownloadsDir = path.resolve(DOWNLOADS_FINISHED_DIR);
 
     if (!resolvedPath.startsWith(resolvedDownloadsDir)) {
-      return res.status(403).send('Access denied');
+      throw new ForbiddenError('Access denied');
     }
 
     // Check if file exists
     try {
       await fs.access(filePath);
     } catch {
-      return res.status(404).send('File not found');
+      throw new NotFoundError('File not found');
     }
 
     // Set appropriate headers
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${validatedFilename}"`
+    );
     res.sendFile(filePath);
-  } catch (error) {
-    req.logger.error('Error downloading file:', error);
-    res.status(500).send('Server error');
-  }
-});
+  })
+);
 
-router.post('/file/delete', async (req, res) => {
-  try {
+router.post(
+  '/file/delete',
+  asyncHandler(async (req, res) => {
     const { filename } = req.body;
-
-    if (!filename || !filename.trim()) {
-      req.session.flashMessage = 'Invalid filename provided';
-      req.session.flashType = 'error';
-      return res.redirect('/downloads');
-    }
-
-    const trimmedFilename = filename.trim();
-    const filePath = path.join(DOWNLOADS_FINISHED_DIR, trimmedFilename);
+    const validatedFilename = validateFilename(filename);
+    const filePath = path.join(DOWNLOADS_FINISHED_DIR, validatedFilename);
 
     // Security check: ensure the file is within the downloads directory
     const resolvedPath = path.resolve(filePath);
     const resolvedDownloadsDir = path.resolve(DOWNLOADS_FINISHED_DIR);
 
     if (!resolvedPath.startsWith(resolvedDownloadsDir)) {
-      req.session.flashMessage = 'Access denied';
-      req.session.flashType = 'error';
-      return res.redirect('/downloads');
+      throw new ForbiddenError('Access denied');
     }
 
     try {
       await fs.unlink(filePath);
-      req.logger.info(`Deleted file: ${trimmedFilename}`);
+      req.logger.info(`Deleted file: ${validatedFilename}`);
 
       req.session.flashMessage = 'File deleted successfully';
       req.session.flashType = 'success';
       res.redirect('/downloads');
     } catch (error) {
       if (error.code === 'ENOENT') {
-        req.session.flashMessage = 'File not found';
-        req.session.flashType = 'error';
-        return res.redirect('/downloads');
+        throw new NotFoundError('File not found');
       }
       throw error;
     }
-  } catch (error) {
-    req.logger.error('Error deleting file:', error);
-    req.session.flashMessage = 'Failed to delete file';
-    req.session.flashType = 'error';
-    res.redirect('/downloads');
-  }
-});
+  })
+);
 
 export default router;

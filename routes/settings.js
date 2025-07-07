@@ -4,25 +4,26 @@ import {
   saveSettings,
   getAvailableOptions,
 } from '../lib/settings.js';
+import { asyncHandler } from '../lib/errorHandler.js';
+import { validateSettings } from '../lib/validators.js';
 
 const router = express.Router();
 
-router.get('/settings', async (req, res) => {
-  try {
+router.get(
+  '/settings',
+  asyncHandler(async (req, res) => {
     const settings = await loadSettings();
     const options = getAvailableOptions();
     res.render('settings', {
       settings,
       options,
     });
-  } catch (error) {
-    req.logger.error('Error rendering settings page:', error);
-    res.status(500).send('Server error');
-  }
-});
+  })
+);
 
-router.post('/settings', async (req, res) => {
-  try {
+router.post(
+  '/settings',
+  asyncHandler(async (req, res) => {
     const { videoQuality, subtitles, autoSubs, subLanguage, rateLimit } =
       req.body;
 
@@ -34,18 +35,14 @@ router.post('/settings', async (req, res) => {
       rateLimit: rateLimit || 'no-limit',
     };
 
-    await saveSettings(settings);
-    req.logger.info('Settings updated:', settings);
+    const validatedSettings = validateSettings(settings);
+    await saveSettings(validatedSettings);
+    req.logger.info('Settings updated:', validatedSettings);
 
     req.session.flashMessage = 'Settings saved successfully';
     req.session.flashType = 'success';
     res.redirect('/settings');
-  } catch (error) {
-    req.logger.error('Error saving settings:', error);
-    req.session.flashMessage = 'Failed to save settings';
-    req.session.flashType = 'error';
-    res.redirect('/settings');
-  }
-});
+  })
+);
 
 export default router;
