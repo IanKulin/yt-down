@@ -10,23 +10,8 @@ router.get('/', async (req, res) => {
     ]);
 
     // Convert Job objects to the format expected by the template
-    const formattedQueuedJobs = queuedJobs.map((job) => ({
-      hash: job.id,
-      url: job.url,
-      title: job.title,
-      retryCount: job.retryCount,
-      timestamp: job.timestamp,
-      sortOrder: job.sortOrder,
-    }));
-
-    const formattedActiveJobs = activeJobs.map((job) => ({
-      hash: job.id,
-      url: job.url,
-      title: job.title,
-      retryCount: job.retryCount,
-      timestamp: job.timestamp,
-      sortOrder: job.sortOrder,
-    }));
+    const formattedQueuedJobs = queuedJobs.map((job) => job.toApiFormat());
+    const formattedActiveJobs = activeJobs.map((job) => job.toApiFormat());
 
     res.render('queue', {
       queuedJobs: formattedQueuedJobs,

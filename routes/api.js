@@ -18,32 +18,9 @@ router.get('/api/state', async (req, res) => {
     ]);
 
     // Convert Job objects to the format expected by the API
-    const formattedQueuedJobs = queuedJobs.map((job) => ({
-      hash: job.id,
-      url: job.url,
-      title: job.title,
-      retryCount: job.retryCount,
-      timestamp: job.timestamp,
-      sortOrder: job.sortOrder,
-    }));
-
-    const formattedActiveJobs = activeJobs.map((job) => ({
-      hash: job.id,
-      url: job.url,
-      title: job.title,
-      retryCount: job.retryCount,
-      timestamp: job.timestamp,
-      sortOrder: job.sortOrder,
-    }));
-
-    const formattedFinishedJobs = finishedJobs.map((job) => ({
-      hash: job.id,
-      url: job.url,
-      title: job.title,
-      retryCount: job.retryCount,
-      timestamp: job.timestamp,
-      sortOrder: job.sortOrder,
-    }));
+    const formattedQueuedJobs = queuedJobs.map((job) => job.toApiFormat());
+    const formattedActiveJobs = activeJobs.map((job) => job.toApiFormat());
+    const formattedFinishedJobs = finishedJobs.map((job) => job.toApiFormat());
 
     // Check for pending notifications
     let notifications = [];
