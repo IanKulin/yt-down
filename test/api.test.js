@@ -229,16 +229,16 @@ describe('api.js', () => {
       );
     });
 
-    test('should test URL structure for queue items', () => {
-      const sampleUrls = [
+    test('should test download job structure for queue items', () => {
+      const sampleJobs = [
         { hash: 'abc123', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
         { hash: 'def456', url: 'https://vimeo.com/12345' },
         { hash: 'ghi789', url: 'https://example.com/video.mp4' },
       ];
 
-      for (const item of sampleUrls) {
-        assert.ok('hash' in item, 'URL item should have hash');
-        assert.ok('url' in item, 'URL item should have url');
+      for (const item of sampleJobs) {
+        assert.ok('hash' in item, 'Job item should have hash');
+        assert.ok('url' in item, 'Job item should have url');
         assert.equal(typeof item.hash, 'string', 'Hash should be string');
         assert.equal(typeof item.url, 'string', 'URL should be string');
         assert.ok(item.hash.length > 0, 'Hash should not be empty');

@@ -1,11 +1,11 @@
 <%- include('partials/header', { currentPage: 'queue', pageTitle: 'Queue' }) %>
         
-        <form action="/url/add" method="POST">
+        <form action="/job/add" method="POST">
             <div class="form-group">
-                <label for="url">Enter URL to download:</label>
+                <label for="url">Enter URL for download job:</label>
                 <input type="url" id="url" name="url" required placeholder="https://www.youtube.com/watch?v=...">
             </div>
-            <button type="submit">Add to Queue</button>
+            <button type="submit">Add Job to Queue</button>
         </form>
         
         <!-- Current Download Panel -->
@@ -27,14 +27,14 @@
         </div>
         
         <div class="queue-section">
-            <h2>Current Queue (<%= queuedUrls.length + activeUrls.length %> items)</h2>
+            <h2>Current Queue (<%= queuedJobs.length + activeJobs.length %> jobs)</h2>
             
             <div class="queue-container">
-                <% if (queuedUrls.length === 0 && activeUrls.length === 0) { %>
-                    <div class="empty-queue">No URLs in queue</div>
+                <% if (queuedJobs.length === 0 && activeJobs.length === 0) { %>
+                    <div class="empty-queue">No download jobs in queue</div>
                 <% } else { %>
                     <!-- Active Downloads -->
-                    <% activeUrls.forEach(function(item) { %>
+                    <% activeJobs.forEach(function(item) { %>
                         <div class="queue-item active" data-hash="<%= item.hash %>">
                             <div class="queue-item-content">
                                 <div class="url"><%= item.url %></div>
@@ -48,7 +48,7 @@
                     <% }) %>
                     
                     <!-- Queued Downloads -->
-                    <% queuedUrls.forEach(function(item) { %>
+                    <% queuedJobs.forEach(function(item) { %>
                         <div class="queue-item" data-hash="<%= item.hash %>">
                             <div class="queue-item-content">
                                 <div class="url"><%= item.url %></div>
@@ -69,7 +69,7 @@
     <div id="deleteModal" class="modal-overlay">
         <div class="modal">
             <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this URL from the queue?</p>
+            <p>Are you sure you want to delete this download job from the queue?</p>
             <div id="modalUrl" class="modal-url"></div>
             <div class="modal-buttons">
                 <button class="modal-btn btn-cancel" onclick="hideDeleteModal()">Cancel</button>
@@ -79,7 +79,7 @@
     </div>
     
     <!-- Hidden form for delete submission -->
-    <form id="deleteForm" action="/url/delete" method="POST" style="display: none;">
+    <form id="deleteForm" action="/job/delete" method="POST" style="display: none;">
         <input type="hidden" id="deleteHash" name="hash" value="">
     </form>
     
@@ -182,14 +182,14 @@
                 });
         }
         
-        function updateQueueList(queuedUrls, activeUrls) {
+        function updateQueueList(queuedJobs, activeJobs) {
             const queueSection = document.querySelector('.queue-section');
             if (!queueSection) return;
             
             // Update queue count
             const queueCountElement = queueSection.querySelector('h2');
-            const totalCount = queuedUrls.length + activeUrls.length;
-            queueCountElement.textContent = `Current Queue (${totalCount} items)`;
+            const totalCount = queuedJobs.length + activeJobs.length;
+            queueCountElement.textContent = `Current Queue (${totalCount} jobs)`;
             
             // Find or create the queue container
             let queueContainer = queueSection.querySelector('.queue-container');
@@ -207,19 +207,19 @@
             if (totalCount === 0) {
                 const emptyDiv = document.createElement('div');
                 emptyDiv.className = 'empty-queue';
-                emptyDiv.textContent = 'No URLs in queue';
+                emptyDiv.textContent = 'No download jobs in queue';
                 queueContainer.appendChild(emptyDiv);
                 return;
             }
             
             // Add active downloads first
-            activeUrls.forEach(item => {
+            activeJobs.forEach(item => {
                 const queueItem = createQueueItem(item, 'active', 'Downloading...');
                 queueContainer.appendChild(queueItem);
             });
             
             // Add queued downloads
-            queuedUrls.forEach(item => {
+            queuedJobs.forEach(item => {
                 const queueItem = createQueueItem(item, 'queued', 'Waiting...');
                 queueContainer.appendChild(queueItem);
             });

@@ -78,15 +78,15 @@ describe('queueProcessor.js', () => {
 
       assert.equal(
         processor.queuedDir,
-        path.join(baseDir, 'data', 'urls', 'queued')
+        path.join(baseDir, 'data', 'jobs', 'queued')
       );
       assert.equal(
         processor.activeDir,
-        path.join(baseDir, 'data', 'urls', 'active')
+        path.join(baseDir, 'data', 'jobs', 'active')
       );
       assert.equal(
         processor.finishedDir,
-        path.join(baseDir, 'data', 'urls', 'finished')
+        path.join(baseDir, 'data', 'jobs', 'finished')
       );
       assert.equal(
         processor.downloadsActiveDir,
@@ -425,15 +425,15 @@ describe('queueProcessor.js', () => {
 
         assert.equal(
           processor.queuedDir,
-          path.join(baseDir, 'data', 'urls', 'queued')
+          path.join(baseDir, 'data', 'jobs', 'queued')
         );
         assert.equal(
           processor.activeDir,
-          path.join(baseDir, 'data', 'urls', 'active')
+          path.join(baseDir, 'data', 'jobs', 'active')
         );
         assert.equal(
           processor.finishedDir,
-          path.join(baseDir, 'data', 'urls', 'finished')
+          path.join(baseDir, 'data', 'jobs', 'finished')
         );
         assert.equal(
           processor.downloadsActiveDir,

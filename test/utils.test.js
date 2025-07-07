@@ -3,10 +3,10 @@ import { strict as assert } from 'node:assert';
 import fs from 'fs/promises';
 import path from 'path';
 import {
-  createUrlHash,
+  createJobHash,
   formatFileSize,
   ensureDirectoryExists,
-  readUrlsFromDirectory,
+  readJobsFromDirectory,
   getDownloadedFiles,
 } from '../lib/utils.js';
 import {
@@ -19,11 +19,11 @@ import {
 } from './helpers.js';
 
 describe('utils.js', () => {
-  describe('createUrlHash', () => {
+  describe('createJobHash', () => {
     test('should create consistent SHA-256 hash', () => {
       const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-      const hash1 = createUrlHash(url);
-      const hash2 = createUrlHash(url);
+      const hash1 = createJobHash(url);
+      const hash2 = createJobHash(url);
 
       assertValidHash(hash1);
       assert.equal(hash1, hash2, 'Same URL should produce same hash');
@@ -33,8 +33,8 @@ describe('utils.js', () => {
       const url1 = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
       const url2 = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 
-      const hash1 = createUrlHash(url1);
-      const hash2 = createUrlHash(url2);
+      const hash1 = createJobHash(url1);
+      const hash2 = createJobHash(url2);
 
       assertValidHash(hash1);
       assertValidHash(hash2);
@@ -46,7 +46,7 @@ describe('utils.js', () => {
     });
 
     test('should handle empty string', () => {
-      const hash = createUrlHash('');
+      const hash = createJobHash('');
       assertValidHash(hash);
       assert.equal(
         hash,
@@ -56,7 +56,7 @@ describe('utils.js', () => {
 
     test('should handle special characters and unicode', () => {
       const url = 'https://example.com/video?title=测试视频&emoji=🎵';
-      const hash = createUrlHash(url);
+      const hash = createJobHash(url);
       assertValidHash(hash);
     });
   });
@@ -144,97 +144,94 @@ describe('utils.js', () => {
     });
   });
 
-  describe('readUrlsFromDirectory', () => {
-    test('should read URLs from json files', async () => {
+  describe('readJobsFromDirectory', () => {
+    test('should read download jobs from json files', async () => {
       await createTestDir();
-      const testDir = path.join(TEST_DATA_DIR, 'urls');
+      const testDir = path.join(TEST_DATA_DIR, 'jobs');
       const logger = createMockLogger();
 
       await createTestFile(
-        'urls/hash1.json',
+        'jobs/hash1.json',
         JSON.stringify({
           url: 'https://www.youtube.com/watch?v=video1',
           title: 'Test Video 1',
           retryCount: 0,
           timestamp: '2023-01-01T00:00:00Z',
-          sortOrder: 1
+          sortOrder: 1,
         })
       );
       await createTestFile(
-        'urls/hash2.json',
+        'jobs/hash2.json',
         JSON.stringify({
           url: 'https://www.youtube.com/watch?v=video2',
           title: 'Test Video 2',
           retryCount: 0,
           timestamp: '2023-01-01T00:01:00Z',
-          sortOrder: 2
+          sortOrder: 2,
         })
       );
-      await createTestFile('urls/not-json.md', 'should be ignored');
+      await createTestFile('jobs/not-json.md', 'should be ignored');
 
-      const urls = await readUrlsFromDirectory(testDir, 'test', logger);
+      const jobs = await readJobsFromDirectory(testDir, 'test', logger);
 
-      assert.equal(urls.length, 2);
-      assert.equal(urls[0].hash, 'hash1');
-      assert.equal(urls[0].url, 'https://www.youtube.com/watch?v=video1');
-      assert.equal(urls[0].title, 'Test Video 1');
-      assert.equal(urls[0].retryCount, 0);
-      assert.equal(urls[0].sortOrder, 1);
-      assert.equal(urls[1].hash, 'hash2');
-      assert.equal(urls[1].url, 'https://www.youtube.com/watch?v=video2');
-      assert.equal(urls[1].title, 'Test Video 2');
-      assert.equal(urls[1].retryCount, 0);
-      assert.equal(urls[1].sortOrder, 2);
+      assert.equal(jobs.length, 2);
+      assert.equal(jobs[0].hash, 'hash1');
+      assert.equal(jobs[0].url, 'https://www.youtube.com/watch?v=video1');
+      assert.equal(jobs[0].title, 'Test Video 1');
+      assert.equal(jobs[0].retryCount, 0);
+      assert.equal(jobs[0].sortOrder, 1);
+      assert.equal(jobs[1].hash, 'hash2');
+      assert.equal(jobs[1].url, 'https://www.youtube.com/watch?v=video2');
+      assert.equal(jobs[1].title, 'Test Video 2');
+      assert.equal(jobs[1].retryCount, 0);
+      assert.equal(jobs[1].sortOrder, 2);
 
       await cleanupTestDir();
     });
 
     test('should handle malformed JSON files gracefully', async () => {
       await createTestDir();
-      const testDir = path.join(TEST_DATA_DIR, 'urls');
+      const testDir = path.join(TEST_DATA_DIR, 'jobs');
       const logger = createMockLogger();
 
       await createTestFile(
-        'urls/hash1.json',
+        'jobs/hash1.json',
         JSON.stringify({
           url: 'https://www.youtube.com/watch?v=video1',
           title: 'Test Video 1',
           retryCount: 0,
           timestamp: '2023-01-01T00:00:00Z',
-          sortOrder: 1
+          sortOrder: 1,
         })
       );
-      await createTestFile(
-        'urls/malformed.json',
-        '{ invalid json'
-      );
+      await createTestFile('jobs/malformed.json', '{ invalid json');
 
-      const urls = await readUrlsFromDirectory(testDir, 'test', logger);
+      const jobs = await readJobsFromDirectory(testDir, 'test', logger);
 
-      assert.equal(urls.length, 1);
-      assert.equal(urls[0].url, 'https://www.youtube.com/watch?v=video1');
+      assert.equal(jobs.length, 1);
+      assert.equal(jobs[0].url, 'https://www.youtube.com/watch?v=video1');
 
       await cleanupTestDir();
     });
 
     test('should return empty array for non-existent directory', async () => {
       const logger = createMockLogger();
-      const urls = await readUrlsFromDirectory(
+      const jobs = await readJobsFromDirectory(
         '/non/existent/path',
         'test',
         logger
       );
-      assert.deepEqual(urls, []);
+      assert.deepEqual(jobs, []);
     });
 
     test('should create directory if it does not exist', async () => {
       await createTestDir();
-      const testDir = path.join(TEST_DATA_DIR, 'new-urls');
+      const testDir = path.join(TEST_DATA_DIR, 'new-jobs');
       const logger = createMockLogger();
 
-      const urls = await readUrlsFromDirectory(testDir, 'test', logger);
+      const jobs = await readJobsFromDirectory(testDir, 'test', logger);
 
-      assert.deepEqual(urls, []);
+      assert.deepEqual(jobs, []);
       const stats = await fs.stat(testDir);
       assert.ok(stats.isDirectory());
 
@@ -273,7 +270,15 @@ describe('utils.js', () => {
     test('should detect file types correctly with regex patterns', () => {
       // Test the regex patterns used by the function
       const videoExtensions = ['mp4', 'mkv', 'webm', 'avi', 'mov'];
-      const subtitleExtensions = ['srt', 'vtt', 'dfxp', 'ass', 'ttml', 'sbv', 'lrc'];
+      const subtitleExtensions = [
+        'srt',
+        'vtt',
+        'dfxp',
+        'ass',
+        'ttml',
+        'sbv',
+        'lrc',
+      ];
 
       for (const ext of videoExtensions) {
         const filename = `test.${ext}`;

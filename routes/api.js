@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getQueuedUrls, getActiveUrls, getFinishedUrls } from '../lib/utils.js';
+import { getQueuedJobs, getActiveJobs, getFinishedJobs } from '../lib/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,10 +11,10 @@ const router = express.Router();
 
 router.get('/api/state', async (req, res) => {
   try {
-    const [queuedUrls, activeUrls, finishedUrls] = await Promise.all([
-      getQueuedUrls(req.logger),
-      getActiveUrls(req.logger),
-      getFinishedUrls(req.logger),
+    const [queuedJobs, activeJobs, finishedJobs] = await Promise.all([
+      getQueuedJobs(req.logger),
+      getActiveJobs(req.logger),
+      getFinishedJobs(req.logger),
     ]);
 
     // Check for pending notifications
@@ -33,14 +33,14 @@ router.get('/api/state', async (req, res) => {
     }
 
     const state = {
-      queued: queuedUrls,
-      active: activeUrls,
-      finished: finishedUrls,
+      queued: queuedJobs,
+      active: activeJobs,
+      finished: finishedJobs,
       counts: {
-        queued: queuedUrls.length,
-        active: activeUrls.length,
-        finished: finishedUrls.length,
-        total: queuedUrls.length + activeUrls.length + finishedUrls.length,
+        queued: queuedJobs.length,
+        active: activeJobs.length,
+        finished: finishedJobs.length,
+        total: queuedJobs.length + activeJobs.length + finishedJobs.length,
       },
       processor: req.queueProcessor.getStatus(),
       notifications: notifications,
