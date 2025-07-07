@@ -3,64 +3,18 @@ import { strict as assert } from 'node:assert';
 import fs from 'fs/promises';
 import path from 'path';
 import {
-  createJobHash,
   formatFileSize,
   ensureDirectoryExists,
-  readJobsFromDirectory,
   getDownloadedFiles,
 } from '../lib/utils.js';
 import {
   createTestDir,
   cleanupTestDir,
-  createTestFile,
   createMockLogger,
-  assertValidHash,
   TEST_DATA_DIR,
 } from './helpers.js';
 
 describe('utils.js', () => {
-  describe('createJobHash', () => {
-    test('should create consistent SHA-256 hash', () => {
-      const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-      const hash1 = createJobHash(url);
-      const hash2 = createJobHash(url);
-
-      assertValidHash(hash1);
-      assert.equal(hash1, hash2, 'Same URL should produce same hash');
-    });
-
-    test('should create different hashes for different URLs', () => {
-      const url1 = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-      const url2 = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
-
-      const hash1 = createJobHash(url1);
-      const hash2 = createJobHash(url2);
-
-      assertValidHash(hash1);
-      assertValidHash(hash2);
-      assert.notEqual(
-        hash1,
-        hash2,
-        'Different URLs should produce different hashes'
-      );
-    });
-
-    test('should handle empty string', () => {
-      const hash = createJobHash('');
-      assertValidHash(hash);
-      assert.equal(
-        hash,
-        'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-      );
-    });
-
-    test('should handle special characters and unicode', () => {
-      const url = 'https://example.com/video?title=测试视频&emoji=🎵';
-      const hash = createJobHash(url);
-      assertValidHash(hash);
-    });
-  });
-
   describe('formatFileSize', () => {
     test('should format bytes correctly', () => {
       assert.equal(formatFileSize(0), '0 Bytes');
@@ -137,101 +91,6 @@ describe('utils.js', () => {
 
       await ensureDirectoryExists(testDir);
 
-      const stats = await fs.stat(testDir);
-      assert.ok(stats.isDirectory());
-
-      await cleanupTestDir();
-    });
-  });
-
-  describe('readJobsFromDirectory', () => {
-    test('should read download jobs from json files', async () => {
-      await createTestDir();
-      const testDir = path.join(TEST_DATA_DIR, 'jobs');
-      const logger = createMockLogger();
-
-      await createTestFile(
-        'jobs/hash1.json',
-        JSON.stringify({
-          url: 'https://www.youtube.com/watch?v=video1',
-          title: 'Test Video 1',
-          retryCount: 0,
-          timestamp: '2023-01-01T00:00:00Z',
-          sortOrder: 1,
-        })
-      );
-      await createTestFile(
-        'jobs/hash2.json',
-        JSON.stringify({
-          url: 'https://www.youtube.com/watch?v=video2',
-          title: 'Test Video 2',
-          retryCount: 0,
-          timestamp: '2023-01-01T00:01:00Z',
-          sortOrder: 2,
-        })
-      );
-      await createTestFile('jobs/not-json.md', 'should be ignored');
-
-      const jobs = await readJobsFromDirectory(testDir, 'test', logger);
-
-      assert.equal(jobs.length, 2);
-      assert.equal(jobs[0].hash, 'hash1');
-      assert.equal(jobs[0].url, 'https://www.youtube.com/watch?v=video1');
-      assert.equal(jobs[0].title, 'Test Video 1');
-      assert.equal(jobs[0].retryCount, 0);
-      assert.equal(jobs[0].sortOrder, 1);
-      assert.equal(jobs[1].hash, 'hash2');
-      assert.equal(jobs[1].url, 'https://www.youtube.com/watch?v=video2');
-      assert.equal(jobs[1].title, 'Test Video 2');
-      assert.equal(jobs[1].retryCount, 0);
-      assert.equal(jobs[1].sortOrder, 2);
-
-      await cleanupTestDir();
-    });
-
-    test('should handle malformed JSON files gracefully', async () => {
-      await createTestDir();
-      const testDir = path.join(TEST_DATA_DIR, 'jobs');
-      const logger = createMockLogger();
-
-      await createTestFile(
-        'jobs/hash1.json',
-        JSON.stringify({
-          url: 'https://www.youtube.com/watch?v=video1',
-          title: 'Test Video 1',
-          retryCount: 0,
-          timestamp: '2023-01-01T00:00:00Z',
-          sortOrder: 1,
-        })
-      );
-      await createTestFile('jobs/malformed.json', '{ invalid json');
-
-      const jobs = await readJobsFromDirectory(testDir, 'test', logger);
-
-      assert.equal(jobs.length, 1);
-      assert.equal(jobs[0].url, 'https://www.youtube.com/watch?v=video1');
-
-      await cleanupTestDir();
-    });
-
-    test('should return empty array for non-existent directory', async () => {
-      const logger = createMockLogger();
-      const jobs = await readJobsFromDirectory(
-        '/non/existent/path',
-        'test',
-        logger
-      );
-      assert.deepEqual(jobs, []);
-    });
-
-    test('should create directory if it does not exist', async () => {
-      await createTestDir();
-      const testDir = path.join(TEST_DATA_DIR, 'new-jobs');
-      const logger = createMockLogger();
-
-      const jobs = await readJobsFromDirectory(testDir, 'test', logger);
-
-      assert.deepEqual(jobs, []);
       const stats = await fs.stat(testDir);
       assert.ok(stats.isDirectory());
 

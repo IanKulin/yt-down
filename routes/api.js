@@ -2,20 +2,54 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getQueuedJobs, getActiveJobs, getFinishedJobs } from '../lib/utils.js';
+import { JobManager } from '../lib/jobs.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+// Create job manager instance
+const jobManager = new JobManager();
+
 router.get('/api/state', async (req, res) => {
   try {
+    // Set logger on job manager
+    jobManager.logger = req.logger;
+
     const [queuedJobs, activeJobs, finishedJobs] = await Promise.all([
-      getQueuedJobs(req.logger),
-      getActiveJobs(req.logger),
-      getFinishedJobs(req.logger),
+      jobManager.getQueuedJobs(),
+      jobManager.getActiveJobs(),
+      jobManager.getFinishedJobs(),
     ]);
+
+    // Convert Job objects to the format expected by the API
+    const formattedQueuedJobs = queuedJobs.map((job) => ({
+      hash: job.id,
+      url: job.url,
+      title: job.title,
+      retryCount: job.retryCount,
+      timestamp: job.timestamp,
+      sortOrder: job.sortOrder,
+    }));
+
+    const formattedActiveJobs = activeJobs.map((job) => ({
+      hash: job.id,
+      url: job.url,
+      title: job.title,
+      retryCount: job.retryCount,
+      timestamp: job.timestamp,
+      sortOrder: job.sortOrder,
+    }));
+
+    const formattedFinishedJobs = finishedJobs.map((job) => ({
+      hash: job.id,
+      url: job.url,
+      title: job.title,
+      retryCount: job.retryCount,
+      timestamp: job.timestamp,
+      sortOrder: job.sortOrder,
+    }));
 
     // Check for pending notifications
     let notifications = [];
@@ -33,14 +67,17 @@ router.get('/api/state', async (req, res) => {
     }
 
     const state = {
-      queued: queuedJobs,
-      active: activeJobs,
-      finished: finishedJobs,
+      queued: formattedQueuedJobs,
+      active: formattedActiveJobs,
+      finished: formattedFinishedJobs,
       counts: {
-        queued: queuedJobs.length,
-        active: activeJobs.length,
-        finished: finishedJobs.length,
-        total: queuedJobs.length + activeJobs.length + finishedJobs.length,
+        queued: formattedQueuedJobs.length,
+        active: formattedActiveJobs.length,
+        finished: formattedFinishedJobs.length,
+        total:
+          formattedQueuedJobs.length +
+          formattedActiveJobs.length +
+          formattedFinishedJobs.length,
       },
       processor: req.queueProcessor.getStatus(),
       notifications: notifications,

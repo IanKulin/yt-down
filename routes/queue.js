@@ -1,27 +1,43 @@
 import express from 'express';
-import fs from 'fs/promises';
-import path from 'path';
-import {
-  QUEUE_DIR,
-  ensureDirectoryExists,
-  getQueuedJobs,
-  getActiveJobs,
-  createJobHash,
-  createJobItem,
-  writeJobFile,
-} from '../lib/utils.js';
+import { JobManager } from '../lib/jobs.js';
 
 const router = express.Router();
 
+// Create job manager instance
+const jobManager = new JobManager();
+
 router.get('/', async (req, res) => {
   try {
+    // Set logger on job manager
+    jobManager.logger = req.logger;
+
     const [queuedJobs, activeJobs] = await Promise.all([
-      getQueuedJobs(req.logger),
-      getActiveJobs(req.logger),
+      jobManager.getQueuedJobs(),
+      jobManager.getActiveJobs(),
     ]);
+
+    // Convert Job objects to the format expected by the template
+    const formattedQueuedJobs = queuedJobs.map((job) => ({
+      hash: job.id,
+      url: job.url,
+      title: job.title,
+      retryCount: job.retryCount,
+      timestamp: job.timestamp,
+      sortOrder: job.sortOrder,
+    }));
+
+    const formattedActiveJobs = activeJobs.map((job) => ({
+      hash: job.id,
+      url: job.url,
+      title: job.title,
+      retryCount: job.retryCount,
+      timestamp: job.timestamp,
+      sortOrder: job.sortOrder,
+    }));
+
     res.render('queue', {
-      queuedJobs,
-      activeJobs,
+      queuedJobs: formattedQueuedJobs,
+      activeJobs: formattedActiveJobs,
     });
   } catch (error) {
     req.logger.error('Error rendering queue page:', error);
@@ -40,35 +56,25 @@ router.post('/job/add', async (req, res) => {
     }
 
     const trimmedUrl = url.trim();
-    const jobHash = createJobHash(trimmedUrl);
-    const filename = `${jobHash}.json`;
-    const filePath = path.join(QUEUE_DIR, filename);
 
-    await ensureDirectoryExists(QUEUE_DIR);
+    // Set logger on job manager
+    jobManager.logger = req.logger;
 
-    try {
-      await fs.access(filePath);
-      req.session.flashMessage = 'Download job already exists in queue';
-      req.session.flashType = 'error';
-      return res.redirect('/');
-    } catch {
-      // File doesn't exist, we can proceed
-    }
-
-    // Create job item with metadata
-    const jobItem = await createJobItem(trimmedUrl);
-    await writeJobFile(filePath, jobItem);
-    req.logger.info(
-      `Added download job to queue: ${trimmedUrl} (hash: ${jobHash})`
-    );
+    // Create job using JobManager
+    await jobManager.createJob(trimmedUrl);
 
     req.session.flashMessage = 'Download job added to queue successfully';
     req.session.flashType = 'success';
     res.redirect('/');
   } catch (error) {
-    req.logger.error('Error adding URL to queue:', error);
-    req.session.flashMessage = 'Failed to add download job to queue';
-    req.session.flashType = 'error';
+    if (error.message === 'Job already exists') {
+      req.session.flashMessage = 'Download job already exists in queue';
+      req.session.flashType = 'error';
+    } else {
+      req.logger.error('Error adding URL to queue:', error);
+      req.session.flashMessage = 'Failed to add download job to queue';
+      req.session.flashType = 'error';
+    }
     res.redirect('/');
   }
 });
@@ -84,32 +90,25 @@ router.post('/job/delete', async (req, res) => {
     }
 
     const trimmedHash = hash.trim();
-    const filename = `${trimmedHash}.json`;
-    const filePath = path.join(QUEUE_DIR, filename);
 
-    try {
-      const data = await fs.readFile(filePath, 'utf-8');
-      const jobItem = JSON.parse(data);
-      await fs.unlink(filePath);
-      req.logger.info(
-        `Deleted download job from queue: ${jobItem.url} (hash: ${trimmedHash})`
-      );
+    // Set logger on job manager
+    jobManager.logger = req.logger;
 
-      req.session.flashMessage = 'Download job deleted from queue successfully';
-      req.session.flashType = 'success';
-      res.redirect('/');
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        req.session.flashMessage = 'Download job not found in queue';
-        req.session.flashType = 'error';
-        return res.redirect('/');
-      }
-      throw error;
-    }
+    // Delete job using JobManager
+    await jobManager.deleteJob(trimmedHash);
+
+    req.session.flashMessage = 'Download job deleted from queue successfully';
+    req.session.flashType = 'success';
+    res.redirect('/');
   } catch (error) {
-    req.logger.error('Error deleting URL from queue:', error);
-    req.session.flashMessage = 'Failed to delete download job from queue';
-    req.session.flashType = 'error';
+    if (error.message.includes('Job not found')) {
+      req.session.flashMessage = 'Download job not found in queue';
+      req.session.flashType = 'error';
+    } else {
+      req.logger.error('Error deleting URL from queue:', error);
+      req.session.flashMessage = 'Failed to delete download job from queue';
+      req.session.flashType = 'error';
+    }
     res.redirect('/');
   }
 });

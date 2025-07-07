@@ -76,18 +76,15 @@ describe('queueProcessor.js', () => {
       const baseDir = '/test/base';
       const processor = new QueueProcessor({ logger, baseDir });
 
+      // Job directories are now managed by JobManager
+      assert.ok(processor.jobManager, 'Should have JobManager instance');
       assert.equal(
-        processor.queuedDir,
-        path.join(baseDir, 'data', 'jobs', 'queued')
+        processor.jobManager.baseDir,
+        baseDir,
+        'JobManager should use same base directory'
       );
-      assert.equal(
-        processor.activeDir,
-        path.join(baseDir, 'data', 'jobs', 'active')
-      );
-      assert.equal(
-        processor.finishedDir,
-        path.join(baseDir, 'data', 'jobs', 'finished')
-      );
+
+      // Downloads directories are still on processor
       assert.equal(
         processor.downloadsActiveDir,
         path.join(baseDir, 'data', 'downloads', 'active')
@@ -423,18 +420,14 @@ describe('queueProcessor.js', () => {
         const logger = createMockLogger();
         const processor = new QueueProcessor({ logger, baseDir });
 
+        // JobManager handles job directories now
         assert.equal(
-          processor.queuedDir,
-          path.join(baseDir, 'data', 'jobs', 'queued')
+          processor.jobManager.baseDir,
+          baseDir,
+          'JobManager should use correct base directory'
         );
-        assert.equal(
-          processor.activeDir,
-          path.join(baseDir, 'data', 'jobs', 'active')
-        );
-        assert.equal(
-          processor.finishedDir,
-          path.join(baseDir, 'data', 'jobs', 'finished')
-        );
+
+        // Downloads directories are still on processor
         assert.equal(
           processor.downloadsActiveDir,
           path.join(baseDir, 'data', 'downloads', 'active')
@@ -451,18 +444,14 @@ describe('queueProcessor.js', () => {
       const absoluteBase = '/absolute/path/to/app';
       const processor = new QueueProcessor({ logger, baseDir: absoluteBase });
 
-      assert.ok(
-        path.isAbsolute(processor.queuedDir),
-        'Queued dir should be absolute'
+      // JobManager should have the same base directory
+      assert.equal(
+        processor.jobManager.baseDir,
+        absoluteBase,
+        'JobManager should use absolute base directory'
       );
-      assert.ok(
-        path.isAbsolute(processor.activeDir),
-        'Active dir should be absolute'
-      );
-      assert.ok(
-        path.isAbsolute(processor.finishedDir),
-        'Finished dir should be absolute'
-      );
+
+      // Downloads directories should be absolute
       assert.ok(
         path.isAbsolute(processor.downloadsActiveDir),
         'Downloads active dir should be absolute'
