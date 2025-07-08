@@ -1,5 +1,4 @@
 import express from 'express';
-import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
@@ -55,20 +54,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Session configuration for flash messages
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'yt-down-session-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false, // Set to true in production with HTTPS
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60, // 1 hour
-    },
-  })
-);
-
 // Initialize queue processor and job manager
 const queueProcessor = new QueueProcessor({
   logger,
@@ -115,21 +100,23 @@ const broadcastChange = () => {
 queueProcessor.setBroadcastChange(broadcastChange);
 
 // Initialize services (after broadcastChange is defined)
+const notificationService = new NotificationService({
+  logger,
+  baseDir: __dirname,
+  broadcastChange,
+});
+
 const jobService = new JobService({
   jobManager,
   queueProcessor,
   logger,
   broadcastChange,
+  notificationService,
 });
 
 const downloadService = new DownloadService({
   logger,
-});
-
-const notificationService = new NotificationService({
-  logger,
-  baseDir: __dirname,
-  broadcastChange,
+  notificationService,
 });
 
 const settingsService = new SettingsService({
@@ -155,16 +142,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Flash message middleware
-app.use(async (req, res, next) => {
-  // Handle session flash messages only
-  res.locals.flashMessage = req.session.flashMessage;
-  res.locals.flashType = req.session.flashType;
-  delete req.session.flashMessage;
-  delete req.session.flashType;
-
-  next();
-});
 
 async function checkYtDlpExists() {
   try {

@@ -16,15 +16,5 @@ router.get(
   })
 );
 
-router.post(
-  '/settings',
-  asyncHandler(async (req, res) => {
-    const result = await req.services.settings.updateSettings(req.body);
-
-    req.session.flashMessage = result.message;
-    req.session.flashType = result.type;
-    res.redirect('/settings');
-  })
-);
 
 export default router;

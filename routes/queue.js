@@ -20,10 +20,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const { url } = req.body;
 
-    const result = await req.services.jobs.addJob(url);
-
-    req.session.flashMessage = result.message;
-    req.session.flashType = result.type;
+    await req.services.jobs.addJob(url);
     res.redirect('/');
   })
 );
@@ -33,10 +30,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const { hash } = req.body;
 
-    const result = await req.services.jobs.removeJob(hash);
-
-    req.session.flashMessage = result.message;
-    req.session.flashType = result.type;
+    await req.services.jobs.removeJob(hash);
     res.redirect('/');
   })
 );

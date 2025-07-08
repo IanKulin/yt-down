@@ -20,8 +20,8 @@ This is a Node.js web application that provides a queue-based system for downloa
 
 **Server (`server.js`)**
 
-- Express.js application with session management for flash messages
-- WebSocket server for real-time client notifications with polling fallback
+- Express.js application with WebSocket server for real-time client notifications
+- WebSocket server provides instant updates with automatic polling fallback
 - Initializes QueueProcessor, JobManager, and service layer
 - Injects services into request context for route handlers
 
@@ -91,10 +91,10 @@ The "currently downloading" and "finished downloading" locations are split up to
 
 **Service Layer Architecture**: Business logic separated from HTTP concerns using service classes
 **Real-time Updates**: WebSocket-based change notifications with automatic fallback to polling for reliability
-**Error Handling**: Services handle business logic errors; routes handle HTTP responses and flash messages
+**Error Handling**: Services handle business logic errors; error notifications sent via WebSocket instead of traditional page-based messages
 **File Operations**: DownloadService centralizes security validation and file operations
 **Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection; broadcasts progress via WebSocket
-**Notification System**: NotificationService manages completion events stored in `data/notifications.json`
+**Notification System**: Unified WebSocket-based notification system replaces traditional flash messages; all user feedback sent via real-time notifications
 **Dependency Injection**: Services injected via `req.services` for clean testability
 
 ### Environment Variables

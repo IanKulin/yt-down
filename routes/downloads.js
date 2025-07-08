@@ -35,10 +35,7 @@ router.post(
   '/file/delete',
   asyncHandler(async (req, res) => {
     const { filename } = req.body;
-    const result = await req.services.downloads.deleteFile(filename);
-
-    req.session.flashMessage = result.message;
-    req.session.flashType = result.type;
+    await req.services.downloads.deleteFile(filename);
     res.redirect('/downloads');
   })
 );
