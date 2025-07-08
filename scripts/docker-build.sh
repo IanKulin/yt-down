@@ -30,7 +30,7 @@ MINOR_VERSION="${VERSION%.*}"
 echo -e "${GREEN}Tags: latest, ${VERSION}, ${MINOR_VERSION}, ${MAJOR_VERSION}${NC}"
 
 # Build the image with all tags
-docker build --platform linux/x86_64 \
+docker buildx build --platform linux/amd64,linux/arm64 \
   -t "${IMAGE_NAME}:latest" \
   -t "${IMAGE_NAME}:${VERSION}" \
   -t "${IMAGE_NAME}:${MINOR_VERSION}" \
