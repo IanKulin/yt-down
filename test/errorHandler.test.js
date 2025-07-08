@@ -76,13 +76,18 @@ describe('Error Handler', () => {
       );
     });
 
-    it('should handle web route errors with flash message and redirect', () => {
+    it('should handle web route errors with notification and redirect', () => {
       const error = new ValidationError('Invalid input');
+      const mockNotifications = {
+        addNotification: mock.fn(() => Promise.resolve()),
+      };
+      req.services = { notifications: mockNotifications };
 
       handleError(error, req, res, next);
 
-      assert.strictEqual(req.session.flashMessage, 'Invalid input');
-      assert.strictEqual(req.session.flashType, 'error');
+      assert.strictEqual(mockNotifications.addNotification.mock.callCount(), 1);
+      assert.strictEqual(mockNotifications.addNotification.mock.calls[0].arguments[0], 'error');
+      assert.strictEqual(mockNotifications.addNotification.mock.calls[0].arguments[1], 'Invalid input');
       assert.strictEqual(res.redirect.mock.callCount(), 1);
       assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/');
     });

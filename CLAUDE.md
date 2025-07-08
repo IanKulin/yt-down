@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run docker:push` - Push Docker image to registry
 - `LOG_LEVEL=debug npm start` - start app with debugging logs
 
+IMPORTANT: Check tests pass at the start of each session, and at the end of each change, always lint, test and format.
+
 ## Architecture Overview
 
 This is a Node.js web application that provides a queue-based system for downloading videos using `yt-dlp`. The application uses a file-based storage system and processes downloads in the background.
@@ -91,10 +93,10 @@ The "currently downloading" and "finished downloading" locations are split up to
 
 **Service Layer Architecture**: Business logic separated from HTTP concerns using service classes
 **Real-time Updates**: WebSocket-based change notifications with automatic fallback to polling for reliability
-**Error Handling**: Services handle business logic errors; error notifications sent via WebSocket instead of traditional page-based messages
+**Error Handling**: Services handle business logic errors; error notifications sent via WebSocket
 **File Operations**: DownloadService centralizes security validation and file operations
 **Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection; broadcasts progress via WebSocket
-**Notification System**: Unified WebSocket-based notification system replaces traditional flash messages; all user feedback sent via real-time notifications
+**Notification System**: Unified WebSocket-based notification system 
 **Dependency Injection**: Services injected via `req.services` for clean testability
 
 ### Environment Variables

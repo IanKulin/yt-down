@@ -142,7 +142,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 async function checkYtDlpExists() {
   try {
     await execAsync('yt-dlp --version');

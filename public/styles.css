@@ -306,94 +306,138 @@ button:not([class]):hover {
   flex-shrink: 0;
 }
 
-/* Flash Messages */
-.flash-message {
-  position: relative;
-  padding: 16px 48px 16px 16px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  border-left: 4px solid;
-  box-shadow: 0 2px 8px var(--shadow-light);
-  animation: flashSlideIn 0.3s ease-out;
-  transition: all 0.3s ease-out;
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  pointer-events: none;
 }
 
-.flash-message.success {
+.toast-notification {
+  position: relative;
+  padding: 16px 48px 16px 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border-left: 4px solid;
+  box-shadow: 0 4px 16px var(--shadow-dark);
+  animation: toastSlideIn 0.4s ease-out;
+  transition: all 0.3s ease-out;
+  pointer-events: all;
+  background-color: var(--bg-secondary);
+  backdrop-filter: blur(10px);
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+.toast-notification.success {
   background-color: var(--message-success-bg);
   border-left-color: var(--accent-success);
   color: var(--message-success-text);
 }
 
-.flash-message.error {
+.toast-notification.error {
   background-color: var(--message-error-bg);
   border-left-color: var(--accent-danger);
   color: var(--message-error-text);
 }
 
-.flash-content {
+.toast-notification.info {
+  background-color: var(--bg-tertiary);
+  border-left-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.toast-content {
   display: block;
   font-weight: 500;
   line-height: 1.4;
+  font-size: 14px;
 }
 
-.flash-dismiss {
+.toast-dismiss {
   position: absolute;
   top: 8px;
   right: 12px;
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   color: inherit;
   opacity: 0.7;
   transition: opacity 0.2s ease;
   padding: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
 }
 
-.flash-dismiss:hover {
+.toast-dismiss:hover {
   opacity: 1;
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-.flash-dismiss:focus {
+.toast-dismiss:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
 
-@keyframes flashSlideIn {
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background-color: var(--accent-primary);
+  border-radius: 0 0 8px 8px;
+  transition: width 0.1s linear;
+}
+
+.toast-notification.success .toast-progress {
+  background-color: var(--accent-success);
+}
+
+.toast-notification.error .toast-progress {
+  background-color: var(--accent-danger);
+}
+
+.toast-notification.paused .toast-progress {
+  animation-play-state: paused;
+}
+
+@keyframes toastSlideIn {
   0% {
-    transform: translateY(-20px);
+    transform: translateX(-100%);
     opacity: 0;
   }
   100% {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
   }
 }
 
-@keyframes flashSlideOut {
+@keyframes toastSlideOut {
   0% {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
     max-height: 200px;
+    margin-bottom: 12px;
   }
   100% {
-    transform: translateY(-20px);
+    transform: translateX(-100%);
     opacity: 0;
     max-height: 0;
+    margin-bottom: 0;
   }
 }
 
-.flash-message.dismissing {
-  animation: flashSlideOut 0.3s ease-in forwards;
-  margin-bottom: 0;
+.toast-notification.dismissing {
+  animation: toastSlideOut 0.3s ease-in forwards;
   padding-top: 0;
   padding-bottom: 0;
 }

@@ -163,7 +163,12 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.notifications && data.notifications.length > 0) {
-                        showCompletionNotification(data.notifications[0]);
+                        const notification = data.notifications[0];
+                        // Only show if we haven't shown this notification before
+                        if (!shownNotifications.has(notification.timestamp)) {
+                            shownNotifications.add(notification.timestamp);
+                            showCompletionNotification(notification);
+                        }
                     }
                 })
                 .catch(error => {
@@ -172,59 +177,131 @@
         }
         
         function showCompletionNotification(notification) {
-            const existingFlash = document.querySelector('[data-flash-message]');
-            if (existingFlash) {
-                return;
-            }
-            
-            const flashMessage = document.createElement('div');
-            flashMessage.className = 'flash-message success';
-            flashMessage.setAttribute('data-flash-message', '');
-            flashMessage.innerHTML = `
-                <span class="flash-content">${notification.message}</span>
-                <button class="flash-dismiss" aria-label="Dismiss message">&times;</button>
-            `;
-            
-            const header = document.querySelector('.header');
-            header.parentNode.insertBefore(flashMessage, header.nextSibling);
-            
-            const dismissBtn = flashMessage.querySelector('.flash-dismiss');
-            dismissBtn.addEventListener('click', function() {
-                dismissCompletionNotification(notification.timestamp, flashMessage);
-            });
-            
-            setTimeout(() => {
-                dismissCompletionNotification(notification.timestamp, flashMessage);
-            }, 5000);
-            
-            const escapeHandler = function(e) {
-                if (e.key === 'Escape') {
-                    dismissCompletionNotification(notification.timestamp, flashMessage);
-                    document.removeEventListener('keydown', escapeHandler);
-                }
-            };
-            document.addEventListener('keydown', escapeHandler);
+            showToast('success', notification.message, 5000, notification.timestamp);
         }
         
-        function dismissCompletionNotification(notificationId, flashElement) {
-            if (!flashElement || flashElement.classList.contains('dismissing')) return;
+        // Toast notification system
+        let toastQueue = [];
+        let toastIdCounter = 0;
+        let shownNotifications = new Set();
+        
+        function showToast(type, message, duration = 5000, notificationId = null) {
+            const toast = {
+                id: ++toastIdCounter,
+                type: type,
+                message: message,
+                duration: duration,
+                notificationId: notificationId,
+                element: null,
+                timeout: null,
+                progressInterval: null,
+                isHovered: false
+            };
             
-            flashElement.classList.add('dismissing');
+            toastQueue.push(toast);
+            displayToast(toast);
+        }
+        
+        function displayToast(toast) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            // Create toast element
+            const toastElement = document.createElement('div');
+            toastElement.className = `toast-notification ${toast.type}`;
+            toastElement.dataset.toastId = toast.id;
+            toastElement.innerHTML = `
+                <span class="toast-content">${escapeHtml(toast.message)}</span>
+                <button class="toast-dismiss" aria-label="Dismiss notification">&times;</button>
+                <div class="toast-progress"></div>
+            `;
+            
+            toast.element = toastElement;
+            container.appendChild(toastElement);
+            
+            // Set up dismiss functionality
+            const dismissBtn = toastElement.querySelector('.toast-dismiss');
+            dismissBtn.addEventListener('click', () => dismissToast(toast));
+            
+            // Set up hover pause functionality
+            toastElement.addEventListener('mouseenter', () => {
+                toast.isHovered = true;
+                toastElement.classList.add('paused');
+                if (toast.timeout) clearTimeout(toast.timeout);
+                if (toast.progressInterval) clearInterval(toast.progressInterval);
+            });
+            
+            toastElement.addEventListener('mouseleave', () => {
+                toast.isHovered = false;
+                toastElement.classList.remove('paused');
+                startToastTimer(toast);
+            });
+            
+            // Start auto-dismiss timer
+            startToastTimer(toast);
+        }
+        
+        function startToastTimer(toast) {
+            if (toast.isHovered) return;
+            
+            const progressBar = toast.element.querySelector('.toast-progress');
+            let progress = 0;
+            const interval = 50;
+            const increment = (interval / toast.duration) * 100;
+            
+            toast.progressInterval = setInterval(() => {
+                progress += increment;
+                progressBar.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(toast.progressInterval);
+                    dismissToast(toast);
+                }
+            }, interval);
+        }
+        
+        function dismissToast(toast) {
+            if (!toast.element || toast.element.classList.contains('dismissing')) return;
+            
+            // Clear timers
+            if (toast.timeout) clearTimeout(toast.timeout);
+            if (toast.progressInterval) clearInterval(toast.progressInterval);
+            
+            // Animate out
+            toast.element.classList.add('dismissing');
             setTimeout(() => {
-                if (flashElement.parentElement) {
-                    flashElement.parentElement.removeChild(flashElement);
+                if (toast.element.parentElement) {
+                    toast.element.parentElement.removeChild(toast.element);
                 }
             }, 300);
             
-            fetch('/api/notifications/dismiss', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ notificationId: notificationId })
-            }).catch(error => {
-                console.error('Error dismissing notification:', error);
-            });
+            // Remove from queue
+            const index = toastQueue.indexOf(toast);
+            if (index > -1) {
+                toastQueue.splice(index, 1);
+            }
+            
+            // Tell server to remove the notification if it has a notification ID
+            if (toast.notificationId) {
+                // Remove from shown notifications set
+                shownNotifications.delete(toast.notificationId);
+                
+                fetch('/api/notifications/dismiss', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ notificationId: toast.notificationId })
+                }).catch(error => {
+                    console.error('Error dismissing notification:', error);
+                });
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
         
         // Initialize everything when DOM is loaded
