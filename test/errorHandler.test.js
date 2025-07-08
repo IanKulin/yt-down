@@ -86,8 +86,14 @@ describe('Error Handler', () => {
       handleError(error, req, res, next);
 
       assert.strictEqual(mockNotifications.addNotification.mock.callCount(), 1);
-      assert.strictEqual(mockNotifications.addNotification.mock.calls[0].arguments[0], 'error');
-      assert.strictEqual(mockNotifications.addNotification.mock.calls[0].arguments[1], 'Invalid input');
+      assert.strictEqual(
+        mockNotifications.addNotification.mock.calls[0].arguments[0],
+        'error'
+      );
+      assert.strictEqual(
+        mockNotifications.addNotification.mock.calls[0].arguments[1],
+        'Invalid input'
+      );
       assert.strictEqual(res.redirect.mock.callCount(), 1);
       assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/');
     });

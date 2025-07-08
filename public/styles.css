@@ -72,6 +72,19 @@
     --badge-subtitle-text: #c4b5fd;
     --modal-overlay: rgba(0, 0, 0, 0.7);
   }
+
+  /* Dark mode link overrides for better contrast */
+  .attribution-panel a,
+  .footer-link,
+  a:not(.btn):not(.download-btn):not(.delete-btn) {
+    color: #74b9ff !important;
+  }
+
+  .attribution-panel a:hover,
+  .footer-link:hover,
+  a:not(.btn):not(.download-btn):not(.delete-btn):hover {
+    color: #0984e3 !important;
+  }
 }
 
 /* Base Styles */
@@ -896,5 +909,39 @@ button:not([class]):hover {
 }
 
 .attribution-panel a:hover {
+  text-decoration: underline;
+}
+
+/* Footer */
+.footer {
+  margin-top: 40px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-light);
+  background-color: var(--bg-tertiary);
+  text-align: center;
+  border-radius: 6px;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.footer-version {
+  font-weight: 500;
+}
+
+.footer-link {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: var(--accent-primary-hover);
   text-decoration: underline;
 }

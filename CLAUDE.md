@@ -96,7 +96,7 @@ The "currently downloading" and "finished downloading" locations are split up to
 **Error Handling**: Services handle business logic errors; error notifications sent via WebSocket
 **File Operations**: DownloadService centralizes security validation and file operations
 **Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection; broadcasts progress via WebSocket
-**Notification System**: Unified WebSocket-based notification system 
+**Notification System**: Unified WebSocket-based notification system
 **Dependency Injection**: Services injected via `req.services` for clean testability
 
 ### Environment Variables

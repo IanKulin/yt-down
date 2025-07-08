@@ -5,6 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import { readFileSync } from 'fs';
 import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
 import { JobManager } from './lib/jobs.js';
@@ -42,6 +43,12 @@ const logger = new Logger({
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Read app version from package.json
+const packageJson = JSON.parse(
+  readFileSync(path.join(__dirname, 'package.json'), 'utf8')
+);
+const appVersion = packageJson.version;
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -139,6 +146,9 @@ app.use((req, res, next) => {
   req.queueProcessor = queueProcessor;
   req.jobManager = jobManager;
 
+  // Make app version available in all views
+  res.locals.appVersion = appVersion;
+
   next();
 });
 
@@ -154,6 +164,14 @@ async function checkYtDlpExists() {
 logger.debug('isTTY:', process.stdout.isTTY);
 logger.debug('Platform:', process.platform);
 logger.debug('Node version:', process.version);
+
+// Credits route
+app.get('/credits', (req, res) => {
+  res.render('credits', {
+    currentPage: 'credits',
+    pageTitle: 'Credits',
+  });
+});
 
 // Use route modules
 app.use('/', queueRoutes);
