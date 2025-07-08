@@ -83,6 +83,7 @@
         <input type="hidden" id="deleteHash" name="hash" value="">
     </form>
     
+    <script src="/js/websocket.js"></script>
     <script>
         let currentDeleteHash = null;
         
@@ -369,14 +370,39 @@
         
         // Start updating current download status
         document.addEventListener('DOMContentLoaded', function() {
+            // Initial update
             updateCurrentDownload();
-            updateInterval = setInterval(updateCurrentDownload, 2000); // Update every 2 seconds
+            
+            // Set up WebSocket-triggered updates with retry
+            function setupWebSocketUpdates() {
+                if (window.wsClient) {
+                    console.log('WebSocket client available, setting up real-time updates');
+                    window.wsClient.addListener(updateCurrentDownload);
+                } else {
+                    // Retry in a moment if WebSocket client is still loading
+                    setTimeout(() => {
+                        if (window.wsClient) {
+                            console.log('WebSocket client loaded, setting up real-time updates');
+                            window.wsClient.addListener(updateCurrentDownload);
+                        } else {
+                            // Fallback to polling if WebSocket client is not available
+                            console.warn('WebSocket client not available, falling back to polling');
+                            updateInterval = setInterval(updateCurrentDownload, 2000);
+                        }
+                    }, 100);
+                }
+            }
+            
+            setupWebSocketUpdates();
         });
         
-        // Clean up interval when page is unloaded
+        // Clean up when page is unloaded
         window.addEventListener('beforeunload', function() {
             if (updateInterval) {
                 clearInterval(updateInterval);
+            }
+            if (window.wsClient) {
+                window.wsClient.removeListener(updateCurrentDownload);
             }
         });
     </script>
