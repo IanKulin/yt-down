@@ -37,7 +37,8 @@
       "Bash(docker stop:*)",
       "Bash(docker rm:*)",
       "WebFetch(domain:www.npmjs.com)",
-      "Bash(pgrep:*)"
+      "Bash(pgrep:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

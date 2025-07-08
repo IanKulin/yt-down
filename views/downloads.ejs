@@ -54,6 +54,7 @@
         <input type="hidden" id="deleteFilename" name="filename" value="">
     </form>
     
+    <script src="/js/websocket.js"></script>
     <script>
         let currentDeleteFilename = null;
         
@@ -173,8 +174,24 @@
         
         // Start checking for notifications
         document.addEventListener('DOMContentLoaded', function() {
+            // Initial notification check
             checkForNotifications();
-            setInterval(checkForNotifications, 3000); // Check every 3 seconds
+            
+            // Set up WebSocket-triggered notification checks
+            if (window.wsClient) {
+                window.wsClient.addListener(checkForNotifications);
+            } else {
+                // Fallback to polling if WebSocket client is not available
+                console.warn('WebSocket client not available, falling back to polling');
+                setInterval(checkForNotifications, 3000);
+            }
+        });
+        
+        // Clean up when page is unloaded
+        window.addEventListener('beforeunload', function() {
+            if (window.wsClient) {
+                window.wsClient.removeListener(checkForNotifications);
+            }
         });
     </script>
 </body>

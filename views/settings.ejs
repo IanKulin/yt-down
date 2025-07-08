@@ -73,6 +73,7 @@
         </div>
     </div>
     
+    <script src="/js/websocket.js"></script>
     <script>
         // Auto-save functionality
         let saveTimeout;
@@ -229,8 +230,25 @@
         // Initialize everything when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             initAutoSave();
+            
+            // Initial notification check
             checkForNotifications();
-            setInterval(checkForNotifications, 3000); // Check every 3 seconds
+            
+            // Set up WebSocket-triggered notification checks
+            if (window.wsClient) {
+                window.wsClient.addListener(checkForNotifications);
+            } else {
+                // Fallback to polling if WebSocket client is not available
+                console.warn('WebSocket client not available, falling back to polling');
+                setInterval(checkForNotifications, 3000);
+            }
+        });
+        
+        // Clean up when page is unloaded
+        window.addEventListener('beforeunload', function() {
+            if (window.wsClient) {
+                window.wsClient.removeListener(checkForNotifications);
+            }
         });
     </script>
 </body>

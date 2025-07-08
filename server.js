@@ -4,6 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
 import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
 import { JobManager } from './lib/jobs.js';
@@ -44,6 +46,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const server = createServer(app);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -77,11 +80,46 @@ const jobManager = new JobManager({
   baseDir: __dirname,
 });
 
-// Initialize services
+// WebSocket server setup
+const wss = new WebSocketServer({ server });
+
+// WebSocket connection handling
+wss.on('connection', (ws, req) => {
+  logger.debug(`WebSocket client connected from ${req.socket.remoteAddress}`);
+
+  ws.on('close', () => {
+    logger.debug('WebSocket client disconnected');
+  });
+
+  ws.on('error', (error) => {
+    logger.error('WebSocket error:', error);
+  });
+});
+
+// Broadcast function to send "changed" message to all connected clients
+const broadcastChange = () => {
+  const message = 'changed';
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      try {
+        client.send(message);
+      } catch (error) {
+        logger.error('Error sending WebSocket message:', error);
+      }
+    }
+  });
+  logger.debug('Broadcast "changed" message to all WebSocket clients');
+};
+
+// Pass broadcastChange to QueueProcessor
+queueProcessor.setBroadcastChange(broadcastChange);
+
+// Initialize services (after broadcastChange is defined)
 const jobService = new JobService({
   jobManager,
   queueProcessor,
   logger,
+  broadcastChange,
 });
 
 const downloadService = new DownloadService({
@@ -91,6 +129,7 @@ const downloadService = new DownloadService({
 const notificationService = new NotificationService({
   logger,
   baseDir: __dirname,
+  broadcastChange,
 });
 
 const settingsService = new SettingsService({
@@ -150,7 +189,7 @@ app.use('/', apiRoutes);
 app.use(notFoundHandler);
 app.use(handleError);
 
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   // Check if yt-dlp is available
   const ytDlpExists = await checkYtDlpExists();
   if (!ytDlpExists) {
