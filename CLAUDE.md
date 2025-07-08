@@ -21,6 +21,7 @@ This is a Node.js web application that provides a queue-based system for downloa
 **Server (`server.js`)**
 
 - Express.js application with session management for flash messages
+- WebSocket server for real-time client notifications with polling fallback
 - Initializes QueueProcessor, JobManager, and service layer
 - Injects services into request context for route handlers
 
@@ -30,7 +31,8 @@ This is a Node.js web application that provides a queue-based system for downloa
 - Manages download states: queued → active → finished
 - Spawns `yt-dlp` processes and parses progress output
 - Handles retry logic (moves failed downloads back to queue)
-- Tracks real-time download progress and generates notifications
+- Tracks real-time download progress and broadcasts WebSocket notifications
+- Broadcasts state changes for job transitions and progress updates
 
 **Settings System (`lib/settings.js`)**
 
@@ -49,9 +51,9 @@ This is a Node.js web application that provides a queue-based system for downloa
 
 **Service Layer (`lib/services/`)**
 
-- **JobService**: Abstracts job operations from route handlers - job creation, deletion, cancellation, and status retrieval
+- **JobService**: Abstracts job operations from route handlers - job creation, deletion, cancellation, and status retrieval; broadcasts WebSocket notifications
 - **DownloadService**: Handles file operations with security validation, download preparation, and file management
-- **NotificationService**: Centralizes notification management - creation, retrieval, and dismissal of notifications
+- **NotificationService**: Centralizes notification management - creation, retrieval, and dismissal of notifications; broadcasts WebSocket notifications
 - **SettingsService**: Manages settings validation, normalization, and persistence with support for different input formats
 - Services are injected into route handlers via `req.services` for clean separation of concerns
 
@@ -75,22 +77,23 @@ The "currently downloading" and "finished downloading" locations are split up to
 - `/` - Queue management interface (queue.js) - uses JobService
 - `/downloads` - Downloaded files browser (downloads.js) - uses DownloadService
 - `/settings` - Configuration page (settings.js) - uses SettingsService
-- `/api/state` - Real-time application state (api.js) - uses JobService and NotificationService
+- `/api/state` - Application state endpoint (api.js) - uses JobService and NotificationService
 - `/api/notifications/dismiss` - Notification management (api.js) - uses NotificationService
 
 ### View Templates (`views/`)
 
-- `queue.ejs` - Main queue interface with real-time progress updates
-- `downloads.ejs` - Downloaded files management interface
-- `settings.ejs` - Settings configuration interface
+- `queue.ejs` - Main queue interface with real-time progress updates via WebSocket
+- `downloads.ejs` - Downloaded files management interface with WebSocket notifications
+- `settings.ejs` - Settings configuration interface with WebSocket notifications
 - `partials/header.ejs` - Shared header partial with navigation
 
 ### Key Patterns
 
 **Service Layer Architecture**: Business logic separated from HTTP concerns using service classes
+**Real-time Updates**: WebSocket-based change notifications with automatic fallback to polling for reliability
 **Error Handling**: Services handle business logic errors; routes handle HTTP responses and flash messages
 **File Operations**: DownloadService centralizes security validation and file operations
-**Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection
+**Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection; broadcasts progress via WebSocket
 **Notification System**: NotificationService manages completion events stored in `data/notifications.json`
 **Dependency Injection**: Services injected via `req.services` for clean testability
 
