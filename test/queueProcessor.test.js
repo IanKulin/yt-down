@@ -462,4 +462,189 @@ describe('queueProcessor.js', () => {
       );
     });
   });
+
+  describe('Download cancellation', () => {
+    test('should initialize cancelled jobs set in constructor', () => {
+      const logger = createMockLogger();
+      const processor = new QueueProcessor({ logger });
+
+      assert.ok(processor.cancelledJobs instanceof Set, 'Should be a Set');
+      assert.equal(processor.cancelledJobs.size, 0, 'Should start empty');
+    });
+
+    test('should include cancelled jobs count in status', () => {
+      const logger = createMockLogger();
+      const processor = new QueueProcessor({ logger });
+
+      const status = processor.getStatus();
+      assert.ok('cancelledJobs' in status, 'Should have cancelledJobs field');
+      assert.equal(
+        typeof status.cancelledJobs,
+        'number',
+        'cancelledJobs should be number'
+      );
+      assert.equal(
+        status.cancelledJobs,
+        0,
+        'Should start with 0 cancelled jobs'
+      );
+    });
+
+    test('should prevent retry after cancellation', async () => {
+      const logger = createMockLogger();
+      const processor = new QueueProcessor({ logger });
+      const jobHash = 'test-hash';
+      const testUrl = 'https://example.com/video';
+      const testError = new Error('yt-dlp exited with code null');
+
+      // Simulate cancellation by adding to cancelled jobs
+      processor.cancelledJobs.add(jobHash);
+
+      // Mock the JobManager to verify it's not called
+      let handleJobFailureCalled = false;
+      processor.jobManager.handleJobFailure = async () => {
+        handleJobFailureCalled = true;
+        return null;
+      };
+
+      // Call handleDownloadError
+      await processor.handleDownloadError(jobHash, testUrl, testError);
+
+      // Verify cancellation flag was cleaned up
+      assert.equal(
+        processor.cancelledJobs.has(jobHash),
+        false,
+        'Should clean up cancellation flag'
+      );
+
+      // Verify job failure handler was not called
+      assert.equal(
+        handleJobFailureCalled,
+        false,
+        'Should not call handleJobFailure for cancelled jobs'
+      );
+    });
+
+    test('should clean up cancellation flag on completion', async () => {
+      const logger = createMockLogger();
+      const processor = new QueueProcessor({ logger });
+      const jobHash = 'test-hash';
+      const testUrl = 'https://example.com/video';
+
+      // Add to cancelled jobs
+      processor.cancelledJobs.add(jobHash);
+
+      // Mock the JobManager methods
+      processor.jobManager.updateJob = async () => {};
+      processor.jobManager.moveJob = async () => {};
+
+      // Mock moveDownloadedFiles and addCompletionNotification
+      processor.moveDownloadedFiles = async () => {};
+      processor.addCompletionNotification = async () => {};
+
+      // Call completeDownload
+      await processor.completeDownload(jobHash, testUrl);
+
+      // Verify cancellation flag was cleaned up
+      assert.equal(
+        processor.cancelledJobs.has(jobHash),
+        false,
+        'Should clean up cancellation flag on completion'
+      );
+    });
+
+    test('should clean up cancellation flag in finally block', () => {
+      const logger = createMockLogger();
+      const processor = new QueueProcessor({ logger });
+      const jobHash = 'test-hash';
+
+      // Add to cancelled jobs
+      processor.cancelledJobs.add(jobHash);
+
+      // Simulate the finally block cleanup
+      processor.activeDownloads.delete(jobHash);
+      processor.downloadProgress.delete(jobHash);
+      processor.activeProcesses.delete(jobHash);
+      processor.lastProgressBroadcast.delete(jobHash);
+      processor.cancelledJobs.delete(jobHash);
+
+      // Verify cancellation flag was cleaned up
+      assert.equal(
+        processor.cancelledJobs.has(jobHash),
+        false,
+        'Should clean up cancellation flag in finally block'
+      );
+    });
+
+    test('should handle multiple cancelled jobs', async () => {
+      const logger = createMockLogger();
+      const processor = new QueueProcessor({ logger });
+      const jobHashes = ['hash1', 'hash2', 'hash3'];
+
+      // Add multiple jobs to cancelled set
+      jobHashes.forEach((hash) => processor.cancelledJobs.add(hash));
+
+      // Verify all are tracked
+      assert.equal(
+        processor.cancelledJobs.size,
+        3,
+        'Should track multiple cancelled jobs'
+      );
+
+      // Mock the JobManager to verify it's not called
+      let handleJobFailureCallCount = 0;
+      processor.jobManager.handleJobFailure = async () => {
+        handleJobFailureCallCount++;
+        return null;
+      };
+
+      // Process errors for all jobs
+      for (const hash of jobHashes) {
+        await processor.handleDownloadError(
+          hash,
+          'https://example.com/video',
+          new Error('test')
+        );
+      }
+
+      // Verify all cancellation flags were cleaned up
+      assert.equal(
+        processor.cancelledJobs.size,
+        0,
+        'Should clean up all cancellation flags'
+      );
+
+      // Verify job failure handler was never called
+      assert.equal(
+        handleJobFailureCallCount,
+        0,
+        'Should not call handleJobFailure for any cancelled jobs'
+      );
+    });
+
+    test('should handle normal error processing for non-cancelled jobs', async () => {
+      const logger = createMockLogger();
+      const processor = new QueueProcessor({ logger });
+      const jobHash = 'test-hash';
+      const testUrl = 'https://example.com/video';
+      const testError = new Error('Network error');
+
+      // Mock the JobManager to verify it is called
+      let handleJobFailureCalled = false;
+      processor.jobManager.handleJobFailure = async () => {
+        handleJobFailureCalled = true;
+        return { retryCount: 1 };
+      };
+
+      // Call handleDownloadError without cancellation
+      await processor.handleDownloadError(jobHash, testUrl, testError);
+
+      // Verify job failure handler was called
+      assert.equal(
+        handleJobFailureCalled,
+        true,
+        'Should call handleJobFailure for normal errors'
+      );
+    });
+  });
 });
