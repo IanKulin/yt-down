@@ -1,0 +1,35 @@
+<%- include('partials/header', { pageTitle: 'Error', currentPage: 'error' }) %>
+
+<div class="error-page">
+    <div class="error-content">
+        <h2>Error <%= statusCode %></h2>
+        <% if (statusCode === 404) { %>
+            <p>The page you're looking for doesn't exist.</p>
+        <% } else { %>
+            <p>Something went wrong while processing your request.</p>
+        <% } %>
+        
+        <% if (typeof message !== 'undefined' && message) { %>
+            <div class="error-message">
+                <p><%= message %></p>
+            </div>
+        <% } %>
+        
+        <div class="error-actions">
+            <a href="/" class="btn btn-primary">Go to Queue</a>
+            <a href="/downloads" class="btn btn-secondary">View Downloads</a>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer', { appVersion: '1.1.4' }) %>
+
+<script>
+    // Auto-hide error message after 5 seconds and redirect to home
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 5000);
+</script>
+
+</body>
+</html>

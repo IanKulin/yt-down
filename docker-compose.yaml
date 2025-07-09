@@ -1,6 +1,6 @@
 services:
   yt-down:
-    image: ghcr.io/iankulin/yt-down
+    image: ghcr.io/iankulin/yt-down:test
     ports:
       - '3001:3001'
     volumes:

@@ -142,6 +142,8 @@ describe('Validators', () => {
         { rateLimit: 'fast' },
         { rateLimit: -1 },
         { rateLimit: -100 },
+        { rateLimit: 'invalid-rate' },
+        { rateLimit: '999X' },
       ];
 
       invalidSettings.forEach((settings) => {
@@ -156,6 +158,31 @@ describe('Validators', () => {
 
       const result = validateSettings(settings);
       assert.deepStrictEqual(result, settings);
+    });
+
+    it('should validate string rateLimit values used by the application', () => {
+      const validRateLimits = ['no-limit', '180K', '360K', '720K', '1440K'];
+
+      validRateLimits.forEach((rateLimit) => {
+        const settings = { rateLimit };
+        const result = validateSettings(settings);
+        assert.deepStrictEqual(result, settings);
+      });
+    });
+
+    it('should throw ValidationError for invalid string rateLimit values', () => {
+      const invalidRateLimits = [
+        'invalid-rate',
+        '999X',
+        'fast',
+        'slow',
+        '100MB',
+      ];
+
+      invalidRateLimits.forEach((rateLimit) => {
+        const settings = { rateLimit };
+        assert.throws(() => validateSettings(settings), ValidationError);
+      });
     });
   });
 });
