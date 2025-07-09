@@ -29,18 +29,13 @@ MINOR_VERSION="${VERSION%.*}"
 
 echo -e "${GREEN}Tags: latest, ${VERSION}, ${MINOR_VERSION}, ${MAJOR_VERSION}${NC}"
 
-# Push all tags
-echo -e "${YELLOW}Pushing latest tag...${NC}"
-docker push "${IMAGE_NAME}:latest"
-
-echo -e "${YELLOW}Pushing version tag...${NC}"
-docker push "${IMAGE_NAME}:${VERSION}"
-
-echo -e "${YELLOW}Pushing minor version tag...${NC}"
-docker push "${IMAGE_NAME}:${MINOR_VERSION}"
-
-echo -e "${YELLOW}Pushing major version tag...${NC}"
-docker push "${IMAGE_NAME}:${MAJOR_VERSION}"
+# Build and push multi-arch images
+echo -e "${YELLOW}Building and pushing multi-arch images...${NC}"
+docker buildx build --push --platform linux/amd64,linux/arm64 \
+  -t "${IMAGE_NAME}:latest" \
+  -t "${IMAGE_NAME}:${VERSION}" \
+  -t "${IMAGE_NAME}:${MINOR_VERSION}" \
+  -t "${IMAGE_NAME}:${MAJOR_VERSION}" .
 
 echo -e "${GREEN}Successfully pushed Docker images:${NC}"
 echo -e "  - ${IMAGE_NAME}:latest"

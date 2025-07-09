@@ -39,7 +39,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "Bash(pgrep:*)",
       "Bash(true)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(./scripts/docker-build.sh:*)"
     ],
     "deny": []
   }
