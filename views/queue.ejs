@@ -29,7 +29,12 @@
         </form>
         
         <div class="queue-section">
-            <h2>Current Queue (<%= queuedJobs.length + activeJobs.length %> jobs)</h2>
+            <% const totalJobs = queuedJobs.length + activeJobs.length; %>
+            <% if (totalJobs > 0) { %>
+                <h2>Current Queue (<%= totalJobs === 1 ? '1 job' : totalJobs + ' jobs' %>)</h2>
+            <% } else { %>
+                <h2>Current Queue</h2>
+            <% } %>
             
             <div class="queue-container">
                 <% if (queuedJobs.length === 0 && activeJobs.length === 0) { %>
@@ -224,7 +229,11 @@
             // Update queue count
             const queueCountElement = queueSection.querySelector('h2');
             const totalCount = queuedJobs.length + activeJobs.length;
-            queueCountElement.textContent = `Current Queue (${totalCount} jobs)`;
+            if (totalCount > 0) {
+                queueCountElement.textContent = `Current Queue (${totalCount === 1 ? '1 job' : totalCount + ' jobs'})`;
+            } else {
+                queueCountElement.textContent = 'Current Queue';
+            }
             
             // Find or create the queue container
             let queueContainer = queueSection.querySelector('.queue-container');
