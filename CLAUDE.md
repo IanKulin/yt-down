@@ -137,6 +137,6 @@ Tests are located in `test/` directory and use Node.js built-in test runner. Key
 ### Tool use
 
 - use the `temp` directory to store logs
-- use the `temp` directory to write any disposable node or bash scripts you need
+- use the `temp` directory to write any disposable node or bash scripts you need, or for saving screenshots
 - assume a MacOS environment for CLI tools
 - Playwright MCP is available for screenshots of the UI

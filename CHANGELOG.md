@@ -6,3 +6,4 @@
 1.1.2 - Auto cleanup of aborted downlands on start up, queue display fixes, recognise .dfxp subtitles, JSON downloadJobs
 1.1.3 - autosave settings, cancel current download, allow emojis in filenames, websocket, toast, credits
 1.1.4 - fix settings bug
+1.1.5

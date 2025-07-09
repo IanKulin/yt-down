@@ -1,30 +1,32 @@
 <%- include('partials/header', { currentPage: 'queue', pageTitle: 'Queue' }) %>
         
-        <form action="/job/add" method="POST">
-            <div class="form-group">
-                <label for="url">Enter URL for download job:</label>
-                <input type="url" id="url" name="url" required placeholder="https://www.youtube.com/watch?v=...">
-            </div>
-            <button type="submit">Add Job to Queue</button>
-        </form>
-        
         <!-- Current Download Panel -->
-        <div id="currentDownloadPanel" class="current-download-panel" style="display: none;">
+        <div id="currentDownloadPanel" class="current-download-panel">
             <h2>Current Download</h2>
             <div class="download-info">
-                <div class="download-filename" id="downloadFilename"></div>
+                <div class="download-filename" id="downloadFilename">No active download</div>
                 <div class="download-progress">
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
-                    <div class="progress-text" id="progressText"></div>
+                    <div class="progress-text" id="progressText">0%</div>
                 </div>
                 <div class="download-details">
-                    <span class="download-speed" id="downloadSpeed"></span>
-                    <span class="download-eta" id="downloadEta"></span>
+                    <span class="download-speed" id="downloadSpeed">Speed: N/A</span>
+                    <span class="download-eta" id="downloadEta">ETA: N/A</span>
                 </div>
             </div>
         </div>
+        
+        <form action="/job/add" method="POST">
+            <div class="form-group">
+                <label for="url">Enter URL for download job:</label>
+                <div class="form-input-group">
+                    <input type="url" id="url" name="url" required placeholder="https://www.youtube.com/watch?v=...">
+                    <button type="submit">Add Job to Queue</button>
+                </div>
+            </div>
+        </form>
         
         <div class="queue-section">
             <h2>Current Queue (<%= queuedJobs.length + activeJobs.length %> jobs)</h2>
@@ -169,9 +171,6 @@
                     const panel = document.getElementById('currentDownloadPanel');
                     
                     if (currentDownloads && currentDownloads.length > 0) {
-                        // Show the panel
-                        panel.style.display = 'block';
-                        
                         // Get the first (and usually only) active download
                         const download = currentDownloads[0];
                         
@@ -187,11 +186,15 @@
                         // Update speed and ETA
                         const speed = download.speed || 'N/A';
                         const eta = download.eta || 'N/A';
-                        document.getElementById('downloadSpeed').textContent = speed;
-                        document.getElementById('downloadEta').textContent = eta;
+                        document.getElementById('downloadSpeed').textContent = 'Speed: ' + speed;
+                        document.getElementById('downloadEta').textContent = 'ETA: ' + eta;
                     } else {
-                        // Hide the panel
-                        panel.style.display = 'none';
+                        // Reset to default state
+                        document.getElementById('downloadFilename').textContent = 'No active download';
+                        document.getElementById('progressFill').style.width = '0%';
+                        document.getElementById('progressText').textContent = '0%';
+                        document.getElementById('downloadSpeed').textContent = 'Speed: N/A';
+                        document.getElementById('downloadEta').textContent = 'ETA: N/A';
                     }
                     
                     // Update queue list in real-time

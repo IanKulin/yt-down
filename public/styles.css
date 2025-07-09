@@ -217,6 +217,22 @@ h1 {
   margin-bottom: 20px;
 }
 
+.form-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.form-input-group input[type='url'] {
+  flex: 1;
+  margin: 0;
+}
+
+.form-input-group button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 label {
   display: block;
   margin-bottom: 5px;
@@ -458,6 +474,7 @@ button:not([class]):hover {
 /* Current Download Panel Styles */
 .current-download-panel {
   margin-top: 30px;
+  margin-bottom: 40px;
   background-color: var(--bg-tertiary);
   padding: 20px;
   box-shadow: 0 2px 4px var(--shadow-light);
@@ -523,15 +540,7 @@ button:not([class]):hover {
   border: 1px solid var(--border-light);
 }
 
-.download-speed::before {
-  content: 'Speed: ';
-  font-weight: 500;
-}
-
-.download-eta::before {
-  content: 'ETA: ';
-  font-weight: 500;
-}
+/* Removed ::before pseudo-elements since we're now adding prefixes in JavaScript */
 
 /* Queue Styles */
 .queue-section {
