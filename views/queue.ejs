@@ -14,6 +14,7 @@
                 <div class="download-details">
                     <span class="download-speed" id="downloadSpeed">Speed: N/A</span>
                     <span class="download-eta" id="downloadEta">ETA: N/A</span>
+                    <span class="download-filesize" id="downloadFilesize">Size: N/A</span>
                 </div>
             </div>
         </div>
@@ -44,8 +45,8 @@
                     <% activeJobs.forEach(function(item) { %>
                         <div class="queue-item active" data-hash="<%= item.hash %>">
                             <div class="queue-item-content">
-                                <div class="<%= item.title ? 'title' : 'url' %>"><%= item.title || item.url %></div>
-                                <div class="hash">Hash: <%= item.hash %></div>
+                                <div class="url"><%= item.title || item.url %></div>
+                                <div class="file-size">Size: <%= item.filesize ? formatFileSize(item.filesize) : 'calculating...' %></div>
                                 <div class="status downloading">Downloading...</div>
                             </div>
                             <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>" data-status="active">
@@ -62,7 +63,7 @@
                                 <% if (!item.title) { %>
                                     <span class="title-loading">Fetching title...</span>
                                 <% } %>
-                                <div class="hash">Hash: <%= item.hash %></div>
+                                <div class="file-size">Size: <%= item.filesize ? formatFileSize(item.filesize) : 'calculating...' %></div>
                                 <div class="status queued">Waiting...</div>
                             </div>
                             <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>" data-status="queued">
@@ -204,6 +205,14 @@
                         const eta = download.eta || 'N/A';
                         document.getElementById('downloadSpeed').textContent = 'Speed: ' + speed;
                         document.getElementById('downloadEta').textContent = 'ETA: ' + eta;
+                        
+                        // Update file size
+                        const filesize = download.filesize || download.fileSize;
+                        if (filesize) {
+                            document.getElementById('downloadFilesize').textContent = 'Size: ' + (typeof filesize === 'number' ? formatFileSize(filesize) : filesize);
+                        } else {
+                            document.getElementById('downloadFilesize').textContent = 'Size: calculating...';
+                        }
                     } else {
                         // Reset to default state
                         document.getElementById('downloadFilename').textContent = 'No active download';
@@ -211,6 +220,7 @@
                         document.getElementById('progressText').textContent = '0%';
                         document.getElementById('downloadSpeed').textContent = 'Speed: N/A';
                         document.getElementById('downloadEta').textContent = 'ETA: N/A';
+                        document.getElementById('downloadFilesize').textContent = 'Size: N/A';
                     }
                     
                     // Update queue list in real-time
@@ -294,7 +304,7 @@
                 <div class="queue-item-content">
                     <div class="${displayClass}">${displayText}</div>
                     ${loadingIndicator}
-                    <div class="hash">Hash: ${escapeHtml(item.hash)}</div>
+                    <div class="file-size">Size: ${item.filesize ? formatFileSize(item.filesize) : 'calculating...'}</div>
                     <div class="status ${status}">${statusText}</div>
                 </div>
                 <button class="delete-btn" data-hash="${escapeHtml(item.hash)}" data-url="${escapeHtml(item.url)}" data-status="${status}">
@@ -309,6 +319,14 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
         function showApiError(message) {

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance when working with code in this repository.
 
 ## Development Commands
 
@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm test` - Run test suite using Node.js built-in test runner
 - `npm run lint` - Lint codebase with ESLint (max 0 warnings)
 - `npm run format` - Format code with Prettier
-- `npm run docker:build` - Build Docker image using script
-- `npm run docker:push` - Push Docker image to registry
+- `npm run docker:build` - Build local Docker images
+- `npm run docker:push` - Build and push Docker images to registry
 - `LOG_LEVEL=debug npm start` - start app with debugging logs
 
 IMPORTANT: Check tests pass at the start of each session, and at the end of each change, always lint, test and format.
@@ -59,6 +59,7 @@ This is a Node.js web application that provides a queue-based system for downloa
 - **DownloadService**: Handles file operations with security validation, download preparation, and file management
 - **NotificationService**: Centralizes notification management - creation, retrieval, and dismissal of notifications; broadcasts WebSocket notifications
 - **SettingsService**: Manages settings validation, normalization, and persistence with support for different input formats
+- **TitleEnhancementService**: Background service that automatically fetches video titles for queued jobs using yt-dlp
 - Services are injected into route handlers via `req.services` for clean separation of concerns
 
 **File-Based Queue System**
@@ -71,7 +72,7 @@ Each "Download Job" is a small JSON file containing the URL. They are moved thro
 
 **Download Progress System**
 
-The "currently downloading" and "finished downloading" locations are split up to facilitate cleanups of partially downloaded media
+The "currently downloading" and "finished downloading" locations are split up to facilitate cleanups of partially downloaded media after failures
 
 - `data/partials` - Currently downloading partial files
 - `downloads` - Downloaded video/subtitle files (top-level directory for separate bind mount)
@@ -81,7 +82,7 @@ The "currently downloading" and "finished downloading" locations are split up to
 - `/` - Queue management interface (queue.js) - uses JobService
 - `/downloads` - Downloaded files browser (downloads.js) - uses DownloadService
 - `/settings` - Configuration page (settings.js) - uses SettingsService
-- `/api/state` - Application state endpoint (api.js) - uses JobService and NotificationService; returns queued/active jobs only
+- `/api/state` - Application state endpoint (api.js) - uses JobService and NotificationService; returns queued/active jobs
 - `/api/notifications/dismiss` - Notification management (api.js) - uses NotificationService
 
 ### View Templates (`views/`)
@@ -98,6 +99,7 @@ The "currently downloading" and "finished downloading" locations are split up to
 **Error Handling**: Services handle business logic errors; error notifications sent via WebSocket
 **File Operations**: DownloadService centralizes security validation and file operations
 **Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection; broadcasts progress via WebSocket
+**Background Enhancement**: TitleEnhancementService asynchronously fetches video titles for queued jobs without blocking download processing
 **Notification System**: Unified WebSocket-based notification system
 **Dependency Injection**: Services injected via `req.services` for clean testability
 
@@ -105,6 +107,15 @@ The "currently downloading" and "finished downloading" locations are split up to
 
 - `PORT` - Server port (default: 3001)
 - `LOG_LEVEL` - Logging level: silent, error, warn, info, debug (default: info)
+
+### Configuration Settings
+
+Title enhancement service configuration in `data/settings.json`:
+
+- `titleEnhancement.enabled` - Enable/disable title enhancement (default: true)
+- `titleEnhancement.maxConcurrent` - Maximum concurrent title extractions (default: 2)
+- `titleEnhancement.pollInterval` - Polling interval in milliseconds (default: 2000)
+- `titleEnhancement.timeout` - Timeout per title extraction in milliseconds (default: 15000)
 
 ### Docker Deployment
 
@@ -124,6 +135,7 @@ Tests are located in `test/` directory and use Node.js built-in test runner. Key
 - `errorHandler.test.js` - Error handling middleware and response formatting
 - `errors.test.js` - Custom error classes and error structures
 - `validators.test.js` - Input validation functions
+- `titleEnhancementService.test.js` - Background title enhancement service functionality
 - `helpers.js` - Test utilities and shared testing functions
 
 **Running tests:**

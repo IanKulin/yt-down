@@ -638,6 +638,11 @@ button:not([class]):hover {
   }
 }
 
+.file-size {
+  font-size: 66%;
+  color: var(--text-muted);
+}
+
 /* Downloads Styles */
 .downloads-section {
   margin-top: 20px;

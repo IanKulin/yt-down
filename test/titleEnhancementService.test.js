@@ -12,6 +12,7 @@ describe('TitleEnhancementService', () => {
   beforeEach(() => {
     mockJobManager = {
       getQueuedJobs: mock.fn(async () => []),
+      getActiveJobs: mock.fn(async () => []),
       getJob: mock.fn(async () => null),
       updateJob: mock.fn(async () => {}),
     };
@@ -149,22 +150,22 @@ describe('TitleEnhancementService', () => {
         async () => testJobs
       );
 
-      // Mock enhanceJobTitle to avoid actual processing
-      const enhanceJobTitleSpy = mock.method(
+      // Mock enhanceJobMetadata to avoid actual processing
+      const enhanceJobMetadataSpy = mock.method(
         service,
-        'enhanceJobTitle',
+        'enhanceJobMetadata',
         async () => {}
       );
 
       await service.processEnhancementQueue();
 
-      assert.strictEqual(enhanceJobTitleSpy.mock.calls.length, 2);
+      assert.strictEqual(enhanceJobMetadataSpy.mock.calls.length, 2);
       assert.strictEqual(
-        enhanceJobTitleSpy.mock.calls[0].arguments[0].id,
+        enhanceJobMetadataSpy.mock.calls[0].arguments[0].id,
         'job-1'
       );
       assert.strictEqual(
-        enhanceJobTitleSpy.mock.calls[1].arguments[0].id,
+        enhanceJobMetadataSpy.mock.calls[1].arguments[0].id,
         'job-3'
       );
     });
@@ -198,18 +199,18 @@ describe('TitleEnhancementService', () => {
       // Simulate one job already being processed
       service.processingQueue.add('job-1');
 
-      const enhanceJobTitleSpy = mock.method(
+      const enhanceJobMetadataSpy = mock.method(
         service,
-        'enhanceJobTitle',
+        'enhanceJobMetadata',
         async () => {}
       );
 
       await service.processEnhancementQueue();
 
       // Should only process 1 more job (maxConcurrent - 1)
-      assert.strictEqual(enhanceJobTitleSpy.mock.calls.length, 1);
+      assert.strictEqual(enhanceJobMetadataSpy.mock.calls.length, 1);
       assert.strictEqual(
-        enhanceJobTitleSpy.mock.calls[0].arguments[0].id,
+        enhanceJobMetadataSpy.mock.calls[0].arguments[0].id,
         'job-2'
       );
     });
@@ -237,17 +238,17 @@ describe('TitleEnhancementService', () => {
       // Mark job-1 as already being processed
       service.processingQueue.add('job-1');
 
-      const enhanceJobTitleSpy = mock.method(
+      const enhanceJobMetadataSpy = mock.method(
         service,
-        'enhanceJobTitle',
+        'enhanceJobMetadata',
         async () => {}
       );
 
       await service.processEnhancementQueue();
 
-      assert.strictEqual(enhanceJobTitleSpy.mock.calls.length, 1);
+      assert.strictEqual(enhanceJobMetadataSpy.mock.calls.length, 1);
       assert.strictEqual(
-        enhanceJobTitleSpy.mock.calls[0].arguments[0].id,
+        enhanceJobMetadataSpy.mock.calls[0].arguments[0].id,
         'job-2'
       );
     });
@@ -291,7 +292,7 @@ describe('TitleEnhancementService', () => {
       };
     });
 
-    it('should enhance job title successfully', async () => {
+    it('should enhance job with metadata successfully', async () => {
       const testJob = {
         id: 'test-job',
         url: 'https://example.com/video',
@@ -301,18 +302,31 @@ describe('TitleEnhancementService', () => {
 
       mockJobManager.getJob.mock.mockImplementation(async () => testJob);
 
-      // Mock extractVideoTitle to return a title
-      const extractTitleSpy = mock.method(
+      // Mock extractVideoMetadata to return metadata
+      const mockMetadata = {
+        title: 'Test Video Title',
+        filesize: 1234567,
+        filesize_estimated: false,
+        duration: 180,
+        uploader: 'Test Channel',
+        upload_date: '20230101',
+        view_count: 1000,
+        like_count: 50,
+        description: 'Test description',
+        thumbnail: 'https://example.com/thumb.jpg',
+      };
+
+      const extractMetadataSpy = mock.method(
         service,
-        'extractVideoTitle',
-        async () => 'Test Video Title'
+        'extractVideoMetadata',
+        async () => mockMetadata
       );
 
       await service.enhanceJobTitle(testJob);
 
-      assert.strictEqual(extractTitleSpy.mock.calls.length, 1);
+      assert.strictEqual(extractMetadataSpy.mock.calls.length, 1);
       assert.strictEqual(
-        extractTitleSpy.mock.calls[0].arguments[0],
+        extractMetadataSpy.mock.calls[0].arguments[0],
         testJob.url
       );
       assert.strictEqual(mockJobManager.updateJob.mock.calls.length, 1);
@@ -322,7 +336,10 @@ describe('TitleEnhancementService', () => {
       );
       assert.deepStrictEqual(
         mockJobManager.updateJob.mock.calls[0].arguments[1],
-        { title: 'Test Video Title' }
+        {
+          metadata: mockMetadata,
+          title: 'Test Video Title',
+        }
       );
       assert.strictEqual(mockBroadcastChange.mock.calls.length, 1);
     });
@@ -336,15 +353,15 @@ describe('TitleEnhancementService', () => {
 
       service.processingQueue.add('test-job');
 
-      const extractTitleSpy = mock.method(
+      const extractMetadataSpy = mock.method(
         service,
-        'extractVideoTitle',
-        async () => 'Test Title'
+        'extractVideoMetadata',
+        async () => ({ title: 'Test Title' })
       );
 
       await service.enhanceJobTitle(testJob);
 
-      assert.strictEqual(extractTitleSpy.mock.calls.length, 0);
+      assert.strictEqual(extractMetadataSpy.mock.calls.length, 0);
       assert.strictEqual(mockJobManager.updateJob.mock.calls.length, 0);
     });
 
@@ -359,20 +376,20 @@ describe('TitleEnhancementService', () => {
       // First call returns null (job deleted)
       mockJobManager.getJob.mock.mockImplementationOnce(async () => null);
 
-      const extractTitleSpy = mock.method(
+      const extractMetadataSpy = mock.method(
         service,
-        'extractVideoTitle',
-        async () => 'Test Title'
+        'extractVideoMetadata',
+        async () => ({ title: 'Test Title' })
       );
 
       await service.enhanceJobTitle(testJob);
 
-      assert.strictEqual(extractTitleSpy.mock.calls.length, 0);
+      assert.strictEqual(extractMetadataSpy.mock.calls.length, 0);
       assert.strictEqual(mockJobManager.updateJob.mock.calls.length, 0);
       assert.strictEqual(
         mockLogger.info.mock.calls.some((call) =>
           call.arguments[0].includes(
-            'no longer queued, skipping title enhancement'
+            'no longer in valid state, skipping metadata enhancement'
           )
         ),
         true
@@ -387,8 +404,10 @@ describe('TitleEnhancementService', () => {
         state: JobState.QUEUED,
       };
 
-      // Mock extractVideoTitle to return a title
-      mock.method(service, 'extractVideoTitle', async () => 'Test Title');
+      // Mock extractVideoMetadata to return metadata
+      mock.method(service, 'extractVideoMetadata', async () => ({
+        title: 'Test Title',
+      }));
 
       // First call returns queued job (passes initial check)
       mockJobManager.getJob.mock.mockImplementationOnce(async () => testJob);
@@ -418,20 +437,20 @@ describe('TitleEnhancementService', () => {
 
       mockJobManager.getJob.mock.mockImplementation(async () => testJob);
 
-      // Mock extractVideoTitle to return null (failure)
-      const extractTitleSpy = mock.method(
+      // Mock extractVideoMetadata to return null (failure)
+      const extractMetadataSpy = mock.method(
         service,
-        'extractVideoTitle',
+        'extractVideoMetadata',
         async () => null
       );
 
       await service.enhanceJobTitle(testJob);
 
-      assert.strictEqual(extractTitleSpy.mock.calls.length, 1);
+      assert.strictEqual(extractMetadataSpy.mock.calls.length, 1);
       assert.strictEqual(mockJobManager.updateJob.mock.calls.length, 0);
       assert.strictEqual(
         mockLogger.warn.mock.calls.some((call) =>
-          call.arguments[0].includes('Failed to extract title for job')
+          call.arguments[0].includes('Failed to extract metadata for job')
         ),
         true
       );
@@ -453,7 +472,7 @@ describe('TitleEnhancementService', () => {
 
       assert.strictEqual(
         mockLogger.error.mock.calls.some((call) =>
-          call.arguments[0].includes('Title enhancement failed for job')
+          call.arguments[0].includes('Metadata enhancement failed for job')
         ),
         true
       );
@@ -468,7 +487,9 @@ describe('TitleEnhancementService', () => {
       };
 
       mockJobManager.getJob.mock.mockImplementation(async () => testJob);
-      mock.method(service, 'extractVideoTitle', async () => 'Test Title');
+      mock.method(service, 'extractVideoMetadata', async () => ({
+        title: 'Test Title',
+      }));
 
       await service.enhanceJobTitle(testJob);
 
@@ -493,33 +514,138 @@ describe('TitleEnhancementService', () => {
     });
   });
 
-  describe('extractVideoTitle', () => {
-    it('should extract title successfully', async () => {
+  describe('extractVideoMetadata', () => {
+    it('should extract metadata successfully', async () => {
       // This test would require mocking child_process.spawn
       // For now, we'll test the timeout behavior
       const shortTimeout = 100;
-      const title = await service.extractVideoTitle(
+      const metadata = await service.extractVideoMetadata(
         'https://invalid-url.com',
         shortTimeout
       );
 
       // Should return null due to timeout or error
-      assert.strictEqual(title, null);
+      assert.strictEqual(metadata, null);
     });
 
     it('should handle timeout correctly', async () => {
       const shortTimeout = 50;
       const startTime = Date.now();
 
-      const title = await service.extractVideoTitle(
+      const metadata = await service.extractVideoMetadata(
         'https://invalid-url.com',
         shortTimeout
       );
       const endTime = Date.now();
 
-      assert.strictEqual(title, null);
+      assert.strictEqual(metadata, null);
       // Should complete within reasonable time after timeout
       assert(endTime - startTime < shortTimeout + 100);
+    });
+
+    it('should prefer filesize_approx over filesize', async () => {
+      // Mock the spawn method
+      const originalSpawn = service.extractVideoMetadata;
+      service.extractVideoMetadata = async () => ({
+        title: 'Test Video',
+        filesize: 2000000, // Should use filesize_approx
+        filesize_estimated: false,
+        duration: 120,
+        uploader: null,
+        upload_date: null,
+        view_count: null,
+        like_count: null,
+        description: null,
+        thumbnail: null,
+      });
+
+      const result = await service.extractVideoMetadata('test-url');
+
+      assert.strictEqual(result.filesize, 2000000);
+      assert.strictEqual(result.filesize_estimated, false);
+
+      // Restore original method
+      service.extractVideoMetadata = originalSpawn;
+    });
+
+    it('should estimate filesize from bitrate when no explicit size available', async () => {
+      // Mock for SBS-style metadata without explicit filesize
+      service.extractVideoMetadata = async () => ({
+        title: 'Test Video',
+        filesize: 1313600, // Calculated: (1981.321 * 5259 * 1024) / 8 = ~1.3GB
+        filesize_estimated: true,
+        duration: 5259,
+        uploader: 'SBSC',
+        upload_date: null,
+        view_count: null,
+        like_count: null,
+        description: null,
+        thumbnail: null,
+      });
+
+      const result = await service.extractVideoMetadata('test-url');
+
+      assert.strictEqual(result.filesize_estimated, true);
+      assert(result.filesize > 1000000); // Should be a reasonable estimate
+    });
+
+    it('should return null filesize when no size info available', async () => {
+      // Mock for metadata with no size or bitrate info
+      service.extractVideoMetadata = async () => ({
+        title: 'Test Video',
+        filesize: null,
+        filesize_estimated: false,
+        duration: 120,
+        uploader: null,
+        upload_date: null,
+        view_count: null,
+        like_count: null,
+        description: null,
+        thumbnail: null,
+      });
+
+      const result = await service.extractVideoMetadata('test-url');
+
+      assert.strictEqual(result.filesize, null);
+      assert.strictEqual(result.filesize_estimated, false);
+    });
+  });
+
+  describe('extractVideoTitle', () => {
+    it('should extract title from metadata', async () => {
+      // Mock extractVideoMetadata to return metadata
+      const mockMetadata = { title: 'Test Video Title' };
+      mock.method(service, 'extractVideoMetadata', async () => mockMetadata);
+
+      const title = await service.extractVideoTitle(
+        'https://example.com/video'
+      );
+
+      assert.strictEqual(title, 'Test Video Title');
+    });
+
+    it('should return null if no metadata', async () => {
+      // Mock extractVideoMetadata to return null
+      mock.method(service, 'extractVideoMetadata', async () => null);
+
+      const title = await service.extractVideoTitle(
+        'https://example.com/video'
+      );
+
+      assert.strictEqual(title, null);
+    });
+
+    it('should return null if no title in metadata', async () => {
+      // Mock extractVideoMetadata to return metadata without title
+      mock.method(service, 'extractVideoMetadata', async () => ({
+        duration: 180,
+      }));
+
+      const title = await service.extractVideoTitle(
+        'https://example.com/video'
+      );
+
+      assert.strictEqual(title, null);
     });
   });
 });

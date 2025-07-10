@@ -1,5 +1,6 @@
 import express from 'express';
 import { asyncHandler } from '../lib/errorHandler.js';
+import { formatFileSize } from '../lib/utils.js';
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ router.get(
     res.render('queue', {
       queuedJobs: jobs.queued,
       activeJobs: jobs.active,
+      formatFileSize,
     });
   })
 );
