@@ -40,7 +40,8 @@
       "Bash(pgrep:*)",
       "Bash(true)",
       "Bash(awk:*)",
-      "Bash(./scripts/docker-build.sh:*)"
+      "Bash(./scripts/docker-build.sh:*)",
+      "Bash(time yt-dlp:*)"
     ],
     "deny": []
   }

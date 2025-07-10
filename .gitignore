@@ -4,3 +4,5 @@ downloads
 node_modules
 .env
 temp
+FEAT-*
+BUGFIX-*
