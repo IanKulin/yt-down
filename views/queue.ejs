@@ -168,10 +168,18 @@
         // Current download panel management
         let updateInterval;
         
+        // Error state tracking
+        let isShowingConnectionError = false;
+        let lastConnectionState = true; // Assume connected initially
+        let connectionErrorToastId = null;
+        
         function updateCurrentDownload() {
             fetch('/api/state')
                 .then(response => response.json())
                 .then(data => {
+                    // Mark connection as successful
+                    updateConnectionState(true);
+                    
                     const currentDownloads = data.processor.currentDownloads;
                     const panel = document.getElementById('currentDownloadPanel');
                     
@@ -217,8 +225,7 @@
                 })
                 .catch(error => {
                     console.error('Error fetching download status:', error);
-                    // Show error state in UI
-                    showApiError('Failed to fetch download status. Please refresh the page.');
+                    updateConnectionState(false);
                 });
         }
         
@@ -298,6 +305,43 @@
             showToast('error', message, 10000);
         }
         
+        function updateConnectionState(isConnected) {
+            const wasConnected = lastConnectionState;
+            lastConnectionState = isConnected;
+            
+            if (!isConnected && wasConnected) {
+                // Transitioned from connected to disconnected
+                showConnectionError();
+            } else if (isConnected && !wasConnected) {
+                // Transitioned from disconnected to connected
+                clearConnectionError();
+            }
+        }
+        
+        function showConnectionError() {
+            if (isShowingConnectionError) return;
+            
+            isShowingConnectionError = true;
+            connectionErrorToastId = showToast(
+                'error', 
+                'Connection lost. Attempting to reconnect...', 
+                0 // Persistent until cleared
+            );
+        }
+        
+        function clearConnectionError() {
+            if (!isShowingConnectionError) return;
+            
+            isShowingConnectionError = false;
+            if (connectionErrorToastId) {
+                dismissToastById(connectionErrorToastId);
+                connectionErrorToastId = null;
+            }
+            
+            // Show brief success notification
+            showToast('success', 'Connection restored', 3000);
+        }
+        
         function showCompletionNotification(notification) {
             showToast('success', notification.message, 5000, notification.timestamp);
         }
@@ -322,6 +366,7 @@
             
             toastQueue.push(toast);
             displayToast(toast);
+            return toast.id;
         }
         
         function displayToast(toast) {
@@ -364,7 +409,7 @@
         }
         
         function startToastTimer(toast) {
-            if (toast.isHovered) return;
+            if (toast.isHovered || toast.duration === 0) return;
             
             const progressBar = toast.element.querySelector('.toast-progress');
             let progress = 0;
@@ -420,6 +465,13 @@
             }
         }
         
+        function dismissToastById(toastId) {
+            const toast = toastQueue.find(t => t.id === toastId);
+            if (toast) {
+                dismissToast(toast);
+            }
+        }
+        
         // Start updating current download status
         document.addEventListener('DOMContentLoaded', function() {
             // Initial update
@@ -430,12 +482,22 @@
                 if (window.wsClient) {
                     console.log('WebSocket client available, setting up real-time updates');
                     window.wsClient.addListener(updateCurrentDownload);
+                    
+                    // Listen for connection state changes
+                    window.wsClient.addConnectionListener((isConnected) => {
+                        updateConnectionState(isConnected);
+                    });
                 } else {
                     // Retry in a moment if WebSocket client is still loading
                     setTimeout(() => {
                         if (window.wsClient) {
                             console.log('WebSocket client loaded, setting up real-time updates');
                             window.wsClient.addListener(updateCurrentDownload);
+                            
+                            // Listen for connection state changes
+                            window.wsClient.addConnectionListener((isConnected) => {
+                                updateConnectionState(isConnected);
+                            });
                         } else {
                             // Fallback to polling if WebSocket client is not available
                             console.warn('WebSocket client not available, falling back to polling');

@@ -6,6 +6,7 @@ class WebSocketClient {
   constructor() {
     this.ws = null;
     this.listeners = new Set();
+    this.connectionListeners = new Set();
     this.isConnected = false;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
@@ -32,6 +33,7 @@ class WebSocketClient {
         this.reconnectDelay = 1000; // Reset delay
         this.disableFallbackPolling();
         this.updateConnectionStatus(true);
+        this.notifyConnectionListeners(true);
       };
 
       this.ws.onmessage = (event) => {
@@ -45,6 +47,7 @@ class WebSocketClient {
         console.log('WebSocket disconnected:', event.code, event.reason);
         this.isConnected = false;
         this.updateConnectionStatus(false);
+        this.notifyConnectionListeners(false);
 
         // Only attempt reconnection if it wasn't a clean close
         if (event.code !== 1000) {
@@ -140,6 +143,38 @@ class WebSocketClient {
   }
 
   /**
+   * Add a connection listener function to be called when connection state changes
+   * @param {Function} listener - Function to call when connection state changes
+   */
+  addConnectionListener(listener) {
+    if (typeof listener === 'function') {
+      this.connectionListeners.add(listener);
+    }
+  }
+
+  /**
+   * Remove a connection listener function
+   * @param {Function} listener - Function to remove
+   */
+  removeConnectionListener(listener) {
+    this.connectionListeners.delete(listener);
+  }
+
+  /**
+   * Notify all connection listeners about connection state change
+   * @param {boolean} isConnected - Whether WebSocket is connected
+   */
+  notifyConnectionListeners(isConnected) {
+    this.connectionListeners.forEach((listener) => {
+      try {
+        listener(isConnected);
+      } catch (error) {
+        console.error('Error in connection listener:', error);
+      }
+    });
+  }
+
+  /**
    * Notify all listeners that a change occurred
    */
   notifyListeners() {
@@ -178,6 +213,7 @@ class WebSocketClient {
 
     this.isConnected = false;
     this.listeners.clear();
+    this.connectionListeners.clear();
   }
 
   /**
