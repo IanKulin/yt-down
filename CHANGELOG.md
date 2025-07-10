@@ -9,3 +9,4 @@
 1.1.5 - jobs label, fix cancelling adaptive downloads, fix connection messages queuing up
 1.1.6 - remove 'finished' jobs, separate downloads dir, set focus to URL entry
 1.1.7 - fix error code related to favicon
+1.1.8 - Dockerfile improvements, title fetching
