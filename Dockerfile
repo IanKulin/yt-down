@@ -12,11 +12,9 @@ RUN npm ci --omit=dev
 FROM node:24-alpine AS release
 WORKDIR /app
 
-# Install OS-level dependencies for yt-dlp and video processing
-RUN apk add --no-cache python3 py3-pip ffmpeg
-
-# Install yt-dlp and pycryptodomex for AES-128 decryption support
-RUN pip install yt-dlp pycryptodomex --break-system-packages
+# Install OS-level dependencies and Python packages for yt-dlp
+RUN apk add --no-cache python3 py3-pip ffmpeg && \
+    pip install yt-dlp pycryptodomex --break-system-packages
 
 # Copy application code
 COPY . .
@@ -25,7 +23,7 @@ COPY . .
 COPY --from=dependencies /app/node_modules ./node_modules
 
 # Create data directories for the application
-RUN mkdir -p /app/data/urls/queued /app/data/urls/active /app/data/urls/finished /app/data/downloads
+RUN mkdir -p /app/data/jobs/queued /app/data/jobs/active /app/data/partials /app/downloads
 
 EXPOSE 3001
 
