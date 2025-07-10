@@ -1,10 +1,11 @@
 services:
   yt-down:
-    image: ghcr.io/iankulin/yt-down:test
+    image: ghcr.io/iankulin/yt-down
     ports:
       - '3001:3001'
     volumes:
       - ./data:/app/data
+      - ./downloads:/app/downloads
     restart: unless-stopped
     container_name: yt-down
     environment:

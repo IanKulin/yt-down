@@ -87,11 +87,11 @@ describe('queueProcessor.js', () => {
       // Downloads directories are still on processor
       assert.equal(
         processor.downloadsActiveDir,
-        path.join(baseDir, 'data', 'downloads', 'active')
+        path.join(baseDir, 'data', 'partials')
       );
       assert.equal(
         processor.downloadsFinishedDir,
-        path.join(baseDir, 'data', 'downloads', 'finished')
+        path.join(baseDir, 'downloads')
       );
     });
 
@@ -430,11 +430,11 @@ describe('queueProcessor.js', () => {
         // Downloads directories are still on processor
         assert.equal(
           processor.downloadsActiveDir,
-          path.join(baseDir, 'data', 'downloads', 'active')
+          path.join(baseDir, 'data', 'partials')
         );
         assert.equal(
           processor.downloadsFinishedDir,
-          path.join(baseDir, 'data', 'downloads', 'finished')
+          path.join(baseDir, 'downloads')
         );
       }
     });

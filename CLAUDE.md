@@ -73,8 +73,8 @@ Each "Download Job" is a small JSON file containing the URL. They are moved thro
 
 The "currently downloading" and "finished downloading" locations are split up to facilitate cleanups of partially downloaded media
 
-- `data/downloads/active` - Currently downloading
-- `data/downloads/finished` - Downloaded video/subtitle files
+- `data/partials` - Currently downloading partial files
+- `downloads` - Downloaded video/subtitle files (top-level directory for separate bind mount)
 
 ### Routes Structure
 

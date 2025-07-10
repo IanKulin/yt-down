@@ -33,6 +33,21 @@ This application is designed to be run with Docker and Docker Compose.
 
     This command will build the Docker image and start the application. You can access the web interface at [http://localhost:3001](http://localhost:3001).
 
+### Docker Volume Configuration
+
+The default `docker-compose.yaml` file mounts two directories:
+
+- `./data:/app/data` - Application state (jobs, settings, partial downloads)
+- `./downloads:/app/downloads` - Finished downloads
+
+This structure allows you to mount the downloads directory to a separate location, such as a different drive or network storage, while keeping the application data local. For example:
+
+```yaml
+volumes:
+  - ./data:/app/data
+  - /mnt/media/downloads:/app/downloads # Custom download location
+```
+
 ## Technical Overview for Developers
 
 This section provides a brief overview of the project's architecture and development patterns for those who wish to contribute or modify the application.
@@ -60,9 +75,10 @@ This section provides a brief overview of the project's architecture and develop
 - `views/`: EJS templates for the web interface.
 - `public/`: Static assets (CSS).
 - `data/`: (Git-ignored) Stores the application's data.
-  - `jobs/`: Contains the queue files (queued, active, finished).
-  - `downloads/`: Stores the downloaded video and subtitle files.
+  - `jobs/`: Contains the queue files (queued, active).
+  - `partials/`: Stores partial/temporary files during downloads.
   - `settings.json`: Stores user-defined settings.
+- `downloads/`: (Git-ignored) Stores the downloaded video and subtitle files. This is a separate top-level directory to support independent Docker volume mounting.
 
 ### Development Commands
 
