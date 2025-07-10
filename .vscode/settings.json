@@ -18,6 +18,7 @@
     "libstdc",
     "libz",
     "parseable",
+    "pgrep",
     "pkill",
     "promisified",
     "pycryptodomex",

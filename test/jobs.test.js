@@ -788,5 +788,107 @@ describe('jobs.js', () => {
 
       await cleanupTestDir();
     });
+
+    test('should handle async title enhancement workflow', async () => {
+      await createTestDir();
+      const baseDir = path.join(TEST_DATA_DIR, 'title-enhancement-test');
+      const logger = createMockLogger();
+      const jobManager = new JobManager({ logger, baseDir });
+
+      const url = 'https://example.com/video';
+
+      // Create job without title (simulating instant job creation)
+      const job = await jobManager.createJob(url);
+      assert.equal(job.title, null);
+      assert.equal(job.state, JobState.QUEUED);
+
+      // Simulate title enhancement service updating the job
+      await jobManager.updateJob(job.id, { title: 'Enhanced Video Title' });
+
+      // Verify title was updated
+      const updatedJob = await jobManager.getJob(job.id);
+      assert.equal(updatedJob.title, 'Enhanced Video Title');
+      assert.equal(updatedJob.state, JobState.QUEUED);
+
+      // Verify job can still be processed normally
+      await jobManager.moveJob(job.id, JobState.ACTIVE);
+      const activeJob = await jobManager.getJob(job.id);
+      assert.equal(activeJob.state, JobState.ACTIVE);
+      assert.equal(activeJob.title, 'Enhanced Video Title');
+
+      await cleanupTestDir();
+    });
+
+    test('should handle race condition during title enhancement', async () => {
+      await createTestDir();
+      const baseDir = path.join(TEST_DATA_DIR, 'race-condition-test');
+      const logger = createMockLogger();
+      const jobManager = new JobManager({ logger, baseDir });
+
+      const url = 'https://example.com/video';
+
+      // Create job
+      const job = await jobManager.createJob(url);
+      assert.equal(job.title, null);
+
+      // Simulate race condition: move job to active before title enhancement
+      await jobManager.moveJob(job.id, JobState.ACTIVE);
+
+      // Simulate title enhancement service trying to update active job
+      // This should not fail but should still update the title
+      await jobManager.updateJob(job.id, { title: 'Late Enhanced Title' });
+
+      // Verify title was updated even though job became active
+      const updatedJob = await jobManager.getJob(job.id);
+      assert.equal(updatedJob.title, 'Late Enhanced Title');
+      assert.equal(updatedJob.state, JobState.ACTIVE);
+
+      await cleanupTestDir();
+    });
+
+    test('should handle multiple jobs with title enhancement', async () => {
+      await createTestDir();
+      const baseDir = path.join(TEST_DATA_DIR, 'multiple-enhancement-test');
+      const logger = createMockLogger();
+      const jobManager = new JobManager({ logger, baseDir });
+
+      const urls = [
+        'https://example.com/video1',
+        'https://example.com/video2',
+        'https://example.com/video3',
+      ];
+
+      // Create jobs without titles
+      const jobs = await Promise.all(
+        urls.map((url) => jobManager.createJob(url))
+      );
+
+      // Verify all jobs created without titles
+      for (const job of jobs) {
+        assert.equal(job.title, null);
+        assert.equal(job.state, JobState.QUEUED);
+      }
+
+      // Simulate title enhancement for some jobs
+      await Promise.all([
+        jobManager.updateJob(jobs[0].id, { title: 'Enhanced Video 1' }),
+        jobManager.updateJob(jobs[1].id, { title: 'Enhanced Video 2' }),
+        // Leave jobs[2] without title enhancement
+      ]);
+
+      // Verify enhancement results
+      const enhancedJobs = await jobManager.getQueuedJobs();
+      assert.equal(enhancedJobs.length, 3);
+
+      const job1 = enhancedJobs.find((j) => j.url === urls[0]);
+      const job2 = enhancedJobs.find((j) => j.url === urls[1]);
+      const job3 = enhancedJobs.find((j) => j.url === urls[2]);
+
+      assert.equal(job1.title, 'Enhanced Video 1');
+      assert.equal(job2.title, 'Enhanced Video 2');
+      assert.equal(job3.title, null);
+
+      await cleanupTestDir();
+    });
   });
 });

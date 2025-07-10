@@ -44,7 +44,7 @@
                     <% activeJobs.forEach(function(item) { %>
                         <div class="queue-item active" data-hash="<%= item.hash %>">
                             <div class="queue-item-content">
-                                <div class="url"><%= item.url %></div>
+                                <div class="<%= item.title ? 'title' : 'url' %>"><%= item.title || item.url %></div>
                                 <div class="hash">Hash: <%= item.hash %></div>
                                 <div class="status downloading">Downloading...</div>
                             </div>
@@ -58,7 +58,10 @@
                     <% queuedJobs.forEach(function(item) { %>
                         <div class="queue-item" data-hash="<%= item.hash %>">
                             <div class="queue-item-content">
-                                <div class="url"><%= item.url %></div>
+                                <div class="<%= item.title ? 'title' : 'url' %>"><%= item.title || item.url %></div>
+                                <% if (!item.title) { %>
+                                    <span class="title-loading">Fetching title...</span>
+                                <% } %>
                                 <div class="hash">Hash: <%= item.hash %></div>
                                 <div class="status queued">Waiting...</div>
                             </div>
@@ -281,9 +284,16 @@
             queueItem.className = status === 'active' ? 'queue-item active' : 'queue-item';
             queueItem.dataset.hash = item.hash;
             
+            // Determine what to display - title if available, otherwise URL
+            const displayText = item.title ? escapeHtml(item.title) : escapeHtml(item.url);
+            const displayClass = item.title ? 'title' : 'url';
+            const loadingIndicator = (!item.title && status === 'queued') ? 
+                '<span class="title-loading">Fetching title...</span>' : '';
+            
             queueItem.innerHTML = `
                 <div class="queue-item-content">
-                    <div class="url">${escapeHtml(item.url)}</div>
+                    <div class="${displayClass}">${displayText}</div>
+                    ${loadingIndicator}
                     <div class="hash">Hash: ${escapeHtml(item.hash)}</div>
                     <div class="status ${status}">${statusText}</div>
                 </div>

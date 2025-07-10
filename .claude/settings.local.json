@@ -43,6 +43,7 @@
       "Bash(./scripts/docker-build.sh:*)",
       "Bash(time yt-dlp:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "plan"
   }
 }

@@ -17,6 +17,7 @@ router.get(
       active: jobs.active,
       counts: statistics.counts,
       processor: statistics.processor,
+      titleEnhancement: req.services.titleEnhancement.getStatus(),
       notifications,
       timestamp: new Date().toISOString(),
     };

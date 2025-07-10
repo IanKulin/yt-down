@@ -15,6 +15,7 @@ import {
   DownloadService,
   NotificationService,
   SettingsService,
+  TitleEnhancementService,
 } from './lib/services/index.js';
 
 import queueRoutes from './routes/queue.js';
@@ -130,6 +131,12 @@ const settingsService = new SettingsService({
   logger,
 });
 
+const titleEnhancementService = new TitleEnhancementService({
+  jobManager,
+  logger,
+  broadcastChange,
+});
+
 // Middleware to attach logger, services, and legacy objects to requests
 app.use((req, res, next) => {
   req.logger = logger;
@@ -140,6 +147,7 @@ app.use((req, res, next) => {
     downloads: downloadService,
     notifications: notificationService,
     settings: settingsService,
+    titleEnhancement: titleEnhancementService,
   };
 
   // Keep existing objects for backward compatibility during transition
@@ -200,17 +208,22 @@ server.listen(PORT, async () => {
 
   // Start the queue processor
   await queueProcessor.start();
+
+  // Start the title enhancement service
+  await titleEnhancementService.start();
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
   logger.info('Received SIGINT. Gracefully shutting down...');
   await queueProcessor.stop();
+  titleEnhancementService.stop();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   logger.info('Received SIGTERM. Gracefully shutting down...');
   await queueProcessor.stop();
+  titleEnhancementService.stop();
   process.exit(0);
 });
