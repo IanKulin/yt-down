@@ -11,4 +11,5 @@
 1.1.7 - fix error code related to favicon
 1.1.8 - Dockerfile improvements, title fetching
 1.1.9 - bugfix - move completed file on Docker
-1.1.10 -
+1.1.10 -filesize
+1.1.11 - fix cleanup before retry

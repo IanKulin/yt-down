@@ -594,7 +594,7 @@ describe('jobs.js', () => {
         await cleanupTestDir();
       });
 
-      test('should remove job after max retries', async () => {
+      test('should move job to failed directory after max retries', async () => {
         await createTestDir();
         const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
@@ -614,9 +614,15 @@ describe('jobs.js', () => {
           'Should return null when max retries exceeded'
         );
 
-        // Verify job is deleted
+        // Verify job is moved to failed directory
         const retrievedJob = await jobManager.getJob(job.id);
-        assert.equal(retrievedJob, null);
+        assert.ok(retrievedJob, 'Job should exist in failed directory');
+        assert.equal(retrievedJob.state, JobState.FAILED);
+        assert.equal(retrievedJob.metadata.lastError, 'Download failed');
+        assert.ok(
+          retrievedJob.metadata.failedAt,
+          'Should have failedAt timestamp'
+        );
 
         await cleanupTestDir();
       });
@@ -743,9 +749,12 @@ describe('jobs.js', () => {
       );
       assert.equal(finalResult, null);
 
-      // Verify job is deleted
-      const deletedJob = await jobManager.getJob(job.id);
-      assert.equal(deletedJob, null);
+      // Verify job is moved to failed directory
+      const failedJob = await jobManager.getJob(job.id);
+      assert.ok(failedJob, 'Job should exist in failed directory');
+      assert.equal(failedJob.state, JobState.FAILED);
+      assert.equal(failedJob.metadata.lastError, 'Persistent error');
+      assert.ok(failedJob.metadata.failedAt, 'Should have failedAt timestamp');
 
       await cleanupTestDir();
     });

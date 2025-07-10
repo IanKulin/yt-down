@@ -15,6 +15,7 @@ router.get(
     const state = {
       queued: jobs.queued,
       active: jobs.active,
+      failed: jobs.failed,
       counts: statistics.counts,
       processor: statistics.processor,
       titleEnhancement: req.services.titleEnhancement.getStatus(),
@@ -46,6 +47,31 @@ router.post(
     res.json({
       success: result.success,
       settings: result.settings,
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
+
+router.get(
+  '/api/failed',
+  asyncHandler(async (req, res) => {
+    const failedJobs = await req.services.jobs.getFailedJobs();
+
+    res.json({
+      failed: failedJobs,
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
+
+router.post(
+  '/api/failed/:jobId/retry',
+  asyncHandler(async (req, res) => {
+    const { jobId } = req.params;
+    const result = await req.services.jobs.retryFailedJob(jobId);
+
+    res.json({
+      success: result.success,
       timestamp: new Date().toISOString(),
     });
   })
