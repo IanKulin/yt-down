@@ -10,3 +10,4 @@
 1.1.6 - remove 'finished' jobs, separate downloads dir, set focus to URL entry
 1.1.7 - fix error code related to favicon
 1.1.8 - Dockerfile improvements, title fetching
+1.1.9 - bugfix - move completed file on Docker
