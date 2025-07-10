@@ -15,7 +15,6 @@ router.get(
     const state = {
       queued: jobs.queued,
       active: jobs.active,
-      finished: jobs.finished,
       counts: statistics.counts,
       processor: statistics.processor,
       notifications,

@@ -30,11 +30,12 @@ This is a Node.js web application that provides a queue-based system for downloa
 **QueueProcessor (`lib/queueProcessor.js`)**
 
 - Background service that polls for queued downloads every 5 seconds
-- Manages download states: queued → active → finished
+- Manages download states: queued → active → deleted
 - Spawns `yt-dlp` processes and parses progress output
 - Handles retry logic (moves failed downloads back to queue)
 - Tracks real-time download progress and broadcasts WebSocket notifications
 - Broadcasts state changes for job transitions and progress updates
+- Deletes completed jobs while preserving downloaded files
 
 **Settings System (`lib/settings.js`)**
 
@@ -48,8 +49,9 @@ This is a Node.js web application that provides a queue-based system for downloa
 - Provides Job class for structured download job management with validation
 - JobManager handles job lifecycle, state transitions, and atomic file operations
 - Manages job retry logic with configurable retry limits
-- Supports job metadata, title updates, and duplicate prevention
+- Supports job metadata, title updates, and duplicate prevention for active jobs only
 - Provides cleanup functionality for interrupted jobs on application restart
+- Uses job lifecycle: queued → active → deleted
 
 **Service Layer (`lib/services/`)**
 
@@ -65,7 +67,7 @@ Each "Download Job" is a small JSON file containing the URL. They are moved thro
 
 - `data/jobs/queued/` - Pending downloads
 - `data/jobs/active/` - Currently downloading
-- `data/jobs/finished/` - Completed downloads
+- Jobs are deleted upon completion (no persistent finished state)
 
 **Download Progress System**
 
@@ -79,7 +81,7 @@ The "currently downloading" and "finished downloading" locations are split up to
 - `/` - Queue management interface (queue.js) - uses JobService
 - `/downloads` - Downloaded files browser (downloads.js) - uses DownloadService
 - `/settings` - Configuration page (settings.js) - uses SettingsService
-- `/api/state` - Application state endpoint (api.js) - uses JobService and NotificationService
+- `/api/state` - Application state endpoint (api.js) - uses JobService and NotificationService; returns queued/active jobs only
 - `/api/notifications/dismiss` - Notification management (api.js) - uses NotificationService
 
 ### View Templates (`views/`)

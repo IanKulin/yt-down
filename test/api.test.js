@@ -86,11 +86,9 @@ describe('api.js', () => {
       const expectedStructure = {
         queued: [],
         active: [],
-        finished: [],
         counts: {
           queued: 0,
           active: 0,
-          finished: 0,
           total: 0,
         },
         processor: {
@@ -113,10 +111,6 @@ describe('api.js', () => {
         'active should be array'
       );
       assert.ok(
-        Array.isArray(expectedStructure.finished),
-        'finished should be array'
-      );
-      assert.ok(
         typeof expectedStructure.counts === 'object',
         'counts should be object'
       );
@@ -137,7 +131,6 @@ describe('api.js', () => {
       const counts = expectedStructure.counts;
       assert.ok('queued' in counts, 'counts should have queued');
       assert.ok('active' in counts, 'counts should have active');
-      assert.ok('finished' in counts, 'counts should have finished');
       assert.ok('total' in counts, 'counts should have total');
 
       // Verify processor structure
@@ -165,29 +158,26 @@ describe('api.js', () => {
         {
           queued: 0,
           active: 0,
-          finished: 0,
           expectedTotal: 0,
         },
         {
           queued: 5,
           active: 2,
-          finished: 10,
-          expectedTotal: 17,
+          expectedTotal: 7,
         },
         {
           queued: 100,
           active: 0,
-          finished: 50,
-          expectedTotal: 150,
+          expectedTotal: 100,
         },
       ];
 
       for (const testCase of testCases) {
-        const total = testCase.queued + testCase.active + testCase.finished;
+        const total = testCase.queued + testCase.active;
         assert.equal(
           total,
           testCase.expectedTotal,
-          `Total calculation failed for queued:${testCase.queued}, active:${testCase.active}, finished:${testCase.finished}`
+          `Total calculation failed for queued:${testCase.queued}, active:${testCase.active}`
         );
       }
     });

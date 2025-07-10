@@ -187,8 +187,8 @@ describe('jobs.js', () => {
         job.setState(JobState.ACTIVE);
         assert.equal(job.state, JobState.ACTIVE);
 
-        job.setState(JobState.FINISHED);
-        assert.equal(job.state, JobState.FINISHED);
+        job.setState(JobState.ACTIVE);
+        assert.equal(job.state, JobState.ACTIVE);
       });
 
       test('should throw error for invalid state', () => {
@@ -268,10 +268,6 @@ describe('jobs.js', () => {
         assert.equal(
           jobManager.jobDirectories[JobState.ACTIVE],
           path.join(baseDir, 'data', 'jobs', 'active')
-        );
-        assert.equal(
-          jobManager.jobDirectories[JobState.FINISHED],
-          path.join(baseDir, 'data', 'jobs', 'finished')
         );
       });
     });
@@ -381,13 +377,11 @@ describe('jobs.js', () => {
 
         const queuedJobs = await jobManager.getQueuedJobs();
         const activeJobs = await jobManager.getActiveJobs();
-        const finishedJobs = await jobManager.getFinishedJobs();
 
         assert.equal(queuedJobs.length, 1);
         assert.equal(queuedJobs[0].id, job1.id);
         assert.equal(activeJobs.length, 1);
         assert.equal(activeJobs[0].id, job2.id);
-        assert.equal(finishedJobs.length, 0);
 
         await cleanupTestDir();
       });
@@ -434,9 +428,7 @@ describe('jobs.js', () => {
         assert.ok(!queuedExists, 'Queued file should be removed');
         assert.ok(activeExists, 'Active file should exist');
 
-        // Move to finished
-        const finishedJob = await jobManager.moveJob(job.id, JobState.FINISHED);
-        assert.equal(finishedJob.state, JobState.FINISHED);
+        // Test completed - job moved to active successfully
 
         await cleanupTestDir();
       });
@@ -670,13 +662,12 @@ describe('jobs.js', () => {
         const job3 = await jobManager.createJob('https://example.com/stats3');
 
         await jobManager.moveJob(job2.id, JobState.ACTIVE);
-        await jobManager.moveJob(job3.id, JobState.FINISHED);
+        await jobManager.moveJob(job3.id, JobState.ACTIVE);
 
         const stats = await jobManager.getJobStats();
 
         assert.equal(stats.queued, 1);
-        assert.equal(stats.active, 1);
-        assert.equal(stats.finished, 1);
+        assert.equal(stats.active, 2);
         assert.equal(stats.total, 3);
 
         await cleanupTestDir();
@@ -708,15 +699,15 @@ describe('jobs.js', () => {
         metadata: { progress: 50 },
       });
 
-      // Complete successfully
-      await jobManager.moveJob(job.id, JobState.FINISHED);
+      // Complete successfully - in real app, job would be deleted
+      // For this test, just verify it's in active state
       currentJob = await jobManager.getJob(job.id);
-      assert.equal(currentJob.state, JobState.FINISHED);
+      assert.equal(currentJob.state, JobState.ACTIVE);
       assert.equal(currentJob.title, 'Updated Video Title');
 
       // Verify final state
       const stats = await jobManager.getJobStats();
-      assert.equal(stats.finished, 1);
+      assert.equal(stats.active, 1);
       assert.equal(stats.total, 1);
 
       await cleanupTestDir();
@@ -781,19 +772,17 @@ describe('jobs.js', () => {
       // Move jobs to different states concurrently
       await Promise.all([
         jobManager.moveJob(jobs[0].id, JobState.ACTIVE),
-        jobManager.moveJob(jobs[1].id, JobState.FINISHED),
+        jobManager.moveJob(jobs[1].id, JobState.ACTIVE),
         jobManager.updateJob(jobs[2].id, { title: 'Updated Title' }),
       ]);
 
       // Verify final states
-      const [activeJobs, finishedJobs, queuedJobs] = await Promise.all([
+      const [activeJobs, queuedJobs] = await Promise.all([
         jobManager.getActiveJobs(),
-        jobManager.getFinishedJobs(),
         jobManager.getQueuedJobs(),
       ]);
 
-      assert.equal(activeJobs.length, 1);
-      assert.equal(finishedJobs.length, 1);
+      assert.equal(activeJobs.length, 2);
       assert.equal(queuedJobs.length, 1);
       assert.equal(queuedJobs[0].title, 'Updated Title');
 
