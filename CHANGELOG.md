@@ -7,4 +7,4 @@
 1.1.3 - autosave settings, cancel current download, allow emojis in filenames, websocket, toast, credits
 1.1.4 - fix settings bug, docker scripts, move progress bar
 1.1.5 - jobs label, fix cancelling adaptive downloads, fix connection messages queuing up
-1.1.6 - remove 'finished' jobs, separate downloads dir
+1.1.6 - remove 'finished' jobs, separate downloads dir, set focus to URL entry
