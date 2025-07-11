@@ -14,3 +14,4 @@
 1.1.10 -filesize
 1.1.11 - fix cleanup before retry
 1.1.12 - refactor front end js
+1.1.13 - simplify partials cleanup, remove concurrent download code
