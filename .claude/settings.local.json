@@ -45,7 +45,8 @@
       "Bash(jq:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(sed:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npm audit:*)"
     ],
     "deny": [],
     "defaultMode": "plan"
