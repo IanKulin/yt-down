@@ -1,37 +1,29 @@
 # yt-down
 
-A simple, file-based web application for queueing and managing downloads with `yt-dlp`.
+A web application for queueing and managing video downloads from various sources with `yt-dlp`. Particularly suitable for self-hosting.
 
 ## Features
 
 - **Web Interface**: Manage your download queue, view completed downloads, and adjust settings from a web UI.
-- **Queue System**: Add URLs to a queue for background processing. The app prevents duplicate URLs and tracks the state of each download (queued, active, finished).
-- **File-Based Storage**: The application uses the filesystem to manage the queue and store downloaded files.
+- **Queue System**: Add URLs to a queue for background processing. The app prevents duplicate URLs and tracks the state of each download including showing a progress bar.
 - **Customisable Settings**: Configure video quality, subtitles, and download speed limits.
 - **Automatic Processing**: The application automatically processes the queue in the background, downloading one file at a time.
 
-## Installation and Usage
+## Installation
 
-This application is designed to be run with Docker and Docker Compose.
+This application is designed to be run with Docker and Docker Compose. It could be cloned and run directly with Node.js (v22+) but because of it's close dependency on particular versions of yt-dlp and ffmpeg, Docker deployment is highly recommended.
 
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Running the Application
 
 1.  **Create the docker-compose.yaml file:**
 
-- download from [github](https://github.com/IanKulin/yt-down/blob/main/docker-compose.yaml)
-
-3.  **Build and start the container:**
-
-    ```bash
-    docker compose up --build
-    ```
-
-    This command will build the Docker image and start the application. You can access the web interface at [http://localhost:3001](http://localhost:3001).
+- copy from [github](https://github.com/IanKulin/yt-down/blob/main/docker-compose.yaml) and save it to your working directory
+- create the `data` and `downloads` directory
+- ` docker compose up`
 
 ### Docker Volume Configuration
 
@@ -48,50 +40,19 @@ volumes:
   - /mnt/media/downloads:/app/downloads # Custom download location
 ```
 
-## Technical Overview for Developers
+## Usage
 
-This section provides a brief overview of the project's architecture and development patterns for those who wish to contribute or modify the application.
 
-### Core Technologies
 
-- **Backend**: Node.js with Express.js
-- **Frontend**: EJS (Embedded JavaScript) templates for server-side rendering
-- **Styling**: A single, consolidated CSS file with custom properties for theming (including automatic light/dark mode).
-- **Core Dependency**: `yt-dlp` (installed in the Docker image)
+## Developing
 
-### Project Structure
+See separate [README-ARCHITECTURE.md](https://github.com/IanKulin/yt-down/blob/main/README-ARCHITECTURE.md).
 
-- `server.js`: The main application entry point. Initializes the Express server, middleware, and queue processor.
-- `lib/`: Contains the core application logic.
-  - `queueProcessor.js`: Manages the background download queue.
-  - `jobs.js`: Provides Job class and JobManager for structured job management.
-  - `settings.js`: Handles loading and saving application settings.
-  - `utils.js`: Provides utility functions for file operations, hashing, etc.
-- `routes/`: Defines the application's routes.
-  - `api.js`: API endpoints for retrieving application state.
-  - `downloads.js`: Routes for managing downloaded files.
-  - `queue.js`: Routes for the main queue interface.
-  - `settings.js`: Routes for the settings page.
-- `views/`: EJS templates for the web interface.
-- `public/`: Static assets (CSS).
-- `data/`: (Git-ignored) Stores the application's data.
-  - `jobs/`: Contains the queue files (queued, active).
-  - `partials/`: Stores partial/temporary files during downloads.
-  - `settings.json`: Stores user-defined settings.
-- `downloads/`: (Git-ignored) Stores the downloaded video and subtitle files. This is a separate top-level directory to support independent Docker volume mounting.
-
-### Development Commands
-
-- `npm install`: Install dependencies.
-- `npm test`: Run the test suite.
-- `npm run lint`: Lint the codebase.
-- `npm run format`: Format the code with Prettier.
-- `npm run docker:build`: Build the Docker image.
-- `npm run docker:push`: Push the Docker image to the configured registry.
+## Legal
 
 ### License
 
-This app is licensed under the MIT License.
+This app is licensed under the [MIT License](https://github.com/IanKulin/yt-down/blob/main/LICENSE.md).
 
 ### Third-Party Licenses
 
