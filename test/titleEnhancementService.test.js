@@ -41,7 +41,7 @@ describe('TitleEnhancementService', () => {
       assert.strictEqual(service.isRunning, false);
       assert.strictEqual(service.processingQueue.size, 0);
       assert.strictEqual(service.pollInterval, 2000);
-      assert.strictEqual(service.maxConcurrent, 2);
+      assert.strictEqual(service.maxTitleChecks, 2);
       assert.strictEqual(service.intervalId, null);
       assert.strictEqual(service.settings, null);
     });
@@ -87,7 +87,7 @@ describe('TitleEnhancementService', () => {
       assert.deepStrictEqual(status, {
         isRunning: false,
         processingQueue: 0,
-        maxConcurrent: 2,
+        maxTitleChecks: 2,
         pollInterval: 2000,
       });
     });
@@ -95,7 +95,7 @@ describe('TitleEnhancementService', () => {
     it('should return correct status when running', () => {
       // Manually set service state
       service.isRunning = true;
-      service.maxConcurrent = 3;
+      service.maxTitleChecks = 3;
       service.pollInterval = 1000;
 
       const status = service.getStatus();
@@ -103,7 +103,7 @@ describe('TitleEnhancementService', () => {
       assert.deepStrictEqual(status, {
         isRunning: true,
         processingQueue: 0,
-        maxConcurrent: 3,
+        maxTitleChecks: 3,
         pollInterval: 1000,
       });
     });
