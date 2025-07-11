@@ -26,18 +26,14 @@ describe('queueProcessor.js', () => {
         'Should use default poll interval'
       );
       assert.equal(
-        processor.maxConcurrent,
-        1,
-        'Should use default max concurrent'
-      );
-      assert.equal(
         processor.isProcessing,
         false,
         'Should not be processing initially'
       );
-      assert.ok(
-        processor.activeDownloads instanceof Map,
-        'Should initialize activeDownloads as Map'
+      assert.equal(
+        processor.isDownloadActive,
+        false,
+        'Should not have active download initially'
       );
     });
 
@@ -45,13 +41,10 @@ describe('queueProcessor.js', () => {
       const logger = createMockLogger();
       const customBaseDir = '/custom/base/dir';
       const customPollInterval = 10000;
-      const customMaxConcurrent = 3;
-
       const processor = new QueueProcessor({
         logger,
         baseDir: customBaseDir,
         pollInterval: customPollInterval,
-        maxConcurrent: customMaxConcurrent,
       });
 
       assert.equal(
@@ -63,11 +56,6 @@ describe('queueProcessor.js', () => {
         processor.pollInterval,
         customPollInterval,
         'Should use custom poll interval'
-      );
-      assert.equal(
-        processor.maxConcurrent,
-        customMaxConcurrent,
-        'Should use custom max concurrent'
       );
     });
 
@@ -108,11 +96,6 @@ describe('queueProcessor.js', () => {
         5000,
         'Should still use default poll interval'
       );
-      assert.equal(
-        processor.maxConcurrent,
-        1,
-        'Should still use default max concurrent'
-      );
     });
   });
 
@@ -130,14 +113,9 @@ describe('queueProcessor.js', () => {
         'Should not be processing initially'
       );
       assert.equal(
-        status.activeDownloads,
-        0,
-        'Should have 0 active downloads initially'
-      );
-      assert.equal(
-        status.maxConcurrent,
-        1,
-        'Should return max concurrent limit'
+        status.isDownloadActive,
+        false,
+        'Should not have active download initially'
       );
       assert.equal(status.pollInterval, 5000, 'Should return poll interval');
     });
@@ -167,12 +145,9 @@ describe('queueProcessor.js', () => {
     test('should reflect custom configuration', () => {
       const logger = createMockLogger();
       const customPollInterval = 3000;
-      const customMaxConcurrent = 5;
-
       const processor = new QueueProcessor({
         logger,
         pollInterval: customPollInterval,
-        maxConcurrent: customMaxConcurrent,
       });
 
       const status = processor.getStatus();
@@ -180,11 +155,6 @@ describe('queueProcessor.js', () => {
         status.pollInterval,
         customPollInterval,
         'Should return custom poll interval'
-      );
-      assert.equal(
-        status.maxConcurrent,
-        customMaxConcurrent,
-        'Should return custom max concurrent'
       );
     });
 
@@ -197,10 +167,9 @@ describe('queueProcessor.js', () => {
       // Check all required fields exist
       assert.ok('isProcessing' in status, 'Should have isProcessing field');
       assert.ok(
-        'activeDownloads' in status,
-        'Should have activeDownloads field'
+        'isDownloadActive' in status,
+        'Should have isDownloadActive field'
       );
-      assert.ok('maxConcurrent' in status, 'Should have maxConcurrent field');
       assert.ok('pollInterval' in status, 'Should have pollInterval field');
 
       // Check field types
@@ -210,14 +179,9 @@ describe('queueProcessor.js', () => {
         'isProcessing should be boolean'
       );
       assert.equal(
-        typeof status.activeDownloads,
-        'number',
-        'activeDownloads should be number'
-      );
-      assert.equal(
-        typeof status.maxConcurrent,
-        'number',
-        'maxConcurrent should be number'
+        typeof status.isDownloadActive,
+        'boolean',
+        'isDownloadActive should be boolean'
       );
       assert.equal(
         typeof status.pollInterval,
@@ -246,24 +210,6 @@ describe('queueProcessor.js', () => {
       );
     });
 
-    test('should handle zero max concurrent', () => {
-      const logger = createMockLogger();
-      const processor = new QueueProcessor({ logger, maxConcurrent: 0 });
-
-      // Note: QueueProcessor uses logical OR for maxConcurrent, so 0 becomes 1
-      assert.equal(
-        processor.maxConcurrent,
-        1,
-        'Should use default when 0 is provided'
-      );
-      const status = processor.getStatus();
-      assert.equal(
-        status.maxConcurrent,
-        1,
-        'Status should reflect default max concurrent'
-      );
-    });
-
     test('should handle very large poll interval', () => {
       const logger = createMockLogger();
       const largePollInterval = 60000; // 1 minute
@@ -278,45 +224,44 @@ describe('queueProcessor.js', () => {
         'Should accept large poll interval'
       );
     });
-
-    test('should handle very large max concurrent', () => {
-      const logger = createMockLogger();
-      const largeMaxConcurrent = 100;
-      const processor = new QueueProcessor({
-        logger,
-        maxConcurrent: largeMaxConcurrent,
-      });
-
-      assert.equal(
-        processor.maxConcurrent,
-        largeMaxConcurrent,
-        'Should accept large max concurrent'
-      );
-    });
   });
 
   describe('state management', () => {
-    test('should maintain activeDownloads map correctly', () => {
+    test('should maintain download active state correctly', () => {
       const logger = createMockLogger();
       const processor = new QueueProcessor({ logger });
 
-      assert.ok(processor.activeDownloads instanceof Map, 'Should be a Map');
-      assert.equal(processor.activeDownloads.size, 0, 'Should start empty');
+      assert.equal(processor.isDownloadActive, false, 'Should start inactive');
+      assert.equal(
+        processor.activeDownloadHash,
+        null,
+        'Should have no active hash'
+      );
 
-      // Simulate adding an active download
-      const mockPromise = Promise.resolve();
-      processor.activeDownloads.set('test-hash', mockPromise);
+      // Simulate setting active download
+      processor.isDownloadActive = true;
+      processor.activeDownloadHash = 'test-hash';
 
       const status = processor.getStatus();
       assert.equal(
-        status.activeDownloads,
-        1,
-        'Should reflect active download count'
+        status.isDownloadActive,
+        true,
+        'Should reflect active download state'
+      );
+      assert.equal(
+        status.activeDownloadHash,
+        'test-hash',
+        'Should reflect active download hash'
       );
 
-      processor.activeDownloads.delete('test-hash');
+      processor.isDownloadActive = false;
+      processor.activeDownloadHash = null;
       const updatedStatus = processor.getStatus();
-      assert.equal(updatedStatus.activeDownloads, 0, 'Should reflect removal');
+      assert.equal(
+        updatedStatus.isDownloadActive,
+        false,
+        'Should reflect inactive state'
+      );
     });
 
     test('should not be processing initially', () => {
@@ -562,7 +507,8 @@ describe('queueProcessor.js', () => {
       processor.cancelledJobs.add(jobHash);
 
       // Simulate the finally block cleanup
-      processor.activeDownloads.delete(jobHash);
+      processor.isDownloadActive = false;
+      processor.activeDownloadHash = null;
       processor.downloadProgress.delete(jobHash);
       processor.activeProcesses.delete(jobHash);
       processor.lastProgressBroadcast.delete(jobHash);

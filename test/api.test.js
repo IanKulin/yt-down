@@ -6,8 +6,8 @@ function createMockQueueProcessor(status = {}) {
   return {
     getStatus: () => ({
       isProcessing: false,
-      activeDownloads: 0,
-      maxConcurrent: 1,
+      isDownloadActive: false,
+      activeDownloadHash: null,
       pollInterval: 5000,
       ...status,
     }),
@@ -21,8 +21,8 @@ describe('api.js', () => {
       // let's test the structure that would be returned
       const mockProcessor = createMockQueueProcessor({
         isProcessing: true,
-        activeDownloads: 2,
-        maxConcurrent: 3,
+        isDownloadActive: true,
+        activeDownloadHash: 'test-hash',
         pollInterval: 10000,
       });
 
@@ -36,14 +36,9 @@ describe('api.js', () => {
         'isProcessing should be boolean'
       );
       assert.equal(
-        typeof status.activeDownloads,
-        'number',
-        'activeDownloads should be number'
-      );
-      assert.equal(
-        typeof status.maxConcurrent,
-        'number',
-        'maxConcurrent should be number'
+        typeof status.isDownloadActive,
+        'boolean',
+        'isDownloadActive should be boolean'
       );
       assert.equal(
         typeof status.pollInterval,
@@ -52,8 +47,8 @@ describe('api.js', () => {
       );
 
       assert.equal(status.isProcessing, true);
-      assert.equal(status.activeDownloads, 2);
-      assert.equal(status.maxConcurrent, 3);
+      assert.equal(status.isDownloadActive, true);
+      assert.equal(status.activeDownloadHash, 'test-hash');
       assert.equal(status.pollInterval, 10000);
     });
 
@@ -62,16 +57,16 @@ describe('api.js', () => {
       const status = defaultProcessor.getStatus();
 
       assert.equal(status.isProcessing, false);
-      assert.equal(status.activeDownloads, 0);
-      assert.equal(status.maxConcurrent, 1);
+      assert.equal(status.isDownloadActive, false);
+      assert.equal(status.activeDownloadHash, null);
       assert.equal(status.pollInterval, 5000);
     });
 
     test('should allow custom queue processor configuration', () => {
       const customStatus = {
         isProcessing: true,
-        activeDownloads: 5,
-        maxConcurrent: 10,
+        isDownloadActive: true,
+        activeDownloadHash: 'custom-hash',
         pollInterval: 2000,
       };
 
@@ -93,8 +88,8 @@ describe('api.js', () => {
         },
         processor: {
           isProcessing: false,
-          activeDownloads: 0,
-          maxConcurrent: 1,
+          isDownloadActive: false,
+          activeDownloadHash: null,
           pollInterval: 5000,
         },
         notifications: [],
@@ -140,12 +135,12 @@ describe('api.js', () => {
         'processor should have isProcessing'
       );
       assert.ok(
-        'activeDownloads' in processor,
-        'processor should have activeDownloads'
+        'isDownloadActive' in processor,
+        'processor should have isDownloadActive'
       );
       assert.ok(
-        'maxConcurrent' in processor,
-        'processor should have maxConcurrent'
+        'activeDownloadHash' in processor,
+        'processor should have activeDownloadHash'
       );
       assert.ok(
         'pollInterval' in processor,
