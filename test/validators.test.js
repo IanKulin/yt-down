@@ -14,7 +14,6 @@ describe('Validators', () => {
         'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         'http://example.com',
         'https://example.com/path?param=value',
-        'ftp://files.example.com/file.txt',
       ];
 
       validUrls.forEach((url) => {
@@ -36,6 +35,8 @@ describe('Validators', () => {
         'not-a-url',
         'htp://invalid-protocol.com',
         'javascript:alert(1)',
+        'ftp://files.example.com/file.txt',
+        'ftps://secure.example.com/file.txt',
       ];
 
       invalidUrls.forEach((url) => {
@@ -47,6 +48,18 @@ describe('Validators', () => {
       [null, undefined].forEach((url) => {
         assert.throws(() => validateUrl(url), ValidationError);
       });
+    });
+
+    it('should throw ValidationError for URLs longer than 2048 characters', () => {
+      const longUrl = 'https://example.com/' + 'a'.repeat(2050);
+      assert.throws(() => validateUrl(longUrl), ValidationError);
+    });
+
+    it('should accept URLs at the 2048 character limit', () => {
+      const baseUrl = 'https://example.com/';
+      const maxLengthUrl = baseUrl + 'a'.repeat(2048 - baseUrl.length);
+      const result = validateUrl(maxLengthUrl);
+      assert.strictEqual(result, maxLengthUrl);
     });
   });
 
