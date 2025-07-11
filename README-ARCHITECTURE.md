@@ -200,10 +200,42 @@ downloads/                # Completed video files
 - `settings.ejs`: Configuration interface
 - `partials/header.ejs`: Shared navigation
 
+### Front-end JavaScript Architecture
+
+The application uses a modular JavaScript architecture with centralized, cacheable libraries.
+
+#### JavaScript Libraries (`public/js/`)
+
+**Core Libraries:**
+
+- `websocket.js`: WebSocket connection management and real-time updates
+- `utils.js`: Utility functions (file size formatting, HTML escaping, debouncing, etc.)
+- `toast.js`: Centralized toast notification system with XSS protection
+- `modal.js`: Modal management with keyboard and click-outside-to-close
+- `notifications.js`: Notification checking and state management
+
+**Page-specific Libraries:**
+
+- `queue.js`: Queue-specific functionality and UI interactions
+
+#### Template Integration
+
+Each EJS template includes relevant JavaScript libraries at the bottom:
+
+```html
+<!-- Example from queue.ejs -->
+<script src="/js/websocket.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/toast.js"></script>
+<script src="/js/modal.js"></script>
+<script src="/js/notifications.js"></script>
+<script src="/js/queue.js"></script>
+```
+
 ### Real-time Updates
 
 ```javascript
-// In websocket.js
+// In websocket.js (centralized WebSocket management)
 const ws = new WebSocket(`ws://${window.location.host}`);
 ws.onmessage = (event) => {
   if (event.data === 'changed') {
