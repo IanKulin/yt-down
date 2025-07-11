@@ -57,220 +57,29 @@
     </form>
     
     <script src="/js/websocket.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/modal.js"></script>
+    <script src="/js/notifications.js"></script>
     <script>
-        let currentDeleteFilename = null;
-        
-        // Event delegation for delete buttons
+        // Initialize everything when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('delete-btn')) {
-                    const filename = e.target.dataset.filename;
-                    showDeleteModal(filename);
-                }
-            });
-        });
-        
-        function showDeleteModal(filename) {
-            currentDeleteFilename = filename;
-            document.getElementById('modalFilename').textContent = filename;
-            document.getElementById('deleteModal').style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-        }
-        
-        function hideDeleteModal() {
-            document.getElementById('deleteModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            currentDeleteFilename = null;
-        }
-        
-        function confirmDelete() {
-            if (currentDeleteFilename) {
-                document.getElementById('deleteFilename').value = currentDeleteFilename;
-                document.getElementById('deleteForm').submit();
-            }
-        }
-        
-        // Close modal when clicking outside of it
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideDeleteModal();
-            }
-        });
-        
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('deleteModal').style.display === 'block') {
-                hideDeleteModal();
-            }
-        });
-        
-        // Notification checking functionality
-        function checkForNotifications() {
-            fetch('/api/state')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.notifications && data.notifications.length > 0) {
-                        const notification = data.notifications[0];
-                        // Only show if we haven't shown this notification before
-                        if (!shownNotifications.has(notification.timestamp)) {
-                            shownNotifications.add(notification.timestamp);
-                            showCompletionNotification(notification);
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking notifications:', error);
-                });
-        }
-        
-        function showCompletionNotification(notification) {
-            showToast('success', notification.message, 5000, notification.timestamp);
-        }
-        
-        // Toast notification system
-        let toastQueue = [];
-        let toastIdCounter = 0;
-        let shownNotifications = new Set();
-        
-        function showToast(type, message, duration = 5000, notificationId = null) {
-            const toast = {
-                id: ++toastIdCounter,
-                type: type,
-                message: message,
-                duration: duration,
-                notificationId: notificationId,
-                element: null,
-                timeout: null,
-                progressInterval: null,
-                isHovered: false
-            };
-            
-            toastQueue.push(toast);
-            displayToast(toast);
-        }
-        
-        function displayToast(toast) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            
-            // Create toast element
-            const toastElement = document.createElement('div');
-            toastElement.className = `toast-notification ${toast.type}`;
-            toastElement.dataset.toastId = toast.id;
-            toastElement.innerHTML = `
-                <span class="toast-content">${escapeHtml(toast.message)}</span>
-                <button class="toast-dismiss" aria-label="Dismiss notification">&times;</button>
-                <div class="toast-progress"></div>
-            `;
-            
-            toast.element = toastElement;
-            container.appendChild(toastElement);
-            
-            // Set up dismiss functionality
-            const dismissBtn = toastElement.querySelector('.toast-dismiss');
-            dismissBtn.addEventListener('click', () => dismissToast(toast));
-            
-            // Set up hover pause functionality
-            toastElement.addEventListener('mouseenter', () => {
-                toast.isHovered = true;
-                toastElement.classList.add('paused');
-                if (toast.timeout) clearTimeout(toast.timeout);
-                if (toast.progressInterval) clearInterval(toast.progressInterval);
+            // Setup delete modal
+            window.modalSystem.setupDeleteModal({
+                modalId: 'deleteModal',
+                triggerSelector: '.delete-btn',
+                formId: 'deleteForm',
+                dataAttribute: 'data-filename',
+                hiddenInputId: 'deleteFilename'
             });
             
-            toastElement.addEventListener('mouseleave', () => {
-                toast.isHovered = false;
-                toastElement.classList.remove('paused');
-                startToastTimer(toast);
-            });
-            
-            // Start auto-dismiss timer
-            startToastTimer(toast);
-        }
-        
-        function startToastTimer(toast) {
-            if (toast.isHovered) return;
-            
-            const progressBar = toast.element.querySelector('.toast-progress');
-            let progress = 0;
-            const interval = 50;
-            const increment = (interval / toast.duration) * 100;
-            
-            toast.progressInterval = setInterval(() => {
-                progress += increment;
-                progressBar.style.width = progress + '%';
-                
-                if (progress >= 100) {
-                    clearInterval(toast.progressInterval);
-                    dismissToast(toast);
-                }
-            }, interval);
-        }
-        
-        function dismissToast(toast) {
-            if (!toast.element || toast.element.classList.contains('dismissing')) return;
-            
-            // Clear timers
-            if (toast.timeout) clearTimeout(toast.timeout);
-            if (toast.progressInterval) clearInterval(toast.progressInterval);
-            
-            // Animate out
-            toast.element.classList.add('dismissing');
-            setTimeout(() => {
-                if (toast.element.parentElement) {
-                    toast.element.parentElement.removeChild(toast.element);
-                }
-            }, 300);
-            
-            // Remove from queue
-            const index = toastQueue.indexOf(toast);
-            if (index > -1) {
-                toastQueue.splice(index, 1);
-            }
-            
-            // Tell server to remove the notification if it has a notification ID
-            if (toast.notificationId) {
-                // Remove from shown notifications set
-                shownNotifications.delete(toast.notificationId);
-                
-                fetch('/api/notifications/dismiss', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ notificationId: toast.notificationId })
-                }).catch(error => {
-                    console.error('Error dismissing notification:', error);
-                });
-            }
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Start checking for notifications
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initial notification check
-            checkForNotifications();
-            
-            // Set up WebSocket-triggered notification checks
-            if (window.wsClient) {
-                window.wsClient.addListener(checkForNotifications);
-            } else {
-                // Fallback to polling if WebSocket client is not available
-                console.warn('WebSocket client not available, falling back to polling');
-                setInterval(checkForNotifications, 3000);
-            }
+            // Initialize notification system
+            window.notificationSystem.initialize();
         });
         
         // Clean up when page is unloaded
         window.addEventListener('beforeunload', function() {
-            if (window.wsClient) {
-                window.wsClient.removeListener(checkForNotifications);
-            }
+            window.notificationSystem.cleanup();
         });
     </script>
 </body>
