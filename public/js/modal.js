@@ -5,6 +5,7 @@
 class ModalSystem {
   constructor() {
     this.currentModal = null;
+    this.previouslyFocusedElement = null;
     this.setupGlobalEventListeners();
   }
 
@@ -39,8 +40,12 @@ class ModalSystem {
       return;
     }
 
+    // Store currently focused element
+    this.previouslyFocusedElement = document.activeElement;
+
     this.currentModal = modalId;
     modal.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
 
     // Apply any custom options
@@ -58,6 +63,9 @@ class ModalSystem {
       const contentElement = modal.querySelector('.modal-content, .modal-body');
       if (contentElement) contentElement.innerHTML = options.content;
     }
+
+    // Set focus to the first focusable element in the modal
+    this.trapFocus(modal);
   }
 
   /**
@@ -69,8 +77,63 @@ class ModalSystem {
     if (!modal) return;
 
     modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = 'auto';
     this.currentModal = null;
+
+    // Remove focus trap event listener
+    if (modal.focusTrapHandler) {
+      modal.removeEventListener('keydown', modal.focusTrapHandler);
+      modal.focusTrapHandler = null;
+    }
+
+    // Return focus to previously focused element
+    if (this.previouslyFocusedElement) {
+      this.previouslyFocusedElement.focus();
+      this.previouslyFocusedElement = null;
+    }
+  }
+
+  /**
+   * Trap focus within modal
+   * @param {HTMLElement} modal - The modal element
+   */
+  trapFocus(modal) {
+    const focusableElements = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    if (focusableElements.length === 0) return;
+
+    const firstFocusableElement = focusableElements[0];
+    const lastFocusableElement =
+      focusableElements[focusableElements.length - 1];
+
+    // Focus the first element
+    firstFocusableElement.focus();
+
+    // Add event listener for tab key
+    const handleTabKey = (e) => {
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          // Shift + Tab
+          if (document.activeElement === firstFocusableElement) {
+            lastFocusableElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          // Tab
+          if (document.activeElement === lastFocusableElement) {
+            firstFocusableElement.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    // Store the handler to remove it later
+    modal.focusTrapHandler = handleTabKey;
+    modal.addEventListener('keydown', handleTabKey);
   }
 
   /**
@@ -157,6 +220,9 @@ class ModalSystem {
         }
 
         this.showModal(modalId);
+
+        // Update button aria-expanded state
+        e.target.setAttribute('aria-expanded', 'true');
       }
     });
 
@@ -169,6 +235,13 @@ class ModalSystem {
         cancelBtn.addEventListener('click', () => {
           this.hideModal(modalId);
           currentDeleteValue = null;
+          // Update aria-expanded state on trigger element
+          const triggerElement = document.querySelector(
+            `[aria-expanded="true"]`
+          );
+          if (triggerElement) {
+            triggerElement.setAttribute('aria-expanded', 'false');
+          }
         });
       }
 
@@ -195,6 +268,11 @@ class ModalSystem {
     window.hideDeleteModal = () => {
       this.hideModal(modalId);
       currentDeleteValue = null;
+      // Update aria-expanded state on trigger element
+      const triggerElement = document.querySelector(`[aria-expanded="true"]`);
+      if (triggerElement) {
+        triggerElement.setAttribute('aria-expanded', 'false');
+      }
     };
 
     window.confirmDelete = () => {

@@ -1,20 +1,20 @@
 <%- include('partials/header', { currentPage: 'queue', pageTitle: 'Queue' }) %>
         
         <!-- Current Download Panel -->
-        <section id="currentDownloadPanel" class="current-download-panel">
+        <section id="currentDownloadPanel" class="current-download-panel" aria-live="polite" aria-atomic="true">
             <h2>Current Download</h2>
             <div class="download-info">
-                <div class="download-filename" id="downloadFilename">No active download</div>
+                <div class="download-filename" id="downloadFilename" role="status" aria-live="polite">No active download</div>
                 <div class="download-progress">
-                    <div class="progress-bar">
+                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Download progress" aria-describedby="progressText">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
-                    <div class="progress-text" id="progressText">0%</div>
+                    <div class="progress-text" id="progressText" role="status" aria-live="polite">0%</div>
                 </div>
                 <div class="download-details">
-                    <span class="download-speed" id="downloadSpeed">Speed: N/A</span>
-                    <span class="download-eta" id="downloadEta">ETA: N/A</span>
-                    <span class="download-filesize" id="downloadFilesize">Size: N/A</span>
+                    <span class="download-speed" id="downloadSpeed" role="status" aria-live="polite">Speed: N/A</span>
+                    <span class="download-eta" id="downloadEta" role="status" aria-live="polite">ETA: N/A</span>
+                    <span class="download-filesize" id="downloadFilesize" role="status" aria-live="polite">Size: N/A</span>
                 </div>
             </div>
         </section>
@@ -22,9 +22,10 @@
         <form action="/job/add" method="POST">
             <div class="form-group">
                 <label for="url">Enter URL for download job:</label>
+                <div id="urlHelp" class="sr-only">Enter a valid URL from a supported video platform like YouTube, Vimeo, or others supported by yt-dlp.</div>
                 <div class="form-input-group">
-                    <input type="url" id="url" name="url" required placeholder="https://www.youtube.com/watch?v=..." autofocus>
-                    <button type="submit">Add Job to Queue</button>
+                    <input type="url" id="url" name="url" required placeholder="https://www.youtube.com/watch?v=..." autofocus aria-describedby="urlHelp">
+                    <button type="submit" aria-label="Add download job to queue">Add Job to Queue</button>
                 </div>
             </div>
         </form>
@@ -37,19 +38,19 @@
                 <h2>Current Queue</h2>
             <% } %>
             
-            <div class="queue-container">
+            <div class="queue-container" role="list" aria-live="polite" aria-atomic="false">
                 <% if (queuedJobs.length === 0 && activeJobs.length === 0) { %>
                     <div class="empty-queue">No download jobs in queue</div>
                 <% } else { %>
                     <!-- Active Downloads -->
                     <% activeJobs.forEach(function(item) { %>
-                        <div class="queue-item active" data-hash="<%= item.hash %>">
+                        <div class="queue-item active" data-hash="<%= item.hash %>" role="listitem" aria-label="Active download: <%= item.title || item.url %>">
                             <div class="queue-item-content">
                                 <div class="url"><%= item.title || item.url %></div>
                                 <div class="file-size">Size: <%= item.filesize ? formatFileSize(item.filesize) : 'calculating...' %></div>
-                                <div class="status downloading">Downloading...</div>
+                                <div class="status downloading" role="status">Downloading...</div>
                             </div>
-                            <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>" data-status="active">
+                            <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>" data-status="active" aria-label="Cancel download for <%= item.title || item.url %>">
                                 Cancel
                             </button>
                         </div>
@@ -57,16 +58,16 @@
                     
                     <!-- Queued Downloads -->
                     <% queuedJobs.forEach(function(item) { %>
-                        <div class="queue-item" data-hash="<%= item.hash %>">
+                        <div class="queue-item" data-hash="<%= item.hash %>" role="listitem" aria-label="Queued download: <%= item.title || item.url %>">
                             <div class="queue-item-content">
                                 <div class="<%= item.title ? 'title' : 'url' %>"><%= item.title || item.url %></div>
                                 <% if (!item.title) { %>
-                                    <span class="title-loading">Fetching title...</span>
+                                    <span class="title-loading" role="status" aria-live="polite">Fetching title...</span>
                                 <% } %>
                                 <div class="file-size">Size: <%= item.filesize ? formatFileSize(item.filesize) : 'calculating...' %></div>
-                                <div class="status queued">Waiting...</div>
+                                <div class="status queued" role="status">Waiting...</div>
                             </div>
-                            <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>" data-status="queued">
+                            <button class="delete-btn" data-hash="<%= item.hash %>" data-url="<%= item.url %>" data-status="queued" aria-label="Delete download for <%= item.title || item.url %>">
                                 Delete
                             </button>
                         </div>
@@ -79,14 +80,14 @@
     </div>
     
     <!-- Delete/Cancel Confirmation Modal -->
-    <div id="deleteModal" class="modal-overlay">
-        <div class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+    <div id="deleteModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage">
             <h3 id="modalTitle">Confirm Delete</h3>
             <p id="modalMessage">Are you sure you want to delete this download job from the queue?</p>
             <div id="modalUrl" class="modal-url"></div>
             <div class="modal-buttons">
-                <button class="modal-btn btn-cancel" id="modalCancelBtn" onclick="hideDeleteModal()">Cancel</button>
-                <button class="modal-btn btn-delete" id="modalConfirmBtn" onclick="confirmDelete()">Delete</button>
+                <button class="modal-btn btn-cancel" id="modalCancelBtn" onclick="hideDeleteModal()" aria-label="Cancel deletion">Cancel</button>
+                <button class="modal-btn btn-delete" id="modalConfirmBtn" onclick="confirmDelete()" aria-label="Confirm deletion">Delete</button>
             </div>
         </div>
     </div>
