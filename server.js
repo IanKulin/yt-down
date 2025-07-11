@@ -16,12 +16,14 @@ import {
   NotificationService,
   SettingsService,
   TitleEnhancementService,
+  VersionService,
 } from './lib/services/index.js';
 
 import queueRoutes from './routes/queue.js';
 import downloadsRoutes from './routes/downloads.js';
 import settingsRoutes from './routes/settings.js';
 import apiRoutes from './routes/api.js';
+import creditsRoutes from './routes/credits.js';
 import { handleError, notFoundHandler } from './lib/errorHandler.js';
 
 const execAsync = promisify(exec);
@@ -50,6 +52,9 @@ const packageJson = JSON.parse(
   readFileSync(path.join(__dirname, 'package.json'), 'utf8')
 );
 const appVersion = packageJson.version;
+
+// Log app version first
+logger.info(`Starting yt-down v${appVersion}`);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -137,6 +142,10 @@ const titleEnhancementService = new TitleEnhancementService({
   broadcastChange,
 });
 
+const versionService = new VersionService({
+  logger,
+});
+
 // Middleware to attach logger, services, and legacy objects to requests
 app.use((req, res, next) => {
   req.logger = logger;
@@ -148,6 +157,7 @@ app.use((req, res, next) => {
     notifications: notificationService,
     settings: settingsService,
     titleEnhancement: titleEnhancementService,
+    versions: versionService,
   };
 
   // Keep existing objects for backward compatibility during transition
@@ -156,6 +166,9 @@ app.use((req, res, next) => {
 
   // Make app version available in all views
   res.locals.appVersion = appVersion;
+
+  // Make tool versions available in all views
+  res.locals.toolVersions = versionService.getVersions();
 
   next();
 });
@@ -173,26 +186,22 @@ logger.debug('isTTY:', process.stdout.isTTY);
 logger.debug('Platform:', process.platform);
 logger.debug('Node version:', process.version);
 
-// Credits route
-app.get('/credits', (req, res) => {
-  res.render('credits', {
-    currentPage: 'credits',
-    pageTitle: 'Credits',
-  });
-});
-
 // Use route modules
 app.use('/', queueRoutes);
 app.use('/', downloadsRoutes);
 app.use('/', settingsRoutes);
 app.use('/', apiRoutes);
+app.use('/', creditsRoutes);
 
 // Error handling middleware (must be after all routes)
 app.use(notFoundHandler);
 app.use(handleError);
 
 server.listen(PORT, async () => {
-  // Check if yt-dlp is available
+  // Initialize version service
+  await versionService.initialize();
+
+  // Check if yt-dlp is available (now redundant but kept for backwards compatibility)
   const ytDlpExists = await checkYtDlpExists();
   if (!ytDlpExists) {
     logger.error(

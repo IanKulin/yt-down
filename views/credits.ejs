@@ -4,9 +4,34 @@
             <h2>About yt-down</h2>
             <p>Version <%= appVersion %></p>
             <p>A web application for queueing downloads using yt-dlp.</p>
+            <h3>Dependencies</h3>
+            <p>yt-down is essentially a wrapper for the <a href="https://github.com/yt-dlp/yt-dlp"><tt>yt-dlp</tt></a> command with a bit of queuing. <tt>yt-dlp</tt> leans on <a href="https://ffmpeg.org"><tt>ffmpeg</tt></a> for video processing.</p>
+            
+            <h4>Tool Versions</h4>
+            <ul>
+                <li>
+                    <strong>yt-dlp:</strong> 
+                    <% if (toolVersions.ytDlp) { %>
+                        <%= toolVersions.ytDlp %>
+                    <% } else { %>
+                        <span class="text-muted">Not available</span>
+                    <% } %>
+                </li>
+                <li>
+                    <strong>ffmpeg:</strong> 
+                    <% if (toolVersions.ffmpeg) { %>
+                        <%= toolVersions.ffmpeg %>
+                    <% } else { %>
+                        <span class="text-muted">Not available</span>
+                    <% } %>
+                </li>
+            </ul>
             
             <h3>Attributions</h3>
             <p>SVG symbols from <a href="https://lucide.dev" target="_blank" rel="noopener noreferrer">Lucide</a>, licensed under the <a href="https://lucide.dev/license" target="_blank" rel="noopener noreferrer">ISC License</a>.</p>
+        
+            <h3>Troubleshooting</h3>
+            <p>There's a constant <a href="https://en.wikipedia.org/wiki/Red_Queen_hypothesis">Red Queen</a> battle between streaming platforms and utilities like <tt>yt-dlp</tt> that almost guarantees that this will break at some point. You could check this by running <tt>yt-dlp</tt> at your command line on the same link. If it's simply a matter of using a newer version of yt-dlp, the Docker version will probably have been updated accordingly.</p>
         </div>
         
         <%- include('partials/footer') %>
