@@ -43,7 +43,9 @@
       "Bash(./scripts/docker-build.sh:*)",
       "Bash(time yt-dlp:*)",
       "Bash(jq:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(sed:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "defaultMode": "plan"
