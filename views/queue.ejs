@@ -1,7 +1,7 @@
 <%- include('partials/header', { currentPage: 'queue', pageTitle: 'Queue' }) %>
         
         <!-- Current Download Panel -->
-        <div id="currentDownloadPanel" class="current-download-panel">
+        <section id="currentDownloadPanel" class="current-download-panel">
             <h2>Current Download</h2>
             <div class="download-info">
                 <div class="download-filename" id="downloadFilename">No active download</div>
@@ -17,7 +17,7 @@
                     <span class="download-filesize" id="downloadFilesize">Size: N/A</span>
                 </div>
             </div>
-        </div>
+        </section>
         
         <form action="/job/add" method="POST">
             <div class="form-group">
@@ -29,7 +29,7 @@
             </div>
         </form>
         
-        <div class="queue-section">
+        <section class="queue-section">
             <% const totalJobs = queuedJobs.length + activeJobs.length; %>
             <% if (totalJobs > 0) { %>
                 <h2>Current Queue (<%= totalJobs === 1 ? '1 job' : totalJobs + ' jobs' %>)</h2>
@@ -73,14 +73,14 @@
                     <% }) %>
                 <% } %>
             </div>
-        </div>
+        </section>
         
         <%- include('partials/footer') %>
     </div>
     
     <!-- Delete/Cancel Confirmation Modal -->
     <div id="deleteModal" class="modal-overlay">
-        <div class="modal">
+        <div class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalMessage">
             <h3 id="modalTitle">Confirm Delete</h3>
             <p id="modalMessage">Are you sure you want to delete this download job from the queue?</p>
             <div id="modalUrl" class="modal-url"></div>

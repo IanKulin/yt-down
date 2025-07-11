@@ -1,7 +1,7 @@
 <%- include('partials/header', { pageTitle: 'Error', currentPage: 'error' }) %>
 
-<div class="error-page">
-    <div class="error-content">
+<section class="error-page">
+    <div class="error-content" role="alert">
         <h2>Error <%= statusCode %></h2>
         <% if (statusCode === 404) { %>
             <p>The page you're looking for doesn't exist.</p>
@@ -10,7 +10,7 @@
         <% } %>
         
         <% if (typeof message !== 'undefined' && message) { %>
-            <div class="error-message">
+            <div class="error-message" role="alert">
                 <p><%= message %></p>
             </div>
         <% } %>
@@ -20,7 +20,7 @@
             <a href="/downloads" class="btn btn-secondary">View Downloads</a>
         </div>
     </div>
-</div>
+</section>
 
 <%- include('partials/footer', { appVersion: '1.1.4' }) %>
 

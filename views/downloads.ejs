@@ -4,12 +4,13 @@
             <strong><%= downloadedFiles.length %></strong> files found
         </div>
         
-        <div class="downloads-section">
+        <section class="downloads-section">
             <% if (downloadedFiles.length === 0) { %>
                 <div class="empty-downloads">No downloaded files found</div>
             <% } else { %>
+                <ul class="file-list">
                 <% downloadedFiles.forEach(function(file) { %>
-                    <div class="file-item">
+                    <li class="file-item">
                         <div class="file-info">
                             <div class="file-name">
                                 <% if (file.isVideo) { %>
@@ -30,19 +31,20 @@
                                 Delete
                             </button>
                         </div>
-                    </div>
+                    </li>
                 <% }) %>
+                </ul>
             <% } %>
-        </div>
+        </section>
         
         <%- include('partials/footer') %>
     </div>
     
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal-overlay">
-        <div class="modal">
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this file? This action cannot be undone.</p>
+        <div class="modal" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+            <h3 id="modalTitle">Confirm Delete</h3>
+            <p id="modalMessage">Are you sure you want to delete this file? This action cannot be undone.</p>
             <div id="modalFilename" class="modal-filename"></div>
             <div class="modal-buttons">
                 <button class="modal-btn btn-cancel" onclick="hideDeleteModal()">Cancel</button>

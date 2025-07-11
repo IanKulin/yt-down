@@ -1,11 +1,11 @@
 <%- include('partials/header', { currentPage: 'settings', pageTitle: 'Settings' }) %>
         
-        <div class="settings-section">
+        <section class="settings-section">
             <h2>Download Settings</h2>
             
             <form id="settingsForm" data-auto-save="true">
-                <div class="settings-group">
-                    <h3>Video Quality</h3>
+                <fieldset class="settings-group">
+                    <legend>Video Quality</legend>
                     <div class="form-group">
                         <label for="videoQuality">Maximum Resolution:</label>
                         <select id="videoQuality" name="videoQuality" data-auto-save="true">
@@ -16,10 +16,10 @@
                             <% }) %>
                         </select>
                     </div>
-                </div>
+                </fieldset>
                 
-                <div class="settings-group">
-                    <h3>Subtitles</h3>
+                <fieldset class="settings-group">
+                    <legend>Subtitles</legend>
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
                             <input type="checkbox" name="subtitles" data-auto-save="true" <%= settings.subtitles ? 'checked' : '' %>>
@@ -46,10 +46,10 @@
                             <% }) %>
                         </select>
                     </div>
-                </div>
+                </fieldset>
                 
-                <div class="settings-group">
-                    <h3>Download Speed</h3>
+                <fieldset class="settings-group">
+                    <legend>Download Speed</legend>
                     <div class="form-group">
                         <label for="rateLimit">Rate Limit:</label>
                         <select id="rateLimit" name="rateLimit" data-auto-save="true">
@@ -60,13 +60,13 @@
                             <% }) %>
                         </select>
                     </div>
-                </div>
+                </fieldset>
                 
                 <div class="form-actions">
                     <!-- Auto-save feedback provided by field glow effect -->
                 </div>
             </form>
-        </div>
+        </section>
         
         <%- include('partials/footer') %>
     </div>
