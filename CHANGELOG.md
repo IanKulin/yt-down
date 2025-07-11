@@ -13,3 +13,4 @@
 1.1.9 - bugfix - move completed file on Docker
 1.1.10 -filesize
 1.1.11 - fix cleanup before retry
+1.1.12 - refactor front end js
