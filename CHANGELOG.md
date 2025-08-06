@@ -15,4 +15,6 @@
 1.1.11 - fix cleanup before retry
 1.1.12 - refactor front end js
 1.1.13 - simplify partials cleanup, remove concurrent download code, remove delete download success toast, ignore dot files when moving downloads
-1.1.14 -
+1.1.14 - credits, semantic html, aria, body size limit, url length limit
+         fix filenames with '..' being treated as path traversal attempts
+         fix green toast error messages
