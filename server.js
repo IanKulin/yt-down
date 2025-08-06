@@ -201,7 +201,7 @@ server.listen(PORT, async () => {
   // Initialize version service
   await versionService.initialize();
 
-  // Check if yt-dlp is available (now redundant but kept for backwards compatibility)
+  // Check if yt-dlp is available
   const ytDlpExists = await checkYtDlpExists();
   if (!ytDlpExists) {
     logger.error(
