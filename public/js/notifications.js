@@ -48,13 +48,44 @@ class NotificationSystem {
    */
   showCompletionNotification(notification) {
     if (window.showToast) {
+      // Map backend notification types to frontend toast types
+      const toastType = this.mapNotificationTypeToToastType(notification.type);
+
       window.showToast(
-        notification.type || 'success',
+        toastType,
         notification.message,
         5000,
         notification.timestamp
       );
     }
+  }
+
+  /**
+   * Map backend notification types to CSS-compatible toast types
+   * @param {string} notificationType - Backend notification type
+   * @returns {string} CSS-compatible toast type
+   */
+  mapNotificationTypeToToastType(notificationType) {
+    // Map success-related types to 'success' for green styling
+    const successTypes = [
+      'download_complete',
+      'job_added',
+      'job_cancelled',
+      'job_deleted',
+      'job_retried',
+    ];
+
+    if (successTypes.includes(notificationType)) {
+      return 'success';
+    }
+
+    // Keep error as error for red styling
+    if (notificationType === 'error') {
+      return 'error';
+    }
+
+    // Default to info for unknown types
+    return notificationType || 'info';
   }
 
   /**
