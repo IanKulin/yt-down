@@ -49,7 +49,7 @@ class NotificationSystem {
   showCompletionNotification(notification) {
     if (window.showToast) {
       window.showToast(
-        'success',
+        notification.type || 'success',
         notification.message,
         5000,
         notification.timestamp
