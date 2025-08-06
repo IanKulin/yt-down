@@ -40,10 +40,6 @@ volumes:
   - /mnt/media/downloads:/app/downloads # Custom download location
 ```
 
-## Usage
-
-
-
 ## Developing
 
 See separate [README-ARCHITECTURE.md](https://github.com/IanKulin/yt-down/blob/main/README-ARCHITECTURE.md).
