@@ -92,11 +92,37 @@ describe('Validators', () => {
         '..\\..\\windows\\system32\\config\\sam',
         'file/with/slashes.txt',
         'file\\with\\backslashes.txt',
-        'file..with..dots.txt',
+        '../file.mp4',
+        'file/../other.mp4',
+        'file\\..\\other.mp4',
+        '..',
+        '../',
+        '..\\',
       ];
 
       maliciousFilenames.forEach((filename) => {
         assert.throws(() => validateFilename(filename), ValidationError);
+      });
+    });
+
+    it('should allow filenames with consecutive dots (fixed behavior)', () => {
+      // These filenames with consecutive dots should now be valid after the fix
+      const validFilenames = [
+        'Series 1 L.P.G..mp4',
+        'file..mp4',
+        'video..avi',
+        'document..pdf',
+        'file..with..dots.txt',
+        'track..mp3',
+      ];
+
+      validFilenames.forEach((filename) => {
+        const result = validateFilename(filename);
+        assert.strictEqual(
+          result,
+          filename,
+          `Expected "${filename}" to be valid`
+        );
       });
     });
 
