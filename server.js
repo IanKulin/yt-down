@@ -71,13 +71,14 @@ const jobManager = new JobManager({
   baseDir: __dirname,
 });
 
-// WebSocket server will be initialized after HTTP server is created
-const wss = new WebSocketServer({
-  server: serve({
-    fetch: app.fetch,
-    port: PORT,
-  }),
+// Create HTTP server first
+const server = serve({
+  fetch: app.fetch,
+  port: PORT,
 });
+
+// Then create WebSocket server using the HTTP server
+const wss = new WebSocketServer({ server });
 
 // Broadcast function to send "changed" message to all connected clients
 const broadcastChange = () => {
