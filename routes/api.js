@@ -31,7 +31,7 @@ router.get(
 router.post(
   '/api/notifications/dismiss',
   asyncHandler(async (c) => {
-    const body = await c.req.parseBody();
+    const body = await c.req.json();
     const { notificationId } = body;
 
     const result = await c
