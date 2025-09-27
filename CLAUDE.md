@@ -22,10 +22,10 @@ This is a Node.js web application that provides a queue-based system for downloa
 
 **Server (`server.js`)**
 
-- Express.js application with WebSocket server for real-time client notifications
+- Hono.js application with WebSocket server for real-time client notifications
 - WebSocket server provides instant updates with automatic polling fallback
 - Initializes QueueProcessor, JobManager, and service layer
-- Injects services into request context for route handlers
+- Injects services into Hono context for route handlers
 
 **QueueProcessor (`lib/queueProcessor.js`)**
 
@@ -60,7 +60,7 @@ This is a Node.js web application that provides a queue-based system for downloa
 - **NotificationService**: Centralizes notification management - creation, retrieval, and dismissal of notifications; broadcasts WebSocket notifications
 - **SettingsService**: Manages settings validation, normalization, and persistence with support for different input formats
 - **TitleEnhancementService**: Background service that automatically fetches video titles for queued jobs using yt-dlp
-- Services are injected into route handlers via `req.services` for clean separation of concerns
+- Services are injected into route handlers via Hono context for clean separation of concerns
 
 **File-Based Queue System**
 
@@ -101,7 +101,7 @@ The "currently downloading" and "finished downloading" locations are split up to
 **Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection; broadcasts progress via WebSocket
 **Background Enhancement**: TitleEnhancementService asynchronously fetches video titles for queued jobs without blocking download processing
 **Notification System**: Unified WebSocket-based notification system
-**Dependency Injection**: Services injected via `req.services` for clean testability
+**Dependency Injection**: Services injected via Hono context for clean testability
 
 ### Environment Variables
 
