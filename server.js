@@ -145,9 +145,6 @@ app.use(async (c, next) => {
     versions: versionService,
   });
 
-  // Keep existing objects for backward compatibility during transition
-  c.set('queueProcessor', queueProcessor);
-  c.set('jobManager', jobManager);
 
   // Set view data for EJS templates
   c.set('viewData', {
