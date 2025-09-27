@@ -53,3 +53,11 @@ This app is licensed under the [MIT License](https://github.com/IanKulin/yt-down
 ### Third-Party Licenses
 
 SVG symbols used in this app are from [Lucide](https://lucide.dev/), licensed under the [ISC License](https://lucide.dev/license).
+
+### AI Disclosure
+
+AI coding tools were used in the production of this app
+
+## Version History
+
+- 1.2.0 - convert to Hono

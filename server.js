@@ -1,9 +1,10 @@
-import express from 'express';
+import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { readFileSync } from 'fs';
 import Logger from '@iankulin/logger';
@@ -56,16 +57,8 @@ const appVersion = packageJson.version;
 // Log app version first
 logger.info(`Starting yt-down v${appVersion}`);
 
-const app = express();
+const app = new Hono();
 const PORT = process.env.PORT || 3001;
-const server = createServer(app);
-
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(express.json({ limit: '10kb' }));
 
 // Initialize queue processor and job manager
 const queueProcessor = new QueueProcessor({
@@ -78,20 +71,12 @@ const jobManager = new JobManager({
   baseDir: __dirname,
 });
 
-// WebSocket server setup
-const wss = new WebSocketServer({ server });
-
-// WebSocket connection handling
-wss.on('connection', (ws, req) => {
-  logger.debug(`WebSocket client connected from ${req.socket.remoteAddress}`);
-
-  ws.on('close', () => {
-    logger.debug('WebSocket client disconnected');
-  });
-
-  ws.on('error', (error) => {
-    logger.error('WebSocket error:', error);
-  });
+// WebSocket server will be initialized after HTTP server is created
+const wss = new WebSocketServer({
+  server: serve({
+    fetch: app.fetch,
+    port: PORT,
+  }),
 });
 
 // Broadcast function to send "changed" message to all connected clients
@@ -146,32 +131,34 @@ const versionService = new VersionService({
   logger,
 });
 
-// Middleware to attach logger, services, and legacy objects to requests
-app.use((req, res, next) => {
-  req.logger = logger;
-
-  // Inject services
-  req.services = {
+// Middleware to attach logger, services, and view data to Hono context
+app.use(async (c, next) => {
+  // Set services and logger in Hono context
+  c.set('logger', logger);
+  c.set('services', {
     jobs: jobService,
     downloads: downloadService,
     notifications: notificationService,
     settings: settingsService,
     titleEnhancement: titleEnhancementService,
     versions: versionService,
-  };
+  });
 
   // Keep existing objects for backward compatibility during transition
-  req.queueProcessor = queueProcessor;
-  req.jobManager = jobManager;
+  c.set('queueProcessor', queueProcessor);
+  c.set('jobManager', jobManager);
 
-  // Make app version available in all views
-  res.locals.appVersion = appVersion;
+  // Set view data for EJS templates
+  c.set('viewData', {
+    appVersion,
+    toolVersions: versionService.getVersions(),
+  });
 
-  // Make tool versions available in all views
-  res.locals.toolVersions = versionService.getVersions();
-
-  next();
+  await next();
 });
+
+// Static file serving - serve public directory at root path
+app.use('/*', serveStatic({ root: './public' }));
 
 async function checkYtDlpExists() {
   try {
@@ -187,17 +174,33 @@ logger.debug('Platform:', process.platform);
 logger.debug('Node version:', process.version);
 
 // Use route modules
-app.use('/', queueRoutes);
-app.use('/', downloadsRoutes);
-app.use('/', settingsRoutes);
-app.use('/', apiRoutes);
-app.use('/', creditsRoutes);
+app.route('/', queueRoutes);
+app.route('/', downloadsRoutes);
+app.route('/', settingsRoutes);
+app.route('/', apiRoutes);
+app.route('/', creditsRoutes);
 
 // Error handling middleware (must be after all routes)
-app.use(notFoundHandler);
-app.use(handleError);
+app.notFound(notFoundHandler);
+app.onError(async (err, c) => {
+  return await handleError(err, c);
+});
 
-server.listen(PORT, async () => {
+// WebSocket connection handling
+wss.on('connection', (ws, req) => {
+  logger.debug(`WebSocket client connected from ${req.socket.remoteAddress}`);
+
+  ws.on('close', () => {
+    logger.debug('WebSocket client disconnected');
+  });
+
+  ws.on('error', (error) => {
+    logger.error('WebSocket error:', error);
+  });
+});
+
+// Initialize services after server is ready
+(async () => {
   // Initialize version service
   await versionService.initialize();
 
@@ -220,7 +223,7 @@ server.listen(PORT, async () => {
 
   // Start the title enhancement service
   await titleEnhancementService.start();
-});
+})();
 
 // Graceful shutdown
 process.on('SIGINT', async () => {

@@ -1,15 +1,16 @@
-import express from 'express';
+import { Hono } from 'hono';
 import { asyncHandler } from '../lib/errorHandler.js';
 
-const router = express.Router();
+const router = new Hono();
 
 router.get(
   '/api/state',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (c) => {
+    const services = c.get('services');
     const [jobs, statistics, notifications] = await Promise.all([
-      req.services.jobs.getJobsForDisplay(),
-      req.services.jobs.getJobStatistics(),
-      req.services.notifications.getNotifications(),
+      services.jobs.getJobsForDisplay(),
+      services.jobs.getJobStatistics(),
+      services.notifications.getNotifications(),
     ]);
 
     const state = {
@@ -18,33 +19,36 @@ router.get(
       failed: jobs.failed,
       counts: statistics.counts,
       processor: statistics.processor,
-      titleEnhancement: req.services.titleEnhancement.getStatus(),
+      titleEnhancement: services.titleEnhancement.getStatus(),
       notifications,
       timestamp: new Date().toISOString(),
     };
 
-    res.json(state);
+    return c.json(state);
   })
 );
 
 router.post(
   '/api/notifications/dismiss',
-  asyncHandler(async (req, res) => {
-    const { notificationId } = req.body;
+  asyncHandler(async (c) => {
+    const body = await c.req.parseBody();
+    const { notificationId } = body;
 
-    const result =
-      await req.services.notifications.dismissNotification(notificationId);
+    const result = await c
+      .get('services')
+      .notifications.dismissNotification(notificationId);
 
-    res.json({ success: result.success });
+    return c.json({ success: result.success });
   })
 );
 
 router.post(
   '/api/settings',
-  asyncHandler(async (req, res) => {
-    const result = await req.services.settings.updateSettings(req.body);
+  asyncHandler(async (c) => {
+    const body = await c.req.parseBody();
+    const result = await c.get('services').settings.updateSettings(body);
 
-    res.json({
+    return c.json({
       success: result.success,
       settings: result.settings,
       timestamp: new Date().toISOString(),
@@ -54,10 +58,10 @@ router.post(
 
 router.get(
   '/api/failed',
-  asyncHandler(async (req, res) => {
-    const failedJobs = await req.services.jobs.getFailedJobs();
+  asyncHandler(async (c) => {
+    const failedJobs = await c.get('services').jobs.getFailedJobs();
 
-    res.json({
+    return c.json({
       failed: failedJobs,
       timestamp: new Date().toISOString(),
     });
@@ -66,11 +70,11 @@ router.get(
 
 router.post(
   '/api/failed/:jobId/retry',
-  asyncHandler(async (req, res) => {
-    const { jobId } = req.params;
-    const result = await req.services.jobs.retryFailedJob(jobId);
+  asyncHandler(async (c) => {
+    const jobId = c.req.param('jobId');
+    const result = await c.get('services').jobs.retryFailedJob(jobId);
 
-    res.json({
+    return c.json({
       success: result.success,
       timestamp: new Date().toISOString(),
     });

@@ -1,18 +1,22 @@
-import express from 'express';
+import { Hono } from 'hono';
 import { asyncHandler } from '../lib/errorHandler.js';
+import { renderWithContext } from '../lib/ejsHelper.js';
 
-const router = express.Router();
+const router = new Hono();
 
 router.get(
   '/settings',
-  asyncHandler(async (req, res) => {
-    const { settings, options } =
-      await req.services.settings.getSettingsForDisplay();
+  asyncHandler(async (c) => {
+    const { settings, options } = await c
+      .get('services')
+      .settings.getSettingsForDisplay();
 
-    res.render('settings', {
+    const html = await renderWithContext(c, 'settings', {
       settings,
       options,
     });
+
+    return c.html(html);
   })
 );
 
