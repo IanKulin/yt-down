@@ -145,7 +145,6 @@ app.use(async (c, next) => {
     versions: versionService,
   });
 
-
   // Set view data for EJS templates
   c.set('viewData', {
     appVersion,

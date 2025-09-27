@@ -1,10 +1,6 @@
 import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
-import {
-  handleError,
-  asyncHandler,
-  createErrorResponse,
-} from '../lib/errorHandler.js';
+import { handleError, createErrorResponse } from '../lib/errorHandler.js';
 import { ValidationError, NotFoundError } from '../lib/errors.js';
 
 describe('Error Handler', () => {
@@ -113,51 +109,6 @@ describe('Error Handler', () => {
       assert.ok(
         mockLogger.error.mock.calls[0].arguments[0].includes('GET /test')
       );
-    });
-  });
-
-  describe('asyncHandler', () => {
-    it('should handle successful async operations', async () => {
-      const successHandler = asyncHandler(async (c, _next) => {
-        return c.json({ success: true });
-      });
-
-      await successHandler(c, mock.fn());
-
-      assert.strictEqual(c.json.mock.callCount(), 1);
-      assert.deepStrictEqual(c.json.mock.calls[0].arguments[0], {
-        success: true,
-      });
-    });
-
-    it('should catch and handle errors', async () => {
-      c.req.path = '/api/test';
-      const error = new ValidationError('Async error');
-      const errorHandler = asyncHandler(async (_c, _next) => {
-        throw error;
-      });
-
-      await errorHandler(c, mock.fn());
-
-      assert.strictEqual(c.json.mock.callCount(), 1);
-      assert.strictEqual(
-        c.json.mock.calls[0].arguments[0].error,
-        'Async error'
-      );
-      assert.strictEqual(c.json.mock.calls[0].arguments[1], 400);
-    });
-
-    it('should handle non-async functions', async () => {
-      const syncHandler = asyncHandler((c, _next) => {
-        return c.json({ sync: true });
-      });
-
-      await syncHandler(c, mock.fn());
-
-      assert.strictEqual(c.json.mock.callCount(), 1);
-      assert.deepStrictEqual(c.json.mock.calls[0].arguments[0], {
-        sync: true,
-      });
     });
   });
 });
