@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 
 const router = new Hono();
 
-router.get('/api/state', async (c) => {
+router.get('/state', async (c) => {
   const services = c.get('services');
   const [jobs, statistics, notifications] = await Promise.all([
     services.jobs.getJobsForDisplay(),
@@ -24,7 +24,7 @@ router.get('/api/state', async (c) => {
   return c.json(state);
 });
 
-router.post('/api/notifications/dismiss', async (c) => {
+router.post('/notifications/dismiss', async (c) => {
   const body = await c.req.json();
   const { notificationId } = body;
 
@@ -35,7 +35,7 @@ router.post('/api/notifications/dismiss', async (c) => {
   return c.json({ success: result.success });
 });
 
-router.post('/api/settings', async (c) => {
+router.post('/settings', async (c) => {
   const body = await c.req.parseBody();
   const result = await c.get('services').settings.updateSettings(body);
 
@@ -46,7 +46,7 @@ router.post('/api/settings', async (c) => {
   });
 });
 
-router.get('/api/failed', async (c) => {
+router.get('/failed', async (c) => {
   const failedJobs = await c.get('services').jobs.getFailedJobs();
 
   return c.json({
@@ -55,7 +55,7 @@ router.get('/api/failed', async (c) => {
   });
 });
 
-router.post('/api/failed/:jobId/retry', async (c) => {
+router.post('/failed/:jobId/retry', async (c) => {
   const jobId = c.req.param('jobId');
   const result = await c.get('services').jobs.retryFailedJob(jobId);
 

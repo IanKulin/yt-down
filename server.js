@@ -170,12 +170,16 @@ logger.debug('isTTY:', process.stdout.isTTY);
 logger.debug('Platform:', process.platform);
 logger.debug('Node version:', process.version);
 
-// Use route modules
-app.route('/', queueRoutes);
-app.route('/', downloadsRoutes);
-app.route('/', settingsRoutes);
-app.route('/', apiRoutes);
-app.route('/', creditsRoutes);
+// Group routes logically
+const webRoutes = new Hono();
+webRoutes.route('/', queueRoutes);
+webRoutes.route('/', downloadsRoutes);
+webRoutes.route('/', settingsRoutes);
+webRoutes.route('/', creditsRoutes);
+
+// Apply route groups with clear separation
+app.route('/', webRoutes);
+app.route('/api', apiRoutes);
 
 // Error handling middleware (must be after all routes)
 app.notFound(notFoundHandler);
