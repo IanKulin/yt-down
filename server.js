@@ -31,7 +31,7 @@ const execAsync = promisify(exec);
 
 // Valid log levels for @iankulin/logger (from most to least verbose)
 const validLogLevels = ['silent', 'error', 'warn', 'info', 'debug'];
-const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'debug';
+const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'info';
 
 // Validate log level
 if (!validLogLevels.includes(logLevel)) {
@@ -157,14 +157,16 @@ app.use(async (c, next) => {
 // Request logging middleware
 app.use(async (c, next) => {
   const logger = c.get('logger');
-  const start = Date.now();
-
-  logger.debug(`→ ${c.req.method} ${c.req.path}`);
-
-  await next();
-
-  const duration = Date.now() - start;
-  logger.debug(`← ${c.req.method} ${c.req.path} ${c.res.status} ${duration}ms`);
+  // Only do timing work if debug logging is enabled
+  if (logger.level() === 'debug') {
+    const start = Date.now();
+    logger.debug(`→ ${c.req.method} ${c.req.path}`);
+    await next();
+    const duration = Date.now() - start;
+    logger.debug(`← ${c.req.method} ${c.req.path} ${c.res.status} ${duration}ms`);
+  } else {
+    await next();
+  }
 });
 
 async function checkYtDlpExists() {
