@@ -31,7 +31,7 @@ const execAsync = promisify(exec);
 
 // Valid log levels for @iankulin/logger (from most to least verbose)
 const validLogLevels = ['silent', 'error', 'warn', 'info', 'debug'];
-const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'info';
+const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'debug';
 
 // Validate log level
 if (!validLogLevels.includes(logLevel)) {
@@ -154,8 +154,18 @@ app.use(async (c, next) => {
   await next();
 });
 
-// Static file serving - serve public directory at root path
-app.use('/*', serveStatic({ root: './public' }));
+// Request logging middleware
+app.use(async (c, next) => {
+  const logger = c.get('logger');
+  const start = Date.now();
+
+  logger.debug(`→ ${c.req.method} ${c.req.path}`);
+
+  await next();
+
+  const duration = Date.now() - start;
+  logger.debug(`← ${c.req.method} ${c.req.path} ${c.res.status} ${duration}ms`);
+});
 
 async function checkYtDlpExists() {
   try {
@@ -180,6 +190,9 @@ webRoutes.route('/', creditsRoutes);
 // Apply route groups with clear separation
 app.route('/', webRoutes);
 app.route('/api', apiRoutes);
+
+// Static file serving - serve public directory at root route
+app.use('/*', serveStatic({ root: './public' }));
 
 // Error handling middleware (must be after all routes)
 app.notFound(notFoundHandler);
