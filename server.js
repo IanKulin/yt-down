@@ -194,7 +194,12 @@ app.route('/', webRoutes);
 app.route('/api', apiRoutes);
 
 // Static file serving - serve public directory at root route
-app.use('/*', serveStatic({ root: './public' }));
+app.use('/*', serveStatic({
+  root: './public',
+  onFound: (_path, c) => {
+    c.header('Cache-Control', 'public, max-age=21600'); // 6 hours
+  }
+}));
 
 // Error handling middleware (must be after all routes)
 app.notFound(notFoundHandler);
