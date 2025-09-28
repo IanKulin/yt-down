@@ -1,43 +1,43 @@
-import express from 'express';
-import { asyncHandler } from '../lib/errorHandler.js';
+import { Hono } from 'hono';
 import { formatFileSize } from '../lib/utils.js';
+import { renderWithContext } from '../lib/ejsHelper.js';
+import { createReadStream } from 'fs';
 
-const router = express.Router();
+const router = new Hono();
 
-router.get(
-  '/downloads',
-  asyncHandler(async (req, res) => {
-    const downloadedFiles = await req.services.downloads.getDownloadedFiles();
+router.get('/downloads', async (c) => {
+  const downloadedFiles = await c
+    .get('services')
+    .downloads.getDownloadedFiles();
 
-    res.render('downloads', {
-      downloadedFiles,
-      formatFileSize,
-    });
-  })
-);
+  const html = await renderWithContext(c, 'downloads', {
+    downloadedFiles,
+    formatFileSize,
+  });
 
-router.get(
-  '/download/:filename',
-  asyncHandler(async (req, res) => {
-    const filename = req.params.filename;
-    const fileInfo = await req.services.downloads.prepareFileDownload(filename);
+  return c.html(html);
+});
 
-    // Set appropriate headers
-    Object.entries(fileInfo.headers).forEach(([key, value]) => {
-      res.setHeader(key, value);
-    });
+router.get('/download/:filename', async (c) => {
+  const filename = c.req.param('filename');
+  const fileInfo = await c
+    .get('services')
+    .downloads.prepareFileDownload(filename);
 
-    res.sendFile(fileInfo.filePath);
-  })
-);
+  // Set appropriate headers
+  Object.entries(fileInfo.headers).forEach(([key, value]) => {
+    c.header(key, value);
+  });
 
-router.post(
-  '/file/delete',
-  asyncHandler(async (req, res) => {
-    const { filename } = req.body;
-    await req.services.downloads.deleteFile(filename);
-    res.redirect('/downloads');
-  })
-);
+  const fileStream = createReadStream(fileInfo.filePath);
+  return c.body(fileStream);
+});
+
+router.post('/file/delete', async (c) => {
+  const body = await c.req.parseBody();
+  const { filename } = body;
+  await c.get('services').downloads.deleteFile(filename);
+  return c.redirect('/downloads');
+});
 
 export default router;

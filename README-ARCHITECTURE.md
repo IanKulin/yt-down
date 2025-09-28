@@ -26,7 +26,7 @@ This is a Node.js web application that provides a queue-based system for downloa
          │                                              │
          ▼                                              ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Express.js     │◄───┤   Service       │◄───┤ File-based      │
+│  Hono.js        │◄───┤   Service       │◄───┤ File-based      │
 │  Routes         │    │   Layer         │    │ Job Storage     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
@@ -98,14 +98,14 @@ data/jobs/
 **Dependency Injection Pattern:**
 
 ```javascript
-// In server.js - services are injected into requests
-app.use((req, res, next) => {
-  req.services = {
+// In server.js - services are injected into Hono context
+app.use('*', (c, next) => {
+  c.set('services', {
     jobs: jobService,
     downloads: downloadService,
     // ... other services
-  };
-  next();
+  });
+  return next();
 });
 ```
 
@@ -115,7 +115,7 @@ app.use((req, res, next) => {
 
 **How it works:**
 
-- WebSocket server runs alongside HTTP server
+- WebSocket server runs alongside Hono HTTP server
 - `broadcastChange()` function sends updates to all connected clients
 - UI automatically refreshes when jobs change state or progress updates
 
@@ -296,7 +296,7 @@ Always use services for business logic:
 
 ```javascript
 // Good - in route handler
-const jobs = await req.services.jobs.getJobsForDisplay();
+const jobs = await c.get('services').jobs.getJobsForDisplay();
 
 // Bad - direct database/file access
 const jobs = await fs.readdir('data/jobs/queued');
@@ -307,9 +307,9 @@ const jobs = await fs.readdir('data/jobs/queued');
 Use the asyncHandler wrapper for async routes:
 
 ```javascript
-router.get(
+app.get(
   '/api/state',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (c) => {
     // Your async code here
   })
 );

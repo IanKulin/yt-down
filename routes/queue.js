@@ -1,40 +1,35 @@
-import express from 'express';
-import { asyncHandler } from '../lib/errorHandler.js';
+import { Hono } from 'hono';
 import { formatFileSize } from '../lib/utils.js';
+import { renderWithContext } from '../lib/ejsHelper.js';
 
-const router = express.Router();
+const router = new Hono();
 
-router.get(
-  '/',
-  asyncHandler(async (req, res) => {
-    const jobs = await req.services.jobs.getJobsForDisplay();
+router.get('/', async (c) => {
+  const jobs = await c.get('services').jobs.getJobsForDisplay();
 
-    res.render('queue', {
-      queuedJobs: jobs.queued,
-      activeJobs: jobs.active,
-      formatFileSize,
-    });
-  })
-);
+  const html = await renderWithContext(c, 'queue', {
+    queuedJobs: jobs.queued,
+    activeJobs: jobs.active,
+    formatFileSize,
+  });
 
-router.post(
-  '/job/add',
-  asyncHandler(async (req, res) => {
-    const { url } = req.body;
+  return c.html(html);
+});
 
-    await req.services.jobs.addJob(url);
-    res.redirect('/');
-  })
-);
+router.post('/job/add', async (c) => {
+  const body = await c.req.parseBody();
+  const { url } = body;
 
-router.post(
-  '/job/delete',
-  asyncHandler(async (req, res) => {
-    const { hash } = req.body;
+  await c.get('services').jobs.addJob(url);
+  return c.redirect('/');
+});
 
-    await req.services.jobs.removeJob(hash);
-    res.redirect('/');
-  })
-);
+router.post('/job/delete', async (c) => {
+  const body = await c.req.parseBody();
+  const { hash } = body;
+
+  await c.get('services').jobs.removeJob(hash);
+  return c.redirect('/');
+});
 
 export default router;

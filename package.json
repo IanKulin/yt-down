@@ -1,6 +1,6 @@
 {
   "name": "yt-down",
-  "version": "1.1.14",
+  "version": "1.2.0",
   "description": "Web app for queueing downloads for yt-dlp",
   "main": "server.js",
   "type": "module",
@@ -16,7 +16,8 @@
   "dependencies": {
     "@iankulin/logger": "^1.0.2",
     "ejs": "^3.1.10",
-    "express": "^5.1.0",
+    "hono": "^4.5.0",
+    "@hono/node-server": "^1.11.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
