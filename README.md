@@ -61,3 +61,4 @@ AI coding tools were used in the production of this app
 ## Version History
 
 - 1.2.0 - convert to Hono
+- 1.2.1 - bugfix API not returning JSON for settings

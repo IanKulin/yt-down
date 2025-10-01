@@ -1,6 +1,6 @@
 {
   "name": "yt-down",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Web app for queueing downloads for yt-dlp",
   "main": "server.js",
   "type": "module",
