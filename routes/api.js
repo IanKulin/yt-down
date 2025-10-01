@@ -36,7 +36,7 @@ router.post('/notifications/dismiss', async (c) => {
 });
 
 router.post('/settings', async (c) => {
-  const body = await c.req.parseBody();
+  const body = await c.req.json();
   const result = await c.get('services').settings.updateSettings(body);
 
   return c.json({
