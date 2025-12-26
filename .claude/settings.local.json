@@ -53,7 +53,9 @@
       "mcp__playwright__playwright_get",
       "Bash(LOG_LEVEL=debug PORT=3003 npm start)",
       "Bash(PORT=3011 npm start)",
-      "Bash(PORT=3011 timeout 10s npm start)"
+      "Bash(PORT=3011 timeout 10s npm start)",
+      "Bash(LOG_LEVEL=debug npm start)",
+      "mcp__playwright__playwright_select"
     ],
     "deny": [],
     "defaultMode": "plan"
