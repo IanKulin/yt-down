@@ -304,15 +304,15 @@ const jobs = await fs.readdir('data/jobs/queued');
 
 #### 2. Error Handling
 
-Use the asyncHandler wrapper for async routes:
+Hono handles async routes natively - no wrapper needed:
 
 ```javascript
-app.get(
-  '/api/state',
-  asyncHandler(async (c) => {
-    // Your async code here
-  })
-);
+// Async routes work directly - errors are caught by Hono's error handler
+app.get('/api/state', async (c) => {
+  // Throw errors directly - they'll be caught by the error handler
+  const jobs = await c.get('services').jobs.getJobsForDisplay();
+  return c.json(jobs);
+});
 ```
 
 #### 3. WebSocket Updates
@@ -329,9 +329,18 @@ this.broadcastChange();
 ### Adding a New API Endpoint
 
 1. Add route to appropriate file in `routes/`
-2. Use `req.services` for business logic
-3. Wrap async handlers with `asyncHandler`
+2. Use `c.get('services')` to access services for business logic
+3. Async handlers work natively in Hono (no wrapper needed)
 4. Add tests in corresponding test file
+
+Example:
+
+```javascript
+router.get('/api/new-endpoint', async (c) => {
+  const data = await c.get('services').someService.getData();
+  return c.json(data);
+});
+```
 
 ### Modifying Job Processing
 
