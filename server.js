@@ -181,15 +181,13 @@ logger.debug('isTTY:', process.stdout.isTTY);
 logger.debug('Platform:', process.platform);
 logger.debug('Node version:', process.version);
 
-// Group routes logically
-const webRoutes = new Hono();
-webRoutes.route('/', queueRoutes);
-webRoutes.route('/', downloadsRoutes);
-webRoutes.route('/', settingsRoutes);
-webRoutes.route('/', creditsRoutes);
+// Web routes
+app.route('/', queueRoutes);
+app.route('/', downloadsRoutes);
+app.route('/', settingsRoutes);
+app.route('/', creditsRoutes);
 
-// Apply route groups with clear separation
-app.route('/', webRoutes);
+// API routes
 app.route('/api', apiRoutes);
 
 // Static file serving - serve public directory at root route
