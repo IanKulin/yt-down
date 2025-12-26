@@ -132,9 +132,8 @@ const versionService = new VersionService({
   logger,
 });
 
-// Middleware to attach logger, services, and view data to Hono context
+// Middleware to inject dependencies into Hono context
 app.use(async (c, next) => {
-  // Set services and logger in Hono context
   c.set('logger', logger);
   c.set('services', {
     jobs: jobService,
@@ -144,8 +143,6 @@ app.use(async (c, next) => {
     titleEnhancement: titleEnhancementService,
     versions: versionService,
   });
-
-  // Set view data for EJS templates
   c.set('viewData', {
     appVersion,
     toolVersions: versionService.getVersions(),
