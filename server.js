@@ -163,7 +163,9 @@ app.use(async (c, next) => {
     logger.debug(`→ ${c.req.method} ${c.req.path}`);
     await next();
     const duration = Date.now() - start;
-    logger.debug(`← ${c.req.method} ${c.req.path} ${c.res.status} ${duration}ms`);
+    logger.debug(
+      `← ${c.req.method} ${c.req.path} ${c.res.status} ${duration}ms`
+    );
   } else {
     await next();
   }
@@ -194,12 +196,15 @@ app.route('/', webRoutes);
 app.route('/api', apiRoutes);
 
 // Static file serving - serve public directory at root route
-app.use('/*', serveStatic({
-  root: './public',
-  onFound: (_path, c) => {
-    c.header('Cache-Control', 'public, max-age=21600'); // 6 hours
-  }
-}));
+app.use(
+  '/*',
+  serveStatic({
+    root: './public',
+    onFound: (_path, c) => {
+      c.header('Cache-Control', 'public, max-age=21600'); // 6 hours
+    },
+  })
+);
 
 // Error handling middleware (must be after all routes)
 app.notFound(notFoundHandler);
