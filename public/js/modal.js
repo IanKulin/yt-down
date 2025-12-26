@@ -100,7 +100,7 @@ class ModalSystem {
    */
   trapFocus(modal) {
     const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
     if (focusableElements.length === 0) return;
@@ -154,8 +154,7 @@ class ModalSystem {
     // Event delegation for delete buttons
     document.addEventListener('click', (e) => {
       if (e.target && e.target.matches(triggerSelector)) {
-        const value =
-          e.target.getAttribute(dataAttribute) ||
+        const value = e.target.getAttribute(dataAttribute) ||
           e.target.dataset.filename ||
           e.target.dataset.hash;
         const url = e.target.dataset.url;
@@ -168,7 +167,7 @@ class ModalSystem {
         if (modal) {
           // Update display text
           const displayElement = modal.querySelector(
-            '.modal-filename, .modal-url, #modalFilename, #modalUrl'
+            '.modal-filename, .modal-url, #modalFilename, #modalUrl',
           );
           if (displayElement) {
             displayElement.textContent = url || value;
@@ -177,23 +176,24 @@ class ModalSystem {
           // Update modal content based on status (for queue items)
           if (status) {
             const titleElement = modal.querySelector(
-              '#modalTitle, .modal-title'
+              '#modalTitle, .modal-title',
             );
             const messageElement = modal.querySelector(
-              '#modalMessage, .modal-message'
+              '#modalMessage, .modal-message',
             );
             const cancelBtn = modal.querySelector(
-              '#modalCancelBtn, .btn-cancel'
+              '#modalCancelBtn, .btn-cancel',
             );
             const confirmBtn = modal.querySelector(
-              '#modalConfirmBtn, .btn-delete, .btn-confirm'
+              '#modalConfirmBtn, .btn-delete, .btn-confirm',
             );
 
             if (status === 'active') {
               if (titleElement) titleElement.textContent = 'Cancel Download';
-              if (messageElement)
+              if (messageElement) {
                 messageElement.textContent =
                   "You're about to cancel this download. It will be stopped and removed from the queue.";
+              }
               if (cancelBtn) {
                 cancelBtn.textContent = 'Keep Downloading';
                 cancelBtn.className = 'modal-btn btn-cancel';
@@ -204,9 +204,10 @@ class ModalSystem {
               }
             } else {
               if (titleElement) titleElement.textContent = 'Confirm Delete';
-              if (messageElement)
+              if (messageElement) {
                 messageElement.textContent =
                   'Are you sure you want to delete this download job from the queue?';
+              }
               if (cancelBtn) {
                 cancelBtn.textContent = 'Cancel';
                 cancelBtn.className = 'modal-btn btn-cancel';
@@ -237,7 +238,7 @@ class ModalSystem {
           currentDeleteValue = null;
           // Update aria-expanded state on trigger element
           const triggerElement = document.querySelector(
-            `[aria-expanded="true"]`
+            `[aria-expanded="true"]`,
           );
           if (triggerElement) {
             triggerElement.setAttribute('aria-expanded', 'false');
@@ -247,7 +248,7 @@ class ModalSystem {
 
       // Confirm button
       const confirmBtn = modal.querySelector(
-        '#modalConfirmBtn, .btn-delete, .btn-confirm'
+        '#modalConfirmBtn, .btn-delete, .btn-confirm',
       );
       if (confirmBtn) {
         confirmBtn.addEventListener('click', () => {
@@ -265,7 +266,7 @@ class ModalSystem {
     }
 
     // Make functions available globally for onclick handlers
-    window.hideDeleteModal = () => {
+    globalThis.hideDeleteModal = () => {
       this.hideModal(modalId);
       currentDeleteValue = null;
       // Update aria-expanded state on trigger element
@@ -275,7 +276,7 @@ class ModalSystem {
       }
     };
 
-    window.confirmDelete = () => {
+    globalThis.confirmDelete = () => {
       if (currentDeleteValue) {
         const hiddenInput = document.getElementById(hiddenInputId);
         const form = document.getElementById(formId);
@@ -290,9 +291,9 @@ class ModalSystem {
 }
 
 // Create global modal system instance
-window.modalSystem = new ModalSystem();
+globalThis.modalSystem = new ModalSystem();
 
 // Convenience functions for global access
-window.showModal = (modalId, options) =>
-  window.modalSystem.showModal(modalId, options);
-window.hideModal = (modalId) => window.modalSystem.hideModal(modalId);
+globalThis.showModal = (modalId, options) =>
+  globalThis.modalSystem.showModal(modalId, options);
+globalThis.hideModal = (modalId) => globalThis.modalSystem.hideModal(modalId);

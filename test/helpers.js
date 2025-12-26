@@ -1,31 +1,29 @@
-import { strict as assert } from 'node:assert';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { dirname, join } from '@std/path';
+import { ensureDir } from '@std/fs';
+import { assertEquals, assertMatch } from '@std/assert';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(new URL(import.meta.url).pathname);
 
-export const TEST_DATA_DIR = path.join(__dirname, 'test-data');
+export const TEST_DATA_DIR = join(__dirname, 'test-data');
 
 export async function createTestDir() {
-  await fs.mkdir(TEST_DATA_DIR, { recursive: true });
+  await ensureDir(TEST_DATA_DIR);
   return TEST_DATA_DIR;
 }
 
 export async function cleanupTestDir() {
   try {
-    await fs.rm(TEST_DATA_DIR, { recursive: true, force: true });
+    await Deno.remove(TEST_DATA_DIR, { recursive: true });
   } catch {
     // Ignore cleanup errors
   }
 }
 
 export async function createTestFile(relativePath, content) {
-  const fullPath = path.join(TEST_DATA_DIR, relativePath);
-  const dir = path.dirname(fullPath);
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(fullPath, content, 'utf-8');
+  const fullPath = join(TEST_DATA_DIR, relativePath);
+  const dir = dirname(fullPath);
+  await ensureDir(dir);
+  await Deno.writeTextFile(fullPath, content);
   return fullPath;
 }
 
@@ -40,14 +38,14 @@ export function createMockLogger() {
 
 // Custom assertion helpers
 export function assertEqualArrays(actual, expected, message) {
-  assert.equal(actual.length, expected.length, message + ' - length mismatch');
+  assertEquals(actual.length, expected.length, message + ' - length mismatch');
   for (let i = 0; i < actual.length; i++) {
-    assert.deepEqual(actual[i], expected[i], message + ` - item ${i} mismatch`);
+    assertEquals(actual[i], expected[i], message + ` - item ${i} mismatch`);
   }
 }
 
 export function assertValidHash(hash, message = 'Invalid hash') {
-  assert.equal(typeof hash, 'string', message + ' - should be string');
-  assert.equal(hash.length, 64, message + ' - should be 64 characters');
-  assert.match(hash, /^[a-f0-9]+$/, message + ' - should be lowercase hex');
+  assertEquals(typeof hash, 'string', message + ' - should be string');
+  assertEquals(hash.length, 64, message + ' - should be 64 characters');
+  assertMatch(hash, /^[a-f0-9]+$/, message + ' - should be lowercase hex');
 }

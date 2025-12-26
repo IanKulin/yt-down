@@ -1,88 +1,88 @@
-import { test, describe } from 'node:test';
-import { strict as assert } from 'node:assert';
-import { getYtDlpArgs, getAvailableOptions } from '../lib/settings.js';
+import { describe, it as test } from '@std/testing/bdd';
+import { assert, assertEquals } from '@std/assert';
+import { getAvailableOptions, getYtDlpArgs } from '../lib/settings.js';
 
 describe('settings.js', () => {
   describe('getAvailableOptions', () => {
     test('should return valid video quality options', () => {
       const options = getAvailableOptions();
 
-      assert.ok(
+      assert(
         Array.isArray(options.videoQualities),
-        'videoQualities should be an array'
+        'videoQualities should be an array',
       );
-      assert.ok(
+      assert(
         options.videoQualities.length > 0,
-        'Should have video quality options'
+        'Should have video quality options',
       );
 
       // Check structure of first option
       const firstOption = options.videoQualities[0];
-      assert.ok(
+      assert(
         typeof firstOption.value === 'string',
-        'Option should have string value'
+        'Option should have string value',
       );
-      assert.ok(
+      assert(
         typeof firstOption.label === 'string',
-        'Option should have string label'
+        'Option should have string label',
       );
 
       // Should include expected options
       const values = options.videoQualities.map((opt) => opt.value);
-      assert.ok(values.includes('no-limit'), 'Should include no-limit option');
-      assert.ok(values.includes('720p'), 'Should include 720p option');
-      assert.ok(values.includes('1080p'), 'Should include 1080p option');
-      assert.ok(values.includes('1440p'), 'Should include 1440p option');
-      assert.ok(values.includes('2160p'), 'Should include 2160p option');
+      assert(values.includes('no-limit'), 'Should include no-limit option');
+      assert(values.includes('720p'), 'Should include 720p option');
+      assert(values.includes('1080p'), 'Should include 1080p option');
+      assert(values.includes('1440p'), 'Should include 1440p option');
+      assert(values.includes('2160p'), 'Should include 2160p option');
     });
 
     test('should return valid rate limit options', () => {
       const options = getAvailableOptions();
 
-      assert.ok(
+      assert(
         Array.isArray(options.rateLimits),
-        'rateLimits should be an array'
+        'rateLimits should be an array',
       );
-      assert.ok(
+      assert(
         options.rateLimits.length > 0,
-        'Should have rate limit options'
+        'Should have rate limit options',
       );
 
       const values = options.rateLimits.map((opt) => opt.value);
-      assert.ok(values.includes('no-limit'), 'Should include no-limit option');
-      assert.ok(values.includes('180K'), 'Should include 180K option');
-      assert.ok(values.includes('360K'), 'Should include 360K option');
-      assert.ok(values.includes('720K'), 'Should include 720K option');
-      assert.ok(values.includes('1440K'), 'Should include 1440K option');
+      assert(values.includes('no-limit'), 'Should include no-limit option');
+      assert(values.includes('180K'), 'Should include 180K option');
+      assert(values.includes('360K'), 'Should include 360K option');
+      assert(values.includes('720K'), 'Should include 720K option');
+      assert(values.includes('1440K'), 'Should include 1440K option');
     });
 
     test('should return valid subtitle language options', () => {
       const options = getAvailableOptions();
 
-      assert.ok(
+      assert(
         Array.isArray(options.subLanguages),
-        'subLanguages should be an array'
+        'subLanguages should be an array',
       );
-      assert.ok(
+      assert(
         options.subLanguages.length > 0,
-        'Should have subtitle language options'
+        'Should have subtitle language options',
       );
 
       const values = options.subLanguages.map((opt) => opt.value);
-      assert.ok(values.includes('en'), 'Should include English');
-      assert.ok(values.includes('es'), 'Should include Spanish');
-      assert.ok(values.includes('fr'), 'Should include French');
-      assert.ok(values.includes('de'), 'Should include German');
+      assert(values.includes('en'), 'Should include English');
+      assert(values.includes('es'), 'Should include Spanish');
+      assert(values.includes('fr'), 'Should include French');
+      assert(values.includes('de'), 'Should include German');
     });
 
     test('should return consistent results on multiple calls', () => {
       const options1 = getAvailableOptions();
       const options2 = getAvailableOptions();
 
-      assert.deepEqual(
+      assertEquals(
         options1,
         options2,
-        'Should return same options on multiple calls'
+        'Should return same options on multiple calls',
       );
     });
   });
@@ -94,33 +94,33 @@ describe('settings.js', () => {
       const args = await getYtDlpArgs(url);
 
       // Check that essential arguments are present
-      assert.ok(
+      assert(
         args.includes('--fragment-retries'),
-        'Should include fragment retries'
+        'Should include fragment retries',
       );
-      assert.ok(args.includes('20'), 'Should include retry count');
-      assert.ok(args.includes('--retries'), 'Should include retries');
-      assert.ok(args.includes('infinite'), 'Should include infinite retries');
-      assert.ok(
+      assert(args.includes('20'), 'Should include retry count');
+      assert(args.includes('--retries'), 'Should include retries');
+      assert(args.includes('infinite'), 'Should include infinite retries');
+      assert(
         args.includes('--socket-timeout'),
-        'Should include socket timeout'
+        'Should include socket timeout',
       );
-      assert.ok(args.includes('30'), 'Should include timeout value');
-      assert.ok(args.includes('-o'), 'Should include output format');
-      assert.ok(
+      assert(args.includes('30'), 'Should include timeout value');
+      assert(args.includes('-o'), 'Should include output format');
+      assert(
         args.includes('%(title)s.%(ext)s'),
-        'Should include filename template'
+        'Should include filename template',
       );
-      assert.ok(args.includes('--format'), 'Should include format selector');
-      assert.ok(
+      assert(args.includes('--format'), 'Should include format selector');
+      assert(
         args.includes('--merge-output-format'),
-        'Should include merge format'
+        'Should include merge format',
       );
-      assert.ok(args.includes('mp4'), 'Should include mp4 format');
-      assert.ok(args.includes(url), 'Should include the URL');
+      assert(args.includes('mp4'), 'Should include mp4 format');
+      assert(args.includes(url), 'Should include the URL');
 
       // URL should be last argument
-      assert.equal(args[args.length - 1], url, 'URL should be last argument');
+      assertEquals(args[args.length - 1], url, 'URL should be last argument');
     });
 
     test('should test format selector patterns for different quality settings', () => {
@@ -162,36 +162,37 @@ describe('settings.js', () => {
 
         if (testCase.quality !== 'no-limit') {
           const height = testCase.quality.replace('p', '');
-          formatSelector = `bestvideo[height<=${height}][ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]/bestvideo[height<=${height}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${height}][ext=mp4]+bestaudio/best[height<=${height}]`;
+          formatSelector =
+            `bestvideo[height<=${height}][ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]/bestvideo[height<=${height}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${height}][ext=mp4]+bestaudio/best[height<=${height}]`;
         } else {
           formatSelector =
             'bestvideo[ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio/best';
         }
 
         if (testCase.shouldIncludeHeight) {
-          assert.ok(
+          assert(
             formatSelector.includes(`height<=${testCase.expectedHeight}`),
-            `Format selector should include height restriction for ${testCase.quality}`
+            `Format selector should include height restriction for ${testCase.quality}`,
           );
         } else {
-          assert.ok(
+          assert(
             !formatSelector.includes('height<='),
-            `Format selector should not include height restriction for ${testCase.quality}`
+            `Format selector should not include height restriction for ${testCase.quality}`,
           );
         }
 
         // Should always include h.264 and mp4 preferences
-        assert.ok(
+        assert(
           formatSelector.includes('vcodec^=avc1'),
-          `Format selector should prefer h.264 for ${testCase.quality}`
+          `Format selector should prefer h.264 for ${testCase.quality}`,
         );
-        assert.ok(
+        assert(
           formatSelector.includes('ext=mp4'),
-          `Format selector should prefer mp4 for ${testCase.quality}`
+          `Format selector should prefer mp4 for ${testCase.quality}`,
         );
-        assert.ok(
+        assert(
           formatSelector.includes('ext=m4a'),
-          `Format selector should prefer m4a audio for ${testCase.quality}`
+          `Format selector should prefer m4a audio for ${testCase.quality}`,
         );
       }
     });
@@ -200,21 +201,21 @@ describe('settings.js', () => {
       const url = 'https://www.youtube.com/watch?v=test';
       const args = await getYtDlpArgs(url);
 
-      assert.ok(Array.isArray(args), 'Should return an array');
-      assert.ok(args.length > 0, 'Should have arguments');
+      assert(Array.isArray(args), 'Should return an array');
+      assert(args.length > 0, 'Should have arguments');
 
       // All arguments should be strings
       for (const arg of args) {
-        assert.equal(
+        assertEquals(
           typeof arg,
           'string',
-          `All arguments should be strings, got: ${typeof arg}`
+          `All arguments should be strings, got: ${typeof arg}`,
         );
       }
 
       // Should not have empty arguments
       for (const arg of args) {
-        assert.ok(arg.length > 0, 'Should not have empty arguments');
+        assert(arg.length > 0, 'Should not have empty arguments');
       }
     });
   });
@@ -229,13 +230,13 @@ describe('settings.js', () => {
 
         if (shouldIncludeRateLimit) {
           // Rate limit should be included in args
-          assert.ok(
+          assert(
             rateLimit.match(/^\d+K$/),
-            `${rateLimit} should match rate limit pattern`
+            `${rateLimit} should match rate limit pattern`,
           );
         } else {
           // No rate limit
-          assert.equal(rateLimit, 'no-limit', 'Should be no-limit value');
+          assertEquals(rateLimit, 'no-limit', 'Should be no-limit value');
         }
       }
     });
@@ -296,10 +297,10 @@ describe('settings.js', () => {
           args.push('--write-auto-subs');
         }
 
-        assert.deepEqual(
+        assertEquals(
           args,
           testCase.expectedArgs,
-          `Subtitle args don't match for case: ${JSON.stringify(testCase)}`
+          `Subtitle args don't match for case: ${JSON.stringify(testCase)}`,
         );
       }
     });

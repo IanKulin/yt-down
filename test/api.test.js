@@ -1,5 +1,5 @@
-import { test, describe } from 'node:test';
-import { strict as assert } from 'node:assert';
+import { describe, it as test } from '@std/testing/bdd';
+import { assert, assertEquals } from '@std/assert';
 
 // Mock queue processor
 function createMockQueueProcessor(status = {}) {
@@ -16,7 +16,7 @@ function createMockQueueProcessor(status = {}) {
 
 describe('api.js', () => {
   describe('GET /api/state', () => {
-    test('should have correct structure and data types', async () => {
+    test('should have correct structure and data types', () => {
       // Since we can't easily mock the utils import without additional tools,
       // let's test the structure that would be returned
       const mockProcessor = createMockQueueProcessor({
@@ -29,37 +29,37 @@ describe('api.js', () => {
       const status = mockProcessor.getStatus();
 
       // Test the processor status structure
-      assert.equal(typeof status, 'object', 'Status should be object');
-      assert.equal(
+      assertEquals(typeof status, 'object', 'Status should be object');
+      assertEquals(
         typeof status.isProcessing,
         'boolean',
-        'isProcessing should be boolean'
+        'isProcessing should be boolean',
       );
-      assert.equal(
+      assertEquals(
         typeof status.isDownloadActive,
         'boolean',
-        'isDownloadActive should be boolean'
+        'isDownloadActive should be boolean',
       );
-      assert.equal(
+      assertEquals(
         typeof status.pollInterval,
         'number',
-        'pollInterval should be number'
+        'pollInterval should be number',
       );
 
-      assert.equal(status.isProcessing, true);
-      assert.equal(status.isDownloadActive, true);
-      assert.equal(status.activeDownloadHash, 'test-hash');
-      assert.equal(status.pollInterval, 10000);
+      assertEquals(status.isProcessing, true);
+      assertEquals(status.isDownloadActive, true);
+      assertEquals(status.activeDownloadHash, 'test-hash');
+      assertEquals(status.pollInterval, 10000);
     });
 
     test('should create queue processor with correct defaults', () => {
       const defaultProcessor = createMockQueueProcessor();
       const status = defaultProcessor.getStatus();
 
-      assert.equal(status.isProcessing, false);
-      assert.equal(status.isDownloadActive, false);
-      assert.equal(status.activeDownloadHash, null);
-      assert.equal(status.pollInterval, 5000);
+      assertEquals(status.isProcessing, false);
+      assertEquals(status.isDownloadActive, false);
+      assertEquals(status.activeDownloadHash, null);
+      assertEquals(status.pollInterval, 5000);
     });
 
     test('should allow custom queue processor configuration', () => {
@@ -73,7 +73,7 @@ describe('api.js', () => {
       const customProcessor = createMockQueueProcessor(customStatus);
       const status = customProcessor.getStatus();
 
-      assert.deepEqual(status, customStatus);
+      assertEquals(status, customStatus);
     });
 
     test('should test state object structure for API response', () => {
@@ -97,54 +97,54 @@ describe('api.js', () => {
       };
 
       // Verify structure
-      assert.ok(
+      assert(
         Array.isArray(expectedStructure.queued),
-        'queued should be array'
+        'queued should be array',
       );
-      assert.ok(
+      assert(
         Array.isArray(expectedStructure.active),
-        'active should be array'
+        'active should be array',
       );
-      assert.ok(
+      assert(
         typeof expectedStructure.counts === 'object',
-        'counts should be object'
+        'counts should be object',
       );
-      assert.ok(
+      assert(
         typeof expectedStructure.processor === 'object',
-        'processor should be object'
+        'processor should be object',
       );
-      assert.ok(
+      assert(
         Array.isArray(expectedStructure.notifications),
-        'notifications should be array'
+        'notifications should be array',
       );
-      assert.ok(
+      assert(
         typeof expectedStructure.timestamp === 'string',
-        'timestamp should be string'
+        'timestamp should be string',
       );
 
       // Verify counts structure
       const counts = expectedStructure.counts;
-      assert.ok('queued' in counts, 'counts should have queued');
-      assert.ok('active' in counts, 'counts should have active');
-      assert.ok('total' in counts, 'counts should have total');
+      assert('queued' in counts, 'counts should have queued');
+      assert('active' in counts, 'counts should have active');
+      assert('total' in counts, 'counts should have total');
 
       // Verify processor structure
       const processor = expectedStructure.processor;
-      assert.ok(
+      assert(
         'isProcessing' in processor,
-        'processor should have isProcessing'
+        'processor should have isProcessing',
       );
-      assert.ok(
+      assert(
         'isDownloadActive' in processor,
-        'processor should have isDownloadActive'
+        'processor should have isDownloadActive',
       );
-      assert.ok(
+      assert(
         'activeDownloadHash' in processor,
-        'processor should have activeDownloadHash'
+        'processor should have activeDownloadHash',
       );
-      assert.ok(
+      assert(
         'pollInterval' in processor,
-        'processor should have pollInterval'
+        'processor should have pollInterval',
       );
     });
 
@@ -169,10 +169,10 @@ describe('api.js', () => {
 
       for (const testCase of testCases) {
         const total = testCase.queued + testCase.active;
-        assert.equal(
+        assertEquals(
           total,
           testCase.expectedTotal,
-          `Total calculation failed for queued:${testCase.queued}, active:${testCase.active}`
+          `Total calculation failed for queued:${testCase.queued}, active:${testCase.active}`,
         );
       }
     });
@@ -180,12 +180,12 @@ describe('api.js', () => {
     test('should test timestamp format', () => {
       const timestamp = new Date().toISOString();
 
-      assert.ok(typeof timestamp === 'string', 'Timestamp should be string');
-      assert.ok(
+      assert(typeof timestamp === 'string', 'Timestamp should be string');
+      assert(
         /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(timestamp),
-        'Timestamp should match ISO format'
+        'Timestamp should match ISO format',
       );
-      assert.ok(!isNaN(Date.parse(timestamp)), 'Timestamp should be parseable');
+      assert(!isNaN(Date.parse(timestamp)), 'Timestamp should be parseable');
     });
 
     test('should test error response structure', () => {
@@ -194,23 +194,23 @@ describe('api.js', () => {
         timestamp: new Date().toISOString(),
       };
 
-      assert.ok(
+      assert(
         'error' in errorResponse,
-        'Error response should have error field'
+        'Error response should have error field',
       );
-      assert.ok(
+      assert(
         'timestamp' in errorResponse,
-        'Error response should have timestamp field'
+        'Error response should have timestamp field',
       );
-      assert.equal(
+      assertEquals(
         typeof errorResponse.error,
         'string',
-        'Error should be string'
+        'Error should be string',
       );
-      assert.equal(
+      assertEquals(
         typeof errorResponse.timestamp,
         'string',
-        'Timestamp should be string'
+        'Timestamp should be string',
       );
     });
 
@@ -222,12 +222,12 @@ describe('api.js', () => {
       ];
 
       for (const item of sampleJobs) {
-        assert.ok('hash' in item, 'Job item should have hash');
-        assert.ok('url' in item, 'Job item should have url');
-        assert.equal(typeof item.hash, 'string', 'Hash should be string');
-        assert.equal(typeof item.url, 'string', 'URL should be string');
-        assert.ok(item.hash.length > 0, 'Hash should not be empty');
-        assert.ok(item.url.length > 0, 'URL should not be empty');
+        assert('hash' in item, 'Job item should have hash');
+        assert('url' in item, 'Job item should have url');
+        assertEquals(typeof item.hash, 'string', 'Hash should be string');
+        assertEquals(typeof item.url, 'string', 'URL should be string');
+        assert(item.hash.length > 0, 'Hash should not be empty');
+        assert(item.url.length > 0, 'URL should not be empty');
       }
     });
   });

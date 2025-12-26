@@ -28,8 +28,10 @@ class NotificationSystem {
       if (data.notifications && data.notifications.length > 0) {
         const notification = data.notifications[0];
         // Only show if we haven't shown this notification before
-        if (!window.toastSystem.hasShownNotification(notification.timestamp)) {
-          window.toastSystem.markNotificationShown(notification.timestamp);
+        if (
+          !globalThis.toastSystem.hasShownNotification(notification.timestamp)
+        ) {
+          globalThis.toastSystem.markNotificationShown(notification.timestamp);
           this.showCompletionNotification(notification);
         }
       }
@@ -47,15 +49,15 @@ class NotificationSystem {
    * @param {Object} notification - Notification object
    */
   showCompletionNotification(notification) {
-    if (window.showToast) {
+    if (globalThis.showToast) {
       // Map backend notification types to frontend toast types
       const toastType = this.mapNotificationTypeToToastType(notification.type);
 
-      window.showToast(
+      globalThis.showToast(
         toastType,
         notification.message,
         5000,
-        notification.timestamp
+        notification.timestamp,
       );
     }
   }
@@ -112,11 +114,11 @@ class NotificationSystem {
     if (this.isShowingConnectionError) return;
 
     this.isShowingConnectionError = true;
-    if (window.showToast) {
-      this.connectionErrorToastId = window.showToast(
+    if (globalThis.showToast) {
+      this.connectionErrorToastId = globalThis.showToast(
         'error',
         'Connection lost. Attempting to reconnect...',
-        0 // Persistent until cleared
+        0, // Persistent until cleared
       );
     }
   }
@@ -128,14 +130,14 @@ class NotificationSystem {
     if (!this.isShowingConnectionError) return;
 
     this.isShowingConnectionError = false;
-    if (this.connectionErrorToastId && window.dismissToastById) {
-      window.dismissToastById(this.connectionErrorToastId);
+    if (this.connectionErrorToastId && globalThis.dismissToastById) {
+      globalThis.dismissToastById(this.connectionErrorToastId);
       this.connectionErrorToastId = null;
     }
 
     // Show brief success notification
-    if (window.showToast) {
-      window.showToast('success', 'Connection restored', 3000);
+    if (globalThis.showToast) {
+      globalThis.showToast('success', 'Connection restored', 3000);
     }
   }
 
@@ -175,9 +177,9 @@ class NotificationSystem {
    * Setup WebSocket-based notification checking
    */
   setupWebSocketNotifications() {
-    if (window.wsClient) {
-      window.wsClient.addListener(() => this.checkForNotifications());
-      window.wsClient.addConnectionListener((isConnected) => {
+    if (globalThis.wsClient) {
+      globalThis.wsClient.addListener(() => this.checkForNotifications());
+      globalThis.wsClient.addConnectionListener((isConnected) => {
         this.updateConnectionState(isConnected);
       });
     } else {
@@ -196,12 +198,12 @@ class NotificationSystem {
 
     // Setup WebSocket notifications with retry
     const setupWebSocket = () => {
-      if (window.wsClient) {
+      if (globalThis.wsClient) {
         this.setupWebSocketNotifications();
       } else {
         // Retry after a short delay
         setTimeout(() => {
-          if (window.wsClient) {
+          if (globalThis.wsClient) {
             this.setupWebSocketNotifications();
           } else {
             // Final fallback to polling
@@ -219,9 +221,9 @@ class NotificationSystem {
    * Clean up resources
    */
   cleanup() {
-    if (window.wsClient) {
-      window.wsClient.removeListener(() => this.checkForNotifications());
-      window.wsClient.removeConnectionListener((isConnected) => {
+    if (globalThis.wsClient) {
+      globalThis.wsClient.removeListener(() => this.checkForNotifications());
+      globalThis.wsClient.removeConnectionListener((isConnected) => {
         this.updateConnectionState(isConnected);
       });
     }
@@ -231,12 +233,12 @@ class NotificationSystem {
 }
 
 // Create global notification system instance
-window.notificationSystem = new NotificationSystem();
+globalThis.notificationSystem = new NotificationSystem();
 
 // Convenience functions for global access
-window.checkForNotifications = () =>
-  window.notificationSystem.checkForNotifications();
-window.showCompletionNotification = (notification) =>
-  window.notificationSystem.showCompletionNotification(notification);
-window.updateConnectionState = (isConnected) =>
-  window.notificationSystem.updateConnectionState(isConnected);
+globalThis.checkForNotifications = () =>
+  globalThis.notificationSystem.checkForNotifications();
+globalThis.showCompletionNotification = (notification) =>
+  globalThis.notificationSystem.showCompletionNotification(notification);
+globalThis.updateConnectionState = (isConnected) =>
+  globalThis.notificationSystem.updateConnectionState(isConnected);

@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": {
+    "start": "deno run --allow-all server.js",
+    "dev": "deno run --allow-all --watch server.js",
+    "test": "deno test --allow-all",
+    "lint": "deno lint",
+    "format": "deno fmt",
+    "docker:build": "./scripts/docker-build.sh",
+    "docker:push": "./scripts/docker-push.sh"
+  },
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.6.14",
+    "hono/deno": "jsr:@hono/hono@^4.6.14/deno",
+    "ejs": "npm:ejs@3.1.10",
+    "@iankulin/logger": "npm:@iankulin/logger@1.0.2",
+    "@std/path": "jsr:@std/path@^1.0.0",
+    "@std/fs": "jsr:@std/fs@^1.0.0",
+    "@std/crypto": "jsr:@std/crypto@^1.0.0",
+    "@std/assert": "jsr:@std/assert@^1.0.0",
+    "@std/testing/bdd": "jsr:@std/testing@^1.0.0/bdd",
+    "@std/encoding/hex": "jsr:@std/encoding@^1.0.0/hex"
+  },
+  "lint": {
+    "exclude": ["node_modules", "temp", "data", "downloads"]
+  },
+  "fmt": {
+    "exclude": ["node_modules", "temp", "data", "downloads"],
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "singleQuote": true
+  },
+  "exclude": ["node_modules", "temp", "data", "downloads"]
+}

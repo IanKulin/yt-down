@@ -1,13 +1,12 @@
-import { test, describe } from 'node:test';
-import { strict as assert } from 'node:assert';
-import fs from 'fs/promises';
-import path from 'path';
+import { describe, it as test } from '@std/testing/bdd';
+import { assert, assertEquals, assertRejects } from '@std/assert';
+import { join } from '@std/path';
 import { Job, JobManager, JobState } from '../lib/jobs.js';
 import {
-  createTestDir,
+  assertValidHash,
   cleanupTestDir,
   createMockLogger,
-  assertValidHash,
+  createTestDir,
   TEST_DATA_DIR,
 } from './helpers.js';
 
@@ -18,17 +17,17 @@ describe('jobs.js', () => {
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         const job = new Job({ url });
 
-        assert.equal(job.url, url);
-        assert.ok(job.id, 'Should have an ID');
-        assert.equal(
+        assertEquals(job.url, url);
+        assert(job.id, 'Should have an ID');
+        assertEquals(
           job.state,
           JobState.QUEUED,
-          'Should default to QUEUED state'
+          'Should default to QUEUED state',
         );
-        assert.equal(job.retryCount, 0, 'Should default to 0 retries');
-        assert.ok(job.timestamp, 'Should have a timestamp');
-        assert.ok(job.sortOrder, 'Should have a sort order');
-        assert.deepEqual(job.metadata, {}, 'Should default to empty metadata');
+        assertEquals(job.retryCount, 0, 'Should default to 0 retries');
+        assert(job.timestamp, 'Should have a timestamp');
+        assert(job.sortOrder, 'Should have a sort order');
+        assertEquals(job.metadata, {}, 'Should default to empty metadata');
       });
 
       test('should create job with custom properties', () => {
@@ -44,13 +43,13 @@ describe('jobs.js', () => {
 
         const job = new Job(jobData);
 
-        assert.equal(job.url, jobData.url);
-        assert.equal(job.title, jobData.title);
-        assert.equal(job.retryCount, jobData.retryCount);
-        assert.equal(job.timestamp, jobData.timestamp);
-        assert.equal(job.sortOrder, jobData.sortOrder);
-        assert.equal(job.state, jobData.state);
-        assert.deepEqual(job.metadata, jobData.metadata);
+        assertEquals(job.url, jobData.url);
+        assertEquals(job.title, jobData.title);
+        assertEquals(job.retryCount, jobData.retryCount);
+        assertEquals(job.timestamp, jobData.timestamp);
+        assertEquals(job.sortOrder, jobData.sortOrder);
+        assertEquals(job.state, jobData.state);
+        assertEquals(job.metadata, jobData.metadata);
       });
 
       test('should generate consistent ID from URL', () => {
@@ -58,7 +57,7 @@ describe('jobs.js', () => {
         const job1 = new Job({ url });
         const job2 = new Job({ url });
 
-        assert.equal(job1.id, job2.id, 'Same URL should produce same ID');
+        assertEquals(job1.id, job2.id, 'Same URL should produce same ID');
         assertValidHash(job1.id);
       });
 
@@ -66,10 +65,9 @@ describe('jobs.js', () => {
         const job1 = new Job({ url: 'https://example.com/video1' });
         const job2 = new Job({ url: 'https://example.com/video2' });
 
-        assert.notEqual(
-          job1.id,
-          job2.id,
-          'Different URLs should produce different IDs'
+        assert(
+          job1.id !== job2.id,
+          'Different URLs should produce different IDs',
         );
       });
 
@@ -78,36 +76,66 @@ describe('jobs.js', () => {
         const job = new Job({ url });
 
         assertValidHash(job.id);
-        assert.equal(job.url, url);
+        assertEquals(job.url, url);
       });
     });
 
     describe('validation', () => {
       test('should validate successfully with valid data', () => {
         const job = new Job({ url: 'https://example.com/video' });
-        assert.doesNotThrow(() => job.validate());
+        // In Deno, there's no assert.doesNotThrow, so just call validate
+        // and if it doesn't throw, the test passes
+        job.validate();
       });
 
       test('should throw error for missing URL', () => {
         const job = new Job({ url: '' });
-        assert.throws(() => job.validate(), /Job URL is required/);
+        let didThrow = false;
+        try {
+          job.validate();
+        } catch (error) {
+          didThrow = true;
+          assert(error.message.includes('Job URL is required'));
+        }
+        assert(didThrow, 'Should have thrown error for missing URL');
       });
 
       test('should throw error for non-string URL', () => {
         const job = new Job({ url: null });
-        assert.throws(() => job.validate(), /Job URL is required/);
+        let didThrow = false;
+        try {
+          job.validate();
+        } catch (error) {
+          didThrow = true;
+          assert(error.message.includes('Job URL is required'));
+        }
+        assert(didThrow, 'Should have thrown error for non-string URL');
       });
 
       test('should throw error for invalid state', () => {
         const job = new Job({ url: 'https://example.com/video' });
         job.state = 'invalid_state';
-        assert.throws(() => job.validate(), /Invalid job state/);
+        let didThrow = false;
+        try {
+          job.validate();
+        } catch (error) {
+          didThrow = true;
+          assert(error.message.includes('Invalid job state'));
+        }
+        assert(didThrow, 'Should have thrown error for invalid state');
       });
 
       test('should throw error for negative retry count', () => {
         const job = new Job({ url: 'https://example.com/video' });
         job.retryCount = -1;
-        assert.throws(() => job.validate(), /Retry count cannot be negative/);
+        let didThrow = false;
+        try {
+          job.validate();
+        } catch (error) {
+          didThrow = true;
+          assert(error.message.includes('Retry count cannot be negative'));
+        }
+        assert(didThrow, 'Should have thrown error for negative retry count');
       });
     });
 
@@ -116,8 +144,8 @@ describe('jobs.js', () => {
         const job = new Job({ url: 'https://example.com/video' });
         const filename = job.getFilename();
 
-        assert.ok(filename.endsWith('.json'), 'Filename should end with .json');
-        assert.equal(filename, `${job.id}.json`);
+        assert(filename.endsWith('.json'), 'Filename should end with .json');
+        assertEquals(filename, `${job.id}.json`);
       });
 
       test('should generate correct file path', () => {
@@ -128,9 +156,9 @@ describe('jobs.js', () => {
         const baseDir = '/test/base';
         const filePath = job.getFilePath(baseDir);
 
-        assert.equal(
+        assertEquals(
           filePath,
-          path.join(baseDir, 'data', 'jobs', 'queued', `${job.id}.json`)
+          join(baseDir, 'data', 'jobs', 'queued', `${job.id}.json`),
         );
       });
 
@@ -147,14 +175,14 @@ describe('jobs.js', () => {
         const job = new Job(jobData);
         const json = job.toJSON();
 
-        assert.equal(json.url, jobData.url);
-        assert.equal(json.title, jobData.title);
-        assert.equal(json.retryCount, jobData.retryCount);
-        assert.equal(json.timestamp, jobData.timestamp);
-        assert.equal(json.sortOrder, jobData.sortOrder);
-        assert.deepEqual(json.metadata, jobData.metadata);
-        assert.ok(!('id' in json), 'JSON should not include ID');
-        assert.ok(!('state' in json), 'JSON should not include state');
+        assertEquals(json.url, jobData.url);
+        assertEquals(json.title, jobData.title);
+        assertEquals(json.retryCount, jobData.retryCount);
+        assertEquals(json.timestamp, jobData.timestamp);
+        assertEquals(json.sortOrder, jobData.sortOrder);
+        assertEquals(json.metadata, jobData.metadata);
+        assert(!('id' in json), 'JSON should not include ID');
+        assert(!('state' in json), 'JSON should not include state');
       });
 
       test('should create from JSON correctly', () => {
@@ -169,14 +197,14 @@ describe('jobs.js', () => {
 
         const job = Job.fromJSON(jsonData, 'test-id', JobState.ACTIVE);
 
-        assert.equal(job.id, 'test-id');
-        assert.equal(job.state, JobState.ACTIVE);
-        assert.equal(job.url, jsonData.url);
-        assert.equal(job.title, jsonData.title);
-        assert.equal(job.retryCount, jsonData.retryCount);
-        assert.equal(job.timestamp, jsonData.timestamp);
-        assert.equal(job.sortOrder, jsonData.sortOrder);
-        assert.deepEqual(job.metadata, jsonData.metadata);
+        assertEquals(job.id, 'test-id');
+        assertEquals(job.state, JobState.ACTIVE);
+        assertEquals(job.url, jsonData.url);
+        assertEquals(job.title, jsonData.title);
+        assertEquals(job.retryCount, jsonData.retryCount);
+        assertEquals(job.timestamp, jsonData.timestamp);
+        assertEquals(job.sortOrder, jsonData.sortOrder);
+        assertEquals(job.metadata, jsonData.metadata);
       });
     });
 
@@ -185,16 +213,23 @@ describe('jobs.js', () => {
         const job = new Job({ url: 'https://example.com/video' });
 
         job.setState(JobState.ACTIVE);
-        assert.equal(job.state, JobState.ACTIVE);
+        assertEquals(job.state, JobState.ACTIVE);
 
         job.setState(JobState.ACTIVE);
-        assert.equal(job.state, JobState.ACTIVE);
+        assertEquals(job.state, JobState.ACTIVE);
       });
 
       test('should throw error for invalid state', () => {
         const job = new Job({ url: 'https://example.com/video' });
 
-        assert.throws(() => job.setState('invalid'), /Invalid job state/);
+        let didThrow = false;
+        try {
+          job.setState('invalid');
+        } catch (error) {
+          didThrow = true;
+          assert(error.message.includes('Invalid job state'));
+        }
+        assert(didThrow, 'Should have thrown error for invalid state');
       });
 
       test('should clone job with new state', () => {
@@ -207,30 +242,30 @@ describe('jobs.js', () => {
 
         const clonedJob = originalJob.clone(JobState.ACTIVE);
 
-        assert.equal(clonedJob.state, JobState.ACTIVE);
-        assert.equal(clonedJob.id, originalJob.id);
-        assert.equal(clonedJob.url, originalJob.url);
-        assert.equal(clonedJob.title, originalJob.title);
-        assert.equal(clonedJob.retryCount, originalJob.retryCount);
-        assert.deepEqual(clonedJob.metadata, originalJob.metadata);
-        assert.notEqual(clonedJob, originalJob, 'Should be different objects');
+        assertEquals(clonedJob.state, JobState.ACTIVE);
+        assertEquals(clonedJob.id, originalJob.id);
+        assertEquals(clonedJob.url, originalJob.url);
+        assertEquals(clonedJob.title, originalJob.title);
+        assertEquals(clonedJob.retryCount, originalJob.retryCount);
+        assertEquals(clonedJob.metadata, originalJob.metadata);
+        assert(clonedJob !== originalJob, 'Should be different objects');
       });
 
       test('should increment retry count', () => {
         const job = new Job({ url: 'https://example.com/video' });
 
-        assert.equal(job.retryCount, 0);
+        assertEquals(job.retryCount, 0);
         job.incrementRetryCount();
-        assert.equal(job.retryCount, 1);
+        assertEquals(job.retryCount, 1);
         job.incrementRetryCount();
-        assert.equal(job.retryCount, 2);
+        assertEquals(job.retryCount, 2);
       });
 
       test('should update title', () => {
         const job = new Job({ url: 'https://example.com/video' });
 
         job.updateTitle('New Title');
-        assert.equal(job.title, 'New Title');
+        assertEquals(job.title, 'New Title');
       });
     });
   });
@@ -240,9 +275,9 @@ describe('jobs.js', () => {
       test('should create with default options', () => {
         const jobManager = new JobManager();
 
-        assert.equal(jobManager.maxRetries, 3);
-        assert.ok(jobManager.baseDir, 'Should have a base directory');
-        assert.ok(jobManager.jobDirectories, 'Should have job directories');
+        assertEquals(jobManager.maxRetries, 3);
+        assert(jobManager.baseDir, 'Should have a base directory');
+        assert(jobManager.jobDirectories, 'Should have job directories');
       });
 
       test('should create with custom options', () => {
@@ -252,22 +287,22 @@ describe('jobs.js', () => {
 
         const jobManager = new JobManager({ logger, baseDir, maxRetries });
 
-        assert.equal(jobManager.logger, logger);
-        assert.equal(jobManager.baseDir, baseDir);
-        assert.equal(jobManager.maxRetries, maxRetries);
+        assertEquals(jobManager.logger, logger);
+        assertEquals(jobManager.baseDir, baseDir);
+        assertEquals(jobManager.maxRetries, maxRetries);
       });
 
       test('should set up correct job directories', () => {
         const baseDir = '/test/base';
         const jobManager = new JobManager({ baseDir });
 
-        assert.equal(
+        assertEquals(
           jobManager.jobDirectories[JobState.QUEUED],
-          path.join(baseDir, 'data', 'jobs', 'queued')
+          join(baseDir, 'data', 'jobs', 'queued'),
         );
-        assert.equal(
+        assertEquals(
           jobManager.jobDirectories[JobState.ACTIVE],
-          path.join(baseDir, 'data', 'jobs', 'active')
+          join(baseDir, 'data', 'jobs', 'active'),
         );
       });
     });
@@ -275,31 +310,34 @@ describe('jobs.js', () => {
     describe('job creation', () => {
       test('should create job successfully', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
         const url = 'https://example.com/video';
         const job = await jobManager.createJob(url);
 
-        assert.equal(job.url, url);
-        assert.equal(job.state, JobState.QUEUED);
+        assertEquals(job.url, url);
+        assertEquals(job.state, JobState.QUEUED);
         assertValidHash(job.id);
 
         // Verify file was created
         const filePath = job.getFilePath(baseDir);
-        const fileExists = await fs
-          .access(filePath)
-          .then(() => true)
-          .catch(() => false);
-        assert.ok(fileExists, 'Job file should be created');
+        let fileExists = false;
+        try {
+          await Deno.stat(filePath);
+          fileExists = true;
+        } catch {
+          fileExists = false;
+        }
+        assert(fileExists, 'Job file should be created');
 
         await cleanupTestDir();
       });
 
       test('should create job with options', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
@@ -312,26 +350,27 @@ describe('jobs.js', () => {
 
         const job = await jobManager.createJob(url, options);
 
-        assert.equal(job.url, url);
-        assert.equal(job.title, options.title);
-        assert.equal(job.retryCount, options.retryCount);
-        assert.deepEqual(job.metadata, options.metadata);
+        assertEquals(job.url, url);
+        assertEquals(job.title, options.title);
+        assertEquals(job.retryCount, options.retryCount);
+        assertEquals(job.metadata, options.metadata);
 
         await cleanupTestDir();
       });
 
       test('should throw error for duplicate job', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
         const url = 'https://example.com/video';
         await jobManager.createJob(url);
 
-        await assert.rejects(
+        await assertRejects(
           () => jobManager.createJob(url),
-          /Job already exists/
+          Error,
+          'Job already exists',
         );
 
         await cleanupTestDir();
@@ -341,7 +380,7 @@ describe('jobs.js', () => {
     describe('job retrieval', () => {
       test('should get job by ID', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
@@ -349,9 +388,9 @@ describe('jobs.js', () => {
         const createdJob = await jobManager.createJob(url);
         const retrievedJob = await jobManager.getJob(createdJob.id);
 
-        assert.equal(retrievedJob.id, createdJob.id);
-        assert.equal(retrievedJob.url, createdJob.url);
-        assert.equal(retrievedJob.state, createdJob.state);
+        assertEquals(retrievedJob.id, createdJob.id);
+        assertEquals(retrievedJob.url, createdJob.url);
+        assertEquals(retrievedJob.state, createdJob.state);
 
         await cleanupTestDir();
       });
@@ -361,12 +400,12 @@ describe('jobs.js', () => {
         const jobManager = new JobManager({ logger });
 
         const job = await jobManager.getJob('non-existent-id');
-        assert.equal(job, null);
+        assertEquals(job, null);
       });
 
       test('should get jobs by state', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
@@ -378,10 +417,10 @@ describe('jobs.js', () => {
         const queuedJobs = await jobManager.getQueuedJobs();
         const activeJobs = await jobManager.getActiveJobs();
 
-        assert.equal(queuedJobs.length, 1);
-        assert.equal(queuedJobs[0].id, job1.id);
-        assert.equal(activeJobs.length, 1);
-        assert.equal(activeJobs[0].id, job2.id);
+        assertEquals(queuedJobs.length, 1);
+        assertEquals(queuedJobs[0].id, job1.id);
+        assertEquals(activeJobs.length, 1);
+        assertEquals(activeJobs[0].id, job2.id);
 
         await cleanupTestDir();
       });
@@ -390,9 +429,10 @@ describe('jobs.js', () => {
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger });
 
-        await assert.rejects(
+        await assertRejects(
           () => jobManager.getJobsByState('invalid'),
-          /Invalid job state/
+          Error,
+          'Invalid job state',
         );
       });
     });
@@ -400,65 +440,71 @@ describe('jobs.js', () => {
     describe('job state transitions', () => {
       test('should move job between states', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
         const job = await jobManager.createJob('https://example.com/video');
-        assert.equal(job.state, JobState.QUEUED);
+        assertEquals(job.state, JobState.QUEUED);
 
         // Move to active
         const activeJob = await jobManager.moveJob(job.id, JobState.ACTIVE);
-        assert.equal(activeJob.state, JobState.ACTIVE);
-        assert.equal(activeJob.id, job.id);
+        assertEquals(activeJob.state, JobState.ACTIVE);
+        assertEquals(activeJob.id, job.id);
 
         // Verify old file is gone and new file exists
         const queuedPath = job.getFilePath(baseDir);
         const activePath = activeJob.getFilePath(baseDir);
 
-        const queuedExists = await fs
-          .access(queuedPath)
-          .then(() => true)
-          .catch(() => false);
-        const activeExists = await fs
-          .access(activePath)
-          .then(() => true)
-          .catch(() => false);
+        let queuedExists = false;
+        try {
+          await Deno.stat(queuedPath);
+          queuedExists = true;
+        } catch {
+          queuedExists = false;
+        }
 
-        assert.ok(!queuedExists, 'Queued file should be removed');
-        assert.ok(activeExists, 'Active file should exist');
+        let activeExists = false;
+        try {
+          await Deno.stat(activePath);
+          activeExists = true;
+        } catch {
+          activeExists = false;
+        }
 
-        // Test completed - job moved to active successfully
+        assert(!queuedExists, 'Queued file should be removed');
+        assert(activeExists, 'Active file should exist');
 
         await cleanupTestDir();
       });
 
       test('should not move job if already in target state', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
         const job = await jobManager.createJob('https://example.com/video');
         const sameJob = await jobManager.moveJob(job.id, JobState.QUEUED);
 
-        assert.equal(sameJob.state, JobState.QUEUED);
-        assert.equal(sameJob.id, job.id);
+        assertEquals(sameJob.state, JobState.QUEUED);
+        assertEquals(sameJob.id, job.id);
 
         await cleanupTestDir();
       });
 
       test('should throw error for invalid state transition', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
         const job = await jobManager.createJob('https://example.com/video');
 
-        await assert.rejects(
+        await assertRejects(
           () => jobManager.moveJob(job.id, 'invalid'),
-          /Invalid job state/
+          Error,
+          'Invalid job state',
         );
 
         await cleanupTestDir();
@@ -468,9 +514,10 @@ describe('jobs.js', () => {
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger });
 
-        await assert.rejects(
+        await assertRejects(
           () => jobManager.moveJob('non-existent', JobState.ACTIVE),
-          /Job not found/
+          Error,
+          'Job not found',
         );
       });
     });
@@ -478,7 +525,7 @@ describe('jobs.js', () => {
     describe('job updates', () => {
       test('should update job properties', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
@@ -491,21 +538,21 @@ describe('jobs.js', () => {
 
         const updatedJob = await jobManager.updateJob(job.id, updates);
 
-        assert.equal(updatedJob.title, updates.title);
-        assert.equal(updatedJob.retryCount, updates.retryCount);
-        assert.deepEqual(updatedJob.metadata, updates.metadata);
+        assertEquals(updatedJob.title, updates.title);
+        assertEquals(updatedJob.retryCount, updates.retryCount);
+        assertEquals(updatedJob.metadata, updates.metadata);
 
         // Verify changes persisted to file
         const retrievedJob = await jobManager.getJob(job.id);
-        assert.equal(retrievedJob.title, updates.title);
-        assert.equal(retrievedJob.retryCount, updates.retryCount);
+        assertEquals(retrievedJob.title, updates.title);
+        assertEquals(retrievedJob.retryCount, updates.retryCount);
 
         await cleanupTestDir();
       });
 
       test('should merge metadata correctly', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
@@ -518,7 +565,7 @@ describe('jobs.js', () => {
         });
 
         const updatedJob = await jobManager.getJob(job.id);
-        assert.deepEqual(updatedJob.metadata, {
+        assertEquals(updatedJob.metadata, {
           duration: 180,
           quality: 'HD',
           format: 'mp4',
@@ -531,7 +578,7 @@ describe('jobs.js', () => {
     describe('job deletion', () => {
       test('should delete job successfully', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
@@ -539,26 +586,32 @@ describe('jobs.js', () => {
         const filePath = job.getFilePath(baseDir);
 
         // Verify file exists
-        let fileExists = await fs
-          .access(filePath)
-          .then(() => true)
-          .catch(() => false);
-        assert.ok(fileExists, 'File should exist before deletion');
+        let fileExists = false;
+        try {
+          await Deno.stat(filePath);
+          fileExists = true;
+        } catch {
+          fileExists = false;
+        }
+        assert(fileExists, 'File should exist before deletion');
 
         // Delete job
         const result = await jobManager.deleteJob(job.id);
-        assert.equal(result, true);
+        assertEquals(result, true);
 
         // Verify file is gone
-        fileExists = await fs
-          .access(filePath)
-          .then(() => true)
-          .catch(() => false);
-        assert.ok(!fileExists, 'File should be deleted');
+        fileExists = false;
+        try {
+          await Deno.stat(filePath);
+          fileExists = true;
+        } catch {
+          fileExists = false;
+        }
+        assert(!fileExists, 'File should be deleted');
 
         // Verify job is not retrievable
         const retrievedJob = await jobManager.getJob(job.id);
-        assert.equal(retrievedJob, null);
+        assertEquals(retrievedJob, null);
 
         await cleanupTestDir();
       });
@@ -567,9 +620,10 @@ describe('jobs.js', () => {
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger });
 
-        await assert.rejects(
+        await assertRejects(
           () => jobManager.deleteJob('non-existent'),
-          /Job not found/
+          Error,
+          'Job not found',
         );
       });
     });
@@ -577,7 +631,7 @@ describe('jobs.js', () => {
     describe('job failure handling', () => {
       test('should retry failed job within limit', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir, maxRetries: 3 });
 
@@ -587,16 +641,16 @@ describe('jobs.js', () => {
         const error = new Error('Download failed');
         const retriedJob = await jobManager.handleJobFailure(job.id, error);
 
-        assert.ok(retriedJob, 'Should return retried job');
-        assert.equal(retriedJob.state, JobState.QUEUED);
-        assert.equal(retriedJob.retryCount, 1);
+        assert(retriedJob, 'Should return retried job');
+        assertEquals(retriedJob.state, JobState.QUEUED);
+        assertEquals(retriedJob.retryCount, 1);
 
         await cleanupTestDir();
       });
 
       test('should move job to failed directory after max retries', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'job-manager-test');
+        const baseDir = join(TEST_DATA_DIR, 'job-manager-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir, maxRetries: 2 });
 
@@ -608,20 +662,20 @@ describe('jobs.js', () => {
         const error = new Error('Download failed');
         const result = await jobManager.handleJobFailure(job.id, error);
 
-        assert.equal(
+        assertEquals(
           result,
           null,
-          'Should return null when max retries exceeded'
+          'Should return null when max retries exceeded',
         );
 
         // Verify job is moved to failed directory
         const retrievedJob = await jobManager.getJob(job.id);
-        assert.ok(retrievedJob, 'Job should exist in failed directory');
-        assert.equal(retrievedJob.state, JobState.FAILED);
-        assert.equal(retrievedJob.metadata.lastError, 'Download failed');
-        assert.ok(
+        assert(retrievedJob, 'Job should exist in failed directory');
+        assertEquals(retrievedJob.state, JobState.FAILED);
+        assertEquals(retrievedJob.metadata.lastError, 'Download failed');
+        assert(
           retrievedJob.metadata.failedAt,
-          'Should have failedAt timestamp'
+          'Should have failedAt timestamp',
         );
 
         await cleanupTestDir();
@@ -631,7 +685,7 @@ describe('jobs.js', () => {
     describe('cleanup operations', () => {
       test('should cleanup interrupted jobs', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'cleanup-test');
+        const baseDir = join(TEST_DATA_DIR, 'cleanup-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir, maxRetries: 3 });
 
@@ -645,10 +699,10 @@ describe('jobs.js', () => {
 
         // Verify jobs moved back to queued with incremented retry count
         const jobs = await jobManager.getQueuedJobs();
-        assert.equal(jobs.length, 2);
+        assertEquals(jobs.length, 2);
 
         for (const job of jobs) {
-          assert.equal(job.retryCount, 1);
+          assertEquals(job.retryCount, 1);
         }
 
         await cleanupTestDir();
@@ -658,7 +712,7 @@ describe('jobs.js', () => {
     describe('statistics', () => {
       test('should return correct job statistics', async () => {
         await createTestDir();
-        const baseDir = path.join(TEST_DATA_DIR, 'stats-test');
+        const baseDir = join(TEST_DATA_DIR, 'stats-test');
         const logger = createMockLogger();
         const jobManager = new JobManager({ logger, baseDir });
 
@@ -672,9 +726,9 @@ describe('jobs.js', () => {
 
         const stats = await jobManager.getJobStats();
 
-        assert.equal(stats.queued, 1);
-        assert.equal(stats.active, 2);
-        assert.equal(stats.total, 3);
+        assertEquals(stats.queued, 1);
+        assertEquals(stats.active, 2);
+        assertEquals(stats.total, 3);
 
         await cleanupTestDir();
       });
@@ -684,7 +738,7 @@ describe('jobs.js', () => {
   describe('Integration tests', () => {
     test('should handle complete job lifecycle', async () => {
       await createTestDir();
-      const baseDir = path.join(TEST_DATA_DIR, 'integration-test');
+      const baseDir = join(TEST_DATA_DIR, 'integration-test');
       const logger = createMockLogger();
       const jobManager = new JobManager({ logger, baseDir });
 
@@ -692,12 +746,12 @@ describe('jobs.js', () => {
 
       // Create job
       const job = await jobManager.createJob(url, { title: 'Test Video' });
-      assert.equal(job.state, JobState.QUEUED);
+      assertEquals(job.state, JobState.QUEUED);
 
       // Move to active
       await jobManager.moveJob(job.id, JobState.ACTIVE);
       let currentJob = await jobManager.getJob(job.id);
-      assert.equal(currentJob.state, JobState.ACTIVE);
+      assertEquals(currentJob.state, JobState.ACTIVE);
 
       // Update during processing
       await jobManager.updateJob(job.id, {
@@ -708,20 +762,20 @@ describe('jobs.js', () => {
       // Complete successfully - in real app, job would be deleted
       // For this test, just verify it's in active state
       currentJob = await jobManager.getJob(job.id);
-      assert.equal(currentJob.state, JobState.ACTIVE);
-      assert.equal(currentJob.title, 'Updated Video Title');
+      assertEquals(currentJob.state, JobState.ACTIVE);
+      assertEquals(currentJob.title, 'Updated Video Title');
 
       // Verify final state
       const stats = await jobManager.getJobStats();
-      assert.equal(stats.active, 1);
-      assert.equal(stats.total, 1);
+      assertEquals(stats.active, 1);
+      assertEquals(stats.total, 1);
 
       await cleanupTestDir();
     });
 
     test('should handle job failure and retry workflow', async () => {
       await createTestDir();
-      const baseDir = path.join(TEST_DATA_DIR, 'retry-workflow-test');
+      const baseDir = join(TEST_DATA_DIR, 'retry-workflow-test');
       const logger = createMockLogger();
       const jobManager = new JobManager({ logger, baseDir, maxRetries: 2 });
 
@@ -734,10 +788,10 @@ describe('jobs.js', () => {
       // First failure
       const retriedJob = await jobManager.handleJobFailure(
         job.id,
-        new Error('Network error')
+        new Error('Network error'),
       );
-      assert.equal(retriedJob.retryCount, 1);
-      assert.equal(retriedJob.state, JobState.QUEUED);
+      assertEquals(retriedJob.retryCount, 1);
+      assertEquals(retriedJob.state, JobState.QUEUED);
 
       // Move to active again
       await jobManager.moveJob(job.id, JobState.ACTIVE);
@@ -745,23 +799,23 @@ describe('jobs.js', () => {
       // Second failure (max retries reached)
       const finalResult = await jobManager.handleJobFailure(
         job.id,
-        new Error('Persistent error')
+        new Error('Persistent error'),
       );
-      assert.equal(finalResult, null);
+      assertEquals(finalResult, null);
 
       // Verify job is moved to failed directory
       const failedJob = await jobManager.getJob(job.id);
-      assert.ok(failedJob, 'Job should exist in failed directory');
-      assert.equal(failedJob.state, JobState.FAILED);
-      assert.equal(failedJob.metadata.lastError, 'Persistent error');
-      assert.ok(failedJob.metadata.failedAt, 'Should have failedAt timestamp');
+      assert(failedJob, 'Job should exist in failed directory');
+      assertEquals(failedJob.state, JobState.FAILED);
+      assertEquals(failedJob.metadata.lastError, 'Persistent error');
+      assert(failedJob.metadata.failedAt, 'Should have failedAt timestamp');
 
       await cleanupTestDir();
     });
 
     test('should handle concurrent job operations', async () => {
       await createTestDir();
-      const baseDir = path.join(TEST_DATA_DIR, 'concurrent-test');
+      const baseDir = join(TEST_DATA_DIR, 'concurrent-test');
       const logger = createMockLogger();
       const jobManager = new JobManager({ logger, baseDir });
 
@@ -773,10 +827,10 @@ describe('jobs.js', () => {
       ];
 
       const jobs = await Promise.all(
-        urls.map((url) => jobManager.createJob(url))
+        urls.map((url) => jobManager.createJob(url)),
       );
 
-      assert.equal(jobs.length, 3);
+      assertEquals(jobs.length, 3);
 
       // Move jobs to different states concurrently
       await Promise.all([
@@ -791,16 +845,16 @@ describe('jobs.js', () => {
         jobManager.getQueuedJobs(),
       ]);
 
-      assert.equal(activeJobs.length, 2);
-      assert.equal(queuedJobs.length, 1);
-      assert.equal(queuedJobs[0].title, 'Updated Title');
+      assertEquals(activeJobs.length, 2);
+      assertEquals(queuedJobs.length, 1);
+      assertEquals(queuedJobs[0].title, 'Updated Title');
 
       await cleanupTestDir();
     });
 
     test('should handle async title enhancement workflow', async () => {
       await createTestDir();
-      const baseDir = path.join(TEST_DATA_DIR, 'title-enhancement-test');
+      const baseDir = join(TEST_DATA_DIR, 'title-enhancement-test');
       const logger = createMockLogger();
       const jobManager = new JobManager({ logger, baseDir });
 
@@ -808,29 +862,29 @@ describe('jobs.js', () => {
 
       // Create job without title (simulating instant job creation)
       const job = await jobManager.createJob(url);
-      assert.equal(job.title, null);
-      assert.equal(job.state, JobState.QUEUED);
+      assertEquals(job.title, null);
+      assertEquals(job.state, JobState.QUEUED);
 
       // Simulate title enhancement service updating the job
       await jobManager.updateJob(job.id, { title: 'Enhanced Video Title' });
 
       // Verify title was updated
       const updatedJob = await jobManager.getJob(job.id);
-      assert.equal(updatedJob.title, 'Enhanced Video Title');
-      assert.equal(updatedJob.state, JobState.QUEUED);
+      assertEquals(updatedJob.title, 'Enhanced Video Title');
+      assertEquals(updatedJob.state, JobState.QUEUED);
 
       // Verify job can still be processed normally
       await jobManager.moveJob(job.id, JobState.ACTIVE);
       const activeJob = await jobManager.getJob(job.id);
-      assert.equal(activeJob.state, JobState.ACTIVE);
-      assert.equal(activeJob.title, 'Enhanced Video Title');
+      assertEquals(activeJob.state, JobState.ACTIVE);
+      assertEquals(activeJob.title, 'Enhanced Video Title');
 
       await cleanupTestDir();
     });
 
     test('should handle race condition during title enhancement', async () => {
       await createTestDir();
-      const baseDir = path.join(TEST_DATA_DIR, 'race-condition-test');
+      const baseDir = join(TEST_DATA_DIR, 'race-condition-test');
       const logger = createMockLogger();
       const jobManager = new JobManager({ logger, baseDir });
 
@@ -838,7 +892,7 @@ describe('jobs.js', () => {
 
       // Create job
       const job = await jobManager.createJob(url);
-      assert.equal(job.title, null);
+      assertEquals(job.title, null);
 
       // Simulate race condition: move job to active before title enhancement
       await jobManager.moveJob(job.id, JobState.ACTIVE);
@@ -849,15 +903,15 @@ describe('jobs.js', () => {
 
       // Verify title was updated even though job became active
       const updatedJob = await jobManager.getJob(job.id);
-      assert.equal(updatedJob.title, 'Late Enhanced Title');
-      assert.equal(updatedJob.state, JobState.ACTIVE);
+      assertEquals(updatedJob.title, 'Late Enhanced Title');
+      assertEquals(updatedJob.state, JobState.ACTIVE);
 
       await cleanupTestDir();
     });
 
     test('should handle multiple jobs with title enhancement', async () => {
       await createTestDir();
-      const baseDir = path.join(TEST_DATA_DIR, 'multiple-enhancement-test');
+      const baseDir = join(TEST_DATA_DIR, 'multiple-enhancement-test');
       const logger = createMockLogger();
       const jobManager = new JobManager({ logger, baseDir });
 
@@ -869,13 +923,13 @@ describe('jobs.js', () => {
 
       // Create jobs without titles
       const jobs = await Promise.all(
-        urls.map((url) => jobManager.createJob(url))
+        urls.map((url) => jobManager.createJob(url)),
       );
 
       // Verify all jobs created without titles
       for (const job of jobs) {
-        assert.equal(job.title, null);
-        assert.equal(job.state, JobState.QUEUED);
+        assertEquals(job.title, null);
+        assertEquals(job.state, JobState.QUEUED);
       }
 
       // Simulate title enhancement for some jobs
@@ -887,15 +941,15 @@ describe('jobs.js', () => {
 
       // Verify enhancement results
       const enhancedJobs = await jobManager.getQueuedJobs();
-      assert.equal(enhancedJobs.length, 3);
+      assertEquals(enhancedJobs.length, 3);
 
       const job1 = enhancedJobs.find((j) => j.url === urls[0]);
       const job2 = enhancedJobs.find((j) => j.url === urls[1]);
       const job3 = enhancedJobs.find((j) => j.url === urls[2]);
 
-      assert.equal(job1.title, 'Enhanced Video 1');
-      assert.equal(job2.title, 'Enhanced Video 2');
-      assert.equal(job3.title, null);
+      assertEquals(job1.title, 'Enhanced Video 1');
+      assertEquals(job2.title, 'Enhanced Video 2');
+      assertEquals(job3.title, null);
 
       await cleanupTestDir();
     });

@@ -107,8 +107,9 @@ class ToastSystem {
    * @param {Object} toast - Toast object
    */
   dismissToast(toast) {
-    if (!toast.element || toast.element.classList.contains('dismissing'))
+    if (!toast.element || toast.element.classList.contains('dismissing')) {
       return;
+    }
 
     // Clear timers
     if (toast.timeout) clearTimeout(toast.timeout);
@@ -186,10 +187,10 @@ class ToastSystem {
 }
 
 // Create global toast system instance
-window.toastSystem = new ToastSystem();
+globalThis.toastSystem = new ToastSystem();
 
 // Convenience functions for global access
-window.showToast = (type, message, duration, notificationId) =>
-  window.toastSystem.showToast(type, message, duration, notificationId);
-window.dismissToastById = (toastId) =>
-  window.toastSystem.dismissToastById(toastId);
+globalThis.showToast = (type, message, duration, notificationId) =>
+  globalThis.toastSystem.showToast(type, message, duration, notificationId);
+globalThis.dismissToastById = (toastId) =>
+  globalThis.toastSystem.dismissToastById(toastId);

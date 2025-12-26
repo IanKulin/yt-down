@@ -4,19 +4,22 @@ This file provides guidance when working with code in this repository.
 
 ## Development Commands
 
-- `npm install` - Install dependencies
-- `npm test` - Run test suite using Node.js built-in test runner
-- `npm run lint` - Lint codebase with ESLint (max 0 warnings)
-- `npm run format` - Format code with Prettier
-- `npm run docker:build` - Build local Docker images
-- `npm run docker:push` - Build and push Docker images to registry
-- `LOG_LEVEL=debug npm start` - start app with debugging logs
+- Dependencies are auto-downloaded by Deno (no install step needed)
+- `deno task test` - Run test suite using Deno's built-in test runner
+- `deno task lint` - Lint codebase with Deno's built-in linter
+- `deno task format` - Format code with Deno's built-in formatter
+- `deno task docker:build` - Build local Docker images
+- `deno task docker:push` - Build and push Docker images to registry
+- `LOG_LEVEL=debug deno task start` - start app with debugging logs
 
-IMPORTANT: Check tests pass at the start of each session, and at the end of each change, always lint, test and format.
+IMPORTANT: Check tests pass at the start of each session, and at the end of each
+change, always lint, test and format.
 
 ## Architecture Overview
 
-This is a Node.js web application that provides a queue-based system for downloading videos using `yt-dlp`. The application uses a file-based storage system and processes downloads in the background.
+This is a Deno web application that provides a queue-based system for
+downloading videos using `yt-dlp`. The application uses a file-based storage
+system and processes downloads in the background.
 
 ### Core Components
 
@@ -47,24 +50,34 @@ This is a Node.js web application that provides a queue-based system for downloa
 **Jobs System (`lib/jobs.js`)**
 
 - Provides Job class for structured download job management with validation
-- JobManager handles job lifecycle, state transitions, and atomic file operations
+- JobManager handles job lifecycle, state transitions, and atomic file
+  operations
 - Manages job retry logic with configurable retry limits
-- Supports job metadata, title updates, and duplicate prevention for active jobs only
+- Supports job metadata, title updates, and duplicate prevention for active jobs
+  only
 - Provides cleanup functionality for interrupted jobs on application restart
 - Uses job lifecycle: queued → active → deleted
 
 **Service Layer (`lib/services/`)**
 
-- **JobService**: Abstracts job operations from route handlers - job creation, deletion, cancellation, and status retrieval; broadcasts WebSocket notifications
-- **DownloadService**: Handles file operations with security validation, download preparation, and file management
-- **NotificationService**: Centralizes notification management - creation, retrieval, and dismissal of notifications; broadcasts WebSocket notifications
-- **SettingsService**: Manages settings validation, normalization, and persistence with support for different input formats
-- **TitleEnhancementService**: Background service that automatically fetches video titles for queued jobs using yt-dlp
-- Services are injected into route handlers via Hono context for clean separation of concerns
+- **JobService**: Abstracts job operations from route handlers - job creation,
+  deletion, cancellation, and status retrieval; broadcasts WebSocket
+  notifications
+- **DownloadService**: Handles file operations with security validation,
+  download preparation, and file management
+- **NotificationService**: Centralizes notification management - creation,
+  retrieval, and dismissal of notifications; broadcasts WebSocket notifications
+- **SettingsService**: Manages settings validation, normalization, and
+  persistence with support for different input formats
+- **TitleEnhancementService**: Background service that automatically fetches
+  video titles for queued jobs using yt-dlp
+- Services are injected into route handlers via Hono context for clean
+  separation of concerns
 
 **File-Based Queue System**
 
-Each "Download Job" is a small JSON file containing the URL. They are moved through these directories to represent the app state.
+Each "Download Job" is a small JSON file containing the URL. They are moved
+through these directories to represent the app state.
 
 - `data/jobs/queued/` - Pending downloads
 - `data/jobs/active/` - Currently downloading
@@ -72,36 +85,45 @@ Each "Download Job" is a small JSON file containing the URL. They are moved thro
 
 **Download Progress System**
 
-The "currently downloading" and "finished downloading" locations are split up to facilitate cleanups of partially downloaded media after failures
+The "currently downloading" and "finished downloading" locations are split up to
+facilitate cleanups of partially downloaded media after failures
 
 - `data/partials` - Currently downloading partial files
-- `downloads` - Downloaded video/subtitle files (top-level directory for separate bind mount)
+- `downloads` - Downloaded video/subtitle files (top-level directory for
+  separate bind mount)
 
 ### Routes Structure
 
 - `/` - Queue management interface (queue.js) - uses JobService
 - `/downloads` - Downloaded files browser (downloads.js) - uses DownloadService
 - `/settings` - Configuration page (settings.js) - uses SettingsService
-- `/api/state` - Application state endpoint (api.js) - uses JobService and NotificationService; returns queued/active jobs
-- `/api/notifications/dismiss` - Notification management (api.js) - uses NotificationService
+- `/api/state` - Application state endpoint (api.js) - uses JobService and
+  NotificationService; returns queued/active jobs
+- `/api/notifications/dismiss` - Notification management (api.js) - uses
+  NotificationService
 
 ### View Templates (`views/`)
 
-- `queue.ejs` - Main queue interface with real-time progress updates via WebSocket
-- `downloads.ejs` - Downloaded files management interface with WebSocket notifications
+- `queue.ejs` - Main queue interface with real-time progress updates via
+  WebSocket
+- `downloads.ejs` - Downloaded files management interface with WebSocket
+  notifications
 - `settings.ejs` - Settings configuration interface with WebSocket notifications
 - `partials/header.ejs` - Shared header partial with navigation
 
 ### Key Patterns
 
-**Service Layer Architecture**: Business logic separated from HTTP concerns using service classes
-**Real-time Updates**: WebSocket-based change notifications with automatic fallback to polling for reliability
-**Error Handling**: Services handle business logic errors; error notifications sent via WebSocket
-**File Operations**: DownloadService centralizes security validation and file operations
-**Progress Tracking**: Real-time parsing of yt-dlp output with fragment and regular progress detection; broadcasts progress via WebSocket
-**Background Enhancement**: TitleEnhancementService asynchronously fetches video titles for queued jobs without blocking download processing
-**Notification System**: Unified WebSocket-based notification system
-**Dependency Injection**: Services injected via Hono context for clean testability
+**Service Layer Architecture**: Business logic separated from HTTP concerns
+using service classes **Real-time Updates**: WebSocket-based change
+notifications with automatic fallback to polling for reliability **Error
+Handling**: Services handle business logic errors; error notifications sent via
+WebSocket **File Operations**: DownloadService centralizes security validation
+and file operations **Progress Tracking**: Real-time parsing of yt-dlp output
+with fragment and regular progress detection; broadcasts progress via WebSocket
+**Background Enhancement**: TitleEnhancementService asynchronously fetches video
+titles for queued jobs without blocking download processing **Notification
+System**: Unified WebSocket-based notification system **Dependency Injection**:
+Services injected via Hono context for clean testability
 
 ### Environment Variables
 
@@ -113,19 +135,24 @@ The "currently downloading" and "finished downloading" locations are split up to
 Title enhancement service configuration in `data/settings.json`:
 
 - `titleEnhancement.enabled` - Enable/disable title enhancement (default: true)
-- `titleEnhancement.maxConcurrent` - Maximum concurrent title extractions (default: 2)
-- `titleEnhancement.pollInterval` - Polling interval in milliseconds (default: 2000)
-- `titleEnhancement.timeout` - Timeout per title extraction in milliseconds (default: 15000)
+- `titleEnhancement.maxConcurrent` - Maximum concurrent title extractions
+  (default: 2)
+- `titleEnhancement.pollInterval` - Polling interval in milliseconds
+  (default: 2000)
+- `titleEnhancement.timeout` - Timeout per title extraction in milliseconds
+  (default: 15000)
 
 ### Docker Deployment
 
-The application is designed for Docker deployment with docker-compose.yaml. The Docker image includes yt-dlp and all necessary dependencies.
+The application is designed for Docker deployment with docker-compose.yaml. The
+Docker image includes yt-dlp and all necessary dependencies.
 
 ## Testing & Debugging
 
 ### Tests
 
-Tests are located in `test/` directory and use Node.js built-in test runner. Key test files:
+Tests are located in `test/` directory and use Deno's built-in test runner. Key
+test files:
 
 - `queueProcessor.test.js` - Core download processing logic and configuration
 - `jobs.test.js` - Job system, JobManager, and lifecycle management
@@ -135,22 +162,24 @@ Tests are located in `test/` directory and use Node.js built-in test runner. Key
 - `errorHandler.test.js` - Error handling middleware and response formatting
 - `errors.test.js` - Custom error classes and error structures
 - `validators.test.js` - Input validation functions
-- `titleEnhancementService.test.js` - Background title enhancement service functionality
+- `titleEnhancementService.test.js` - Background title enhancement service
+  functionality
 - `helpers.js` - Test utilities and shared testing functions
 
 **Running tests:**
 
-- `npm test` - Run all tests
-- `npm test -- test/api.test.js` - Run specific test file
-- Tests use Node.js built-in test runner with concurrency set to 1
+- `deno task test` - Run all tests
+- `deno test --allow-all test/api.test.js` - Run specific test file
+- Tests use Deno's built-in test runner with concurrency set to 1
 
 **Debug logging:**
 
-- `LOG_LEVEL=debug node server.js 2>&1 | tee temp/app.log`
+- `LOG_LEVEL=debug deno task start 2>&1 | tee temp/app.log`
 
 ### Tool use
 
 - use the `temp` directory to store logs
-- use the `temp` directory to write any disposable node or bash scripts you need, or for saving screenshots
+- use the `temp` directory to write any disposable node or bash scripts you
+  need, or for saving screenshots
 - assume a MacOS environment for CLI tools
 - Playwright MCP is available for screenshots of the UI

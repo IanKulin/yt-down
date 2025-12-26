@@ -1,19 +1,33 @@
-import { describe, it, beforeEach, mock } from 'node:test';
-import assert from 'node:assert';
-import { handleError, createErrorResponse } from '../lib/errorHandler.js';
-import { ValidationError, NotFoundError } from '../lib/errors.js';
+import { beforeEach, describe, it } from '@std/testing/bdd';
+import { assert, assertEquals } from '@std/assert';
+import { createErrorResponse, handleError } from '../lib/errorHandler.js';
+import { NotFoundError, ValidationError } from '../lib/errors.js';
+
+// Simple mock function helper for Deno
+function createMockFn(impl) {
+  const calls = [];
+  const fn = (...args) => {
+    calls.push({ arguments: args });
+    return impl ? impl(...args) : undefined;
+  };
+  fn.mock = {
+    calls,
+    callCount: () => calls.length,
+  };
+  return fn;
+}
 
 describe('Error Handler', () => {
   let c;
 
   beforeEach(() => {
     const mockLogger = {
-      error: mock.fn(),
+      error: createMockFn(),
     };
 
     const mockServices = {
       notifications: {
-        addNotification: mock.fn(() => Promise.resolve()),
+        addNotification: createMockFn(() => Promise.resolve()),
       },
     };
 
@@ -21,16 +35,16 @@ describe('Error Handler', () => {
       req: {
         method: 'GET',
         path: '/test',
-        header: mock.fn(() => '/'),
+        header: createMockFn(() => '/'),
       },
-      get: mock.fn((key) => {
+      get: createMockFn((key) => {
         if (key === 'logger') return mockLogger;
         if (key === 'services') return mockServices;
         return null;
       }),
-      json: mock.fn(),
-      redirect: mock.fn(),
-      html: mock.fn(),
+      json: createMockFn(),
+      redirect: createMockFn(),
+      html: createMockFn(),
     };
   });
 
@@ -39,26 +53,26 @@ describe('Error Handler', () => {
       const error = new ValidationError('Invalid input');
       const response = createErrorResponse(error, c);
 
-      assert.strictEqual(response.error, 'Invalid input');
-      assert.strictEqual(response.statusCode, 400);
-      assert.ok(response.timestamp);
+      assertEquals(response.error, 'Invalid input');
+      assertEquals(response.statusCode, 400);
+      assert(response.timestamp);
     });
 
     it('should create generic error response for non-operational errors', () => {
       const error = new Error('Internal error');
       const response = createErrorResponse(error, c);
 
-      assert.strictEqual(response.error, 'Something went wrong');
-      assert.strictEqual(response.statusCode, 500);
-      assert.ok(response.timestamp);
+      assertEquals(response.error, 'Something went wrong');
+      assertEquals(response.statusCode, 500);
+      assert(response.timestamp);
     });
 
     it('should handle errors with custom status codes', () => {
       const error = new NotFoundError('Resource not found');
       const response = createErrorResponse(error, c);
 
-      assert.strictEqual(response.error, 'Resource not found');
-      assert.strictEqual(response.statusCode, 404);
+      assertEquals(response.error, 'Resource not found');
+      assertEquals(response.statusCode, 404);
     });
   });
 
@@ -69,12 +83,12 @@ describe('Error Handler', () => {
 
       await handleError(error, c);
 
-      assert.strictEqual(c.json.mock.callCount(), 1);
-      assert.strictEqual(
+      assertEquals(c.json.mock.callCount(), 1);
+      assertEquals(
         c.json.mock.calls[0].arguments[0].error,
-        'Invalid data'
+        'Invalid data',
       );
-      assert.strictEqual(c.json.mock.calls[0].arguments[1], 400);
+      assertEquals(c.json.mock.calls[0].arguments[1], 400);
     });
 
     it('should handle web route errors with notification and redirect', async () => {
@@ -83,20 +97,20 @@ describe('Error Handler', () => {
       await handleError(error, c);
 
       const mockServices = c.get('services');
-      assert.strictEqual(
+      assertEquals(
         mockServices.notifications.addNotification.mock.callCount(),
-        1
+        1,
       );
-      assert.strictEqual(
+      assertEquals(
         mockServices.notifications.addNotification.mock.calls[0].arguments[0],
-        'error'
+        'error',
       );
-      assert.strictEqual(
+      assertEquals(
         mockServices.notifications.addNotification.mock.calls[0].arguments[1],
-        'Invalid input'
+        'Invalid input',
       );
-      assert.strictEqual(c.redirect.mock.callCount(), 1);
-      assert.strictEqual(c.redirect.mock.calls[0].arguments[0], '/');
+      assertEquals(c.redirect.mock.callCount(), 1);
+      assertEquals(c.redirect.mock.calls[0].arguments[0], '/');
     });
 
     it('should log errors with proper context', async () => {
@@ -105,9 +119,9 @@ describe('Error Handler', () => {
       await handleError(error, c);
 
       const mockLogger = c.get('logger');
-      assert.strictEqual(mockLogger.error.mock.callCount(), 1);
-      assert.ok(
-        mockLogger.error.mock.calls[0].arguments[0].includes('GET /test')
+      assertEquals(mockLogger.error.mock.callCount(), 1);
+      assert(
+        mockLogger.error.mock.calls[0].arguments[0].includes('GET /test'),
       );
     });
   });

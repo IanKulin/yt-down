@@ -1,17 +1,26 @@
 # yt-down
 
-A web application for queueing and managing video downloads from various sources with `yt-dlp`. Particularly suitable for self-hosting.
+A web application for queueing and managing video downloads from various sources
+with `yt-dlp`. Particularly suitable for self-hosting.
 
 ## Features
 
-- **Web Interface**: Manage your download queue, view completed downloads, and adjust settings from a web UI.
-- **Queue System**: Add URLs to a queue for background processing. The app prevents duplicate URLs and tracks the state of each download including showing a progress bar.
-- **Customisable Settings**: Configure video quality, subtitles, and download speed limits.
-- **Automatic Processing**: The application automatically processes the queue in the background, downloading one file at a time.
+- **Web Interface**: Manage your download queue, view completed downloads, and
+  adjust settings from a web UI.
+- **Queue System**: Add URLs to a queue for background processing. The app
+  prevents duplicate URLs and tracks the state of each download including
+  showing a progress bar.
+- **Customisable Settings**: Configure video quality, subtitles, and download
+  speed limits.
+- **Automatic Processing**: The application automatically processes the queue in
+  the background, downloading one file at a time.
 
 ## Installation
 
-This application is designed to be run with Docker and Docker Compose. It could be cloned and run directly with Node.js (v22+) but because of it's close dependency on particular versions of yt-dlp and ffmpeg, Docker deployment is highly recommended.
+This application is designed to be run with Docker and Docker Compose. It could
+be cloned and run directly with Node.js (v22+) but because of it's close
+dependency on particular versions of yt-dlp and ffmpeg, Docker deployment is
+highly recommended.
 
 ### Prerequisites
 
@@ -19,11 +28,13 @@ This application is designed to be run with Docker and Docker Compose. It could 
 
 ### Running the Application
 
-1.  **Create the docker-compose.yaml file:**
+1. **Create the docker-compose.yaml file:**
 
-- copy from [github](https://github.com/IanKulin/yt-down/blob/main/docker-compose.yaml) and save it to your working directory
+- copy from
+  [github](https://github.com/IanKulin/yt-down/blob/main/docker-compose.yaml)
+  and save it to your working directory
 - create the `data` and `downloads` directory
-- ` docker compose up`
+- `docker compose up`
 
 ### Docker Volume Configuration
 
@@ -32,7 +43,9 @@ The default `docker-compose.yaml` file mounts two directories:
 - `./data:/app/data` - Application state (jobs, settings, partial downloads)
 - `./downloads:/app/downloads` - Finished downloads
 
-This structure allows you to mount the downloads directory to a separate location, such as a different drive or network storage, while keeping the application data local. For example:
+This structure allows you to mount the downloads directory to a separate
+location, such as a different drive or network storage, while keeping the
+application data local. For example:
 
 ```yaml
 volumes:
@@ -42,17 +55,31 @@ volumes:
 
 ## Developing
 
-See separate [README-ARCHITECTURE.md](https://github.com/IanKulin/yt-down/blob/main/README-ARCHITECTURE.md).
+See separate
+[README-ARCHITECTURE.md](https://github.com/IanKulin/yt-down/blob/main/README-ARCHITECTURE.md).
+
+Deno commands:
+
+```bash
+deno task start         # Start the server
+deno task dev           # Start with watch mode
+deno task test          # Run tests
+deno task lint          # Lint code  
+deno task format        # Format code
+deno task docker:build  # Build Docker image
+```
 
 ## Legal
 
 ### License
 
-This app is licensed under the [MIT License](https://github.com/IanKulin/yt-down/blob/main/LICENSE.md).
+This app is licensed under the
+[MIT License](https://github.com/IanKulin/yt-down/blob/main/LICENSE.md).
 
 ### Third-Party Licenses
 
-SVG symbols used in this app are from [Lucide](https://lucide.dev/), licensed under the [ISC License](https://lucide.dev/license).
+SVG symbols used in this app are from [Lucide](https://lucide.dev/), licensed
+under the [ISC License](https://lucide.dev/license).
 
 ### AI Disclosure
 
@@ -62,3 +89,4 @@ AI coding tools were used in the production of this app
 
 - 1.2.0 - convert to Hono
 - 1.2.1 - bugfix API not returning JSON for settings
+- 1.3.0 - initial Deno conversion

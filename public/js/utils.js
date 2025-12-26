@@ -71,7 +71,7 @@ class Utils {
     if (typeof obj === 'object') {
       const cloned = {};
       for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
+        if (Object.hasOwn(obj, key)) {
           cloned[key] = Utils.deepClone(obj[key]);
         }
       }
@@ -90,8 +90,9 @@ class Utils {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        (globalThis.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <=
+        (globalThis.innerWidth || document.documentElement.clientWidth)
     );
   }
 
@@ -101,8 +102,9 @@ class Utils {
    * @param {Object} options - Scroll options
    */
   static scrollToElement(target, options = {}) {
-    const element =
-      typeof target === 'string' ? document.querySelector(target) : target;
+    const element = typeof target === 'string'
+      ? document.querySelector(target)
+      : target;
     if (!element) return;
 
     const defaultOptions = {
@@ -120,7 +122,7 @@ class Utils {
    * @returns {string|null} Parameter value or null if not found
    */
   static getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(globalThis.location.search);
     return urlParams.get(param);
   }
 
@@ -131,13 +133,13 @@ class Utils {
    * @param {boolean} replaceHistory - Whether to replace history state
    */
   static setQueryParam(param, value, replaceHistory = true) {
-    const url = new URL(window.location);
+    const url = new URL(globalThis.location);
     url.searchParams.set(param, value);
 
     if (replaceHistory) {
-      window.history.replaceState({}, '', url);
+      globalThis.history.replaceState({}, '', url);
     } else {
-      window.history.pushState({}, '', url);
+      globalThis.history.pushState({}, '', url);
     }
   }
 
@@ -147,13 +149,13 @@ class Utils {
    * @param {boolean} replaceHistory - Whether to replace history state
    */
   static removeQueryParam(param, replaceHistory = true) {
-    const url = new URL(window.location);
+    const url = new URL(globalThis.location);
     url.searchParams.delete(param);
 
     if (replaceHistory) {
-      window.history.replaceState({}, '', url);
+      globalThis.history.replaceState({}, '', url);
     } else {
-      window.history.pushState({}, '', url);
+      globalThis.history.pushState({}, '', url);
     }
   }
 
@@ -215,8 +217,8 @@ class Utils {
    * @param {string} message - Error message
    */
   static showApiError(message) {
-    if (window.showToast) {
-      window.showToast('error', message, 10000);
+    if (globalThis.showToast) {
+      globalThis.showToast('error', message, 10000);
     } else {
       console.error('API Error:', message);
     }
@@ -227,8 +229,8 @@ class Utils {
    * @param {string} message - Success message
    */
   static showSuccess(message) {
-    if (window.showToast) {
-      window.showToast('success', message, 5000);
+    if (globalThis.showToast) {
+      globalThis.showToast('success', message, 5000);
     } else {
       console.log('Success:', message);
     }
@@ -236,9 +238,9 @@ class Utils {
 }
 
 // Make utility functions available globally
-window.Utils = Utils;
+globalThis.Utils = Utils;
 
 // Create convenience functions for backward compatibility
-window.escapeHtml = Utils.escapeHtml;
-window.formatFileSize = Utils.formatFileSize;
-window.showApiError = Utils.showApiError;
+globalThis.escapeHtml = Utils.escapeHtml;
+globalThis.formatFileSize = Utils.formatFileSize;
+globalThis.showApiError = Utils.showApiError;

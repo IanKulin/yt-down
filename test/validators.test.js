@@ -1,9 +1,9 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+import { describe, it } from '@std/testing/bdd';
+import { assertEquals, assertThrows } from '@std/assert';
 import {
-  validateUrl,
   validateFilename,
   validateSettings,
+  validateUrl,
 } from '../lib/validators.js';
 import { ValidationError } from '../lib/errors.js';
 
@@ -18,14 +18,14 @@ describe('Validators', () => {
 
       validUrls.forEach((url) => {
         const result = validateUrl(url);
-        assert.strictEqual(result, url);
+        assertEquals(result, url);
       });
     });
 
     it('should trim whitespace from URLs', () => {
       const url = '  https://example.com  ';
       const result = validateUrl(url);
-      assert.strictEqual(result, 'https://example.com');
+      assertEquals(result, 'https://example.com');
     });
 
     it('should throw ValidationError for invalid URLs', () => {
@@ -40,26 +40,26 @@ describe('Validators', () => {
       ];
 
       invalidUrls.forEach((url) => {
-        assert.throws(() => validateUrl(url), ValidationError);
+        assertThrows(() => validateUrl(url), ValidationError);
       });
     });
 
     it('should throw ValidationError for null/undefined URLs', () => {
       [null, undefined].forEach((url) => {
-        assert.throws(() => validateUrl(url), ValidationError);
+        assertThrows(() => validateUrl(url), ValidationError);
       });
     });
 
     it('should throw ValidationError for URLs longer than 2048 characters', () => {
       const longUrl = 'https://example.com/' + 'a'.repeat(2050);
-      assert.throws(() => validateUrl(longUrl), ValidationError);
+      assertThrows(() => validateUrl(longUrl), ValidationError);
     });
 
     it('should accept URLs at the 2048 character limit', () => {
       const baseUrl = 'https://example.com/';
       const maxLengthUrl = baseUrl + 'a'.repeat(2048 - baseUrl.length);
       const result = validateUrl(maxLengthUrl);
-      assert.strictEqual(result, maxLengthUrl);
+      assertEquals(result, maxLengthUrl);
     });
   });
 
@@ -76,14 +76,14 @@ describe('Validators', () => {
 
       validFilenames.forEach((filename) => {
         const result = validateFilename(filename);
-        assert.strictEqual(result, filename);
+        assertEquals(result, filename);
       });
     });
 
     it('should trim whitespace from filenames', () => {
       const filename = '  video.mp4  ';
       const result = validateFilename(filename);
-      assert.strictEqual(result, 'video.mp4');
+      assertEquals(result, 'video.mp4');
     });
 
     it('should throw ValidationError for directory traversal attempts', () => {
@@ -101,7 +101,7 @@ describe('Validators', () => {
       ];
 
       maliciousFilenames.forEach((filename) => {
-        assert.throws(() => validateFilename(filename), ValidationError);
+        assertThrows(() => validateFilename(filename), ValidationError);
       });
     });
 
@@ -118,17 +118,17 @@ describe('Validators', () => {
 
       validFilenames.forEach((filename) => {
         const result = validateFilename(filename);
-        assert.strictEqual(
+        assertEquals(
           result,
           filename,
-          `Expected "${filename}" to be valid`
+          `Expected "${filename}" to be valid`,
         );
       });
     });
 
     it('should throw ValidationError for empty/null filenames', () => {
       ['', '   ', null, undefined].forEach((filename) => {
-        assert.throws(() => validateFilename(filename), ValidationError);
+        assertThrows(() => validateFilename(filename), ValidationError);
       });
     });
   });
@@ -142,7 +142,7 @@ describe('Validators', () => {
       };
 
       const result = validateSettings(validSettings);
-      assert.deepStrictEqual(result, validSettings);
+      assertEquals(result, validSettings);
     });
 
     it('should validate settings with missing optional fields', () => {
@@ -151,12 +151,12 @@ describe('Validators', () => {
       };
 
       const result = validateSettings(partialSettings);
-      assert.deepStrictEqual(result, partialSettings);
+      assertEquals(result, partialSettings);
     });
 
     it('should throw ValidationError for invalid settings object', () => {
       [null, undefined, 'string', 123, []].forEach((settings) => {
-        assert.throws(() => validateSettings(settings), ValidationError);
+        assertThrows(() => validateSettings(settings), ValidationError);
       });
     });
 
@@ -165,7 +165,7 @@ describe('Validators', () => {
         quality: 123,
       };
 
-      assert.throws(() => validateSettings(invalidSettings), ValidationError);
+      assertThrows(() => validateSettings(invalidSettings), ValidationError);
     });
 
     it('should throw ValidationError for invalid subtitles type', () => {
@@ -173,7 +173,7 @@ describe('Validators', () => {
         subtitles: 'yes',
       };
 
-      assert.throws(() => validateSettings(invalidSettings), ValidationError);
+      assertThrows(() => validateSettings(invalidSettings), ValidationError);
     });
 
     it('should throw ValidationError for invalid rateLimit', () => {
@@ -186,7 +186,7 @@ describe('Validators', () => {
       ];
 
       invalidSettings.forEach((settings) => {
-        assert.throws(() => validateSettings(settings), ValidationError);
+        assertThrows(() => validateSettings(settings), ValidationError);
       });
     });
 
@@ -196,7 +196,7 @@ describe('Validators', () => {
       };
 
       const result = validateSettings(settings);
-      assert.deepStrictEqual(result, settings);
+      assertEquals(result, settings);
     });
 
     it('should validate string rateLimit values used by the application', () => {
@@ -205,7 +205,7 @@ describe('Validators', () => {
       validRateLimits.forEach((rateLimit) => {
         const settings = { rateLimit };
         const result = validateSettings(settings);
-        assert.deepStrictEqual(result, settings);
+        assertEquals(result, settings);
       });
     });
 
@@ -220,7 +220,7 @@ describe('Validators', () => {
 
       invalidRateLimits.forEach((rateLimit) => {
         const settings = { rateLimit };
-        assert.throws(() => validateSettings(settings), ValidationError);
+        assertThrows(() => validateSettings(settings), ValidationError);
       });
     });
   });

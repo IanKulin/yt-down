@@ -1,19 +1,13 @@
 import { Hono } from 'hono';
-import { serve } from '@hono/node-server';
-import { serveStatic } from '@hono/node-server/serve-static';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { WebSocketServer } from 'ws';
-import { readFileSync } from 'fs';
+import { serveStatic } from 'hono/deno';
+import { dirname } from '@std/path';
 import Logger from '@iankulin/logger';
 import QueueProcessor from './lib/queueProcessor.js';
 import { JobManager } from './lib/jobs.js';
 import { cleanupActiveDownloads } from './lib/utils.js';
 import {
-  JobService,
   DownloadService,
+  JobService,
   NotificationService,
   SettingsService,
   TitleEnhancementService,
@@ -27,38 +21,37 @@ import apiRoutes from './routes/api.js';
 import creditsRoutes from './routes/credits.js';
 import { handleError, notFoundHandler } from './lib/errorHandler.js';
 
-const execAsync = promisify(exec);
+// Import deno.json for version
+import denoConfig from './deno.json' with { type: 'json' };
 
 // Valid log levels for @iankulin/logger (from most to least verbose)
 const validLogLevels = ['silent', 'error', 'warn', 'info', 'debug'];
-const logLevel = process.env.LOG_LEVEL?.toLowerCase() || 'info';
+const logLevel = Deno.env.get('LOG_LEVEL')?.toLowerCase() || 'info';
 
 // Validate log level
 if (!validLogLevels.includes(logLevel)) {
   console.warn(
-    `Invalid LOG_LEVEL "${process.env.LOG_LEVEL}". Using default "info" level. Valid levels: ${validLogLevels.join(', ')}`
+    `Invalid LOG_LEVEL "${
+      Deno.env.get('LOG_LEVEL')
+    }". Using default "info" level. Valid levels: ${validLogLevels.join(', ')}`,
   );
 }
 
 const logger = new Logger({
   format: 'simple',
+  callerLevel: "error",
   level: validLogLevels.includes(logLevel) ? logLevel : 'info',
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(new URL(import.meta.url).pathname);
 
-// Read app version from package.json
-const packageJson = JSON.parse(
-  readFileSync(path.join(__dirname, 'package.json'), 'utf8')
-);
-const appVersion = packageJson.version;
+const appVersion = denoConfig.version;
 
 // Log app version first
 logger.info(`Starting yt-down v${appVersion}`);
 
 const app = new Hono();
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(Deno.env.get('PORT') || '3001');
 
 // Initialize queue processor and job manager
 const queueProcessor = new QueueProcessor({
@@ -71,20 +64,14 @@ const jobManager = new JobManager({
   baseDir: __dirname,
 });
 
-// Create HTTP server first
-const server = serve({
-  fetch: app.fetch,
-  port: PORT,
-});
-
-// Then create WebSocket server using the HTTP server
-const wss = new WebSocketServer({ server });
+// WebSocket clients storage
+const wsClients = new Set();
 
 // Broadcast function to send "changed" message to all connected clients
 const broadcastChange = () => {
   const message = 'changed';
-  wss.clients.forEach((client) => {
-    if (client.readyState === client.OPEN) {
+  wsClients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
       try {
         client.send(message);
       } catch (error) {
@@ -161,7 +148,7 @@ app.use(async (c, next) => {
     await next();
     const duration = Date.now() - start;
     logger.debug(
-      `← ${c.req.method} ${c.req.path} ${c.res.status} ${duration}ms`
+      `← ${c.req.method} ${c.req.path} ${c.res.status} ${duration}ms`,
     );
   } else {
     await next();
@@ -170,16 +157,21 @@ app.use(async (c, next) => {
 
 async function checkYtDlpExists() {
   try {
-    await execAsync('yt-dlp --version');
-    return true;
+    const command = new Deno.Command('yt-dlp', {
+      args: ['--version'],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+    const { code } = await command.output();
+    return code === 0;
   } catch {
     return false;
   }
 }
 
-logger.debug('isTTY:', process.stdout.isTTY);
-logger.debug('Platform:', process.platform);
-logger.debug('Node version:', process.version);
+logger.debug('isTTY:', Deno.stdout.isTerminal());
+logger.debug('Platform:', Deno.build.os);
+logger.debug('Deno version:', Deno.version.deno);
 
 // Web routes
 app.route('/', queueRoutes);
@@ -194,30 +186,15 @@ app.route('/api', apiRoutes);
 app.use(
   '/*',
   serveStatic({
-    root: './public',
-    onFound: (_path, c) => {
-      c.header('Cache-Control', 'public, max-age=21600'); // 6 hours
-    },
-  })
+    root: `${__dirname}/public`,
+    rewriteRequestPath: (path) => path,
+  }),
 );
 
 // Error handling middleware (must be after all routes)
 app.notFound(notFoundHandler);
 app.onError(async (err, c) => {
   return await handleError(err, c);
-});
-
-// WebSocket connection handling
-wss.on('connection', (ws, req) => {
-  logger.debug(`WebSocket client connected from ${req.socket.remoteAddress}`);
-
-  ws.on('close', () => {
-    logger.debug('WebSocket client disconnected');
-  });
-
-  ws.on('error', (error) => {
-    logger.error('WebSocket error:', error);
-  });
 });
 
 // Initialize services after server is ready
@@ -229,9 +206,9 @@ wss.on('connection', (ws, req) => {
   const ytDlpExists = await checkYtDlpExists();
   if (!ytDlpExists) {
     logger.error(
-      'yt-dlp not found in PATH. Please install yt-dlp to use this application.'
+      'yt-dlp not found in PATH. Please install yt-dlp to use this application.',
     );
-    process.exit(1);
+    Deno.exit(1);
   }
 
   logger.info(`yt-dlp queue server running on port ${PORT}`);
@@ -247,16 +224,43 @@ wss.on('connection', (ws, req) => {
 })();
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+Deno.addSignalListener('SIGINT', async () => {
   logger.info('Received SIGINT. Gracefully shutting down...');
   await queueProcessor.stop();
   titleEnhancementService.stop();
-  process.exit(0);
+  Deno.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+Deno.addSignalListener('SIGTERM', async () => {
   logger.info('Received SIGTERM. Gracefully shutting down...');
   await queueProcessor.stop();
   titleEnhancementService.stop();
-  process.exit(0);
+  Deno.exit(0);
+});
+
+// Start HTTP server with WebSocket support
+Deno.serve({ port: PORT }, (req) => {
+  // Check for WebSocket upgrade request
+  if (req.headers.get('upgrade') === 'websocket') {
+    const { socket, response } = Deno.upgradeWebSocket(req);
+
+    socket.onopen = () => {
+      wsClients.add(socket);
+      logger.debug('WebSocket client connected');
+    };
+
+    socket.onclose = () => {
+      wsClients.delete(socket);
+      logger.debug('WebSocket client disconnected');
+    };
+
+    socket.onerror = (error) => {
+      logger.error('WebSocket error:', error);
+    };
+
+    return response;
+  }
+
+  // Handle regular HTTP requests through Hono
+  return app.fetch(req);
 });

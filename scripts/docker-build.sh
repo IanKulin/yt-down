@@ -11,12 +11,12 @@ NC='\033[0m' # No Color
 
 echo -e "${YELLOW}Building Docker images...${NC}"
 
-# Get version from package.json
-VERSION=$(node -pe "require('./package.json').version")
+# Get version from deno.json
+VERSION=$(jq -r .version deno.json)
 IMAGE_NAME="ghcr.io/iankulin/yt-down"
 
 if [ -z "$VERSION" ]; then
-    echo -e "${RED}Error: Could not extract version from package.json${NC}"
+    echo -e "${RED}Error: Could not extract version from deno.json${NC}"
     exit 1
 fi
 

@@ -1,10 +1,14 @@
 # Architecture Guide
 
-This guide explains the architecture of yt-down to help understand and maintain the codebase.
+This guide explains the architecture of yt-down to help understand and maintain
+the codebase.
 
 ## What This Application Does
 
-This is a Node.js web application that provides a queue-based system for downloading videos using `yt-dlp`. Users can add URLs to a queue, and the application processes downloads in the background while providing real-time progress updates.
+This is a Node.js web application that provides a queue-based system for
+downloading videos using `yt-dlp`. Users can add URLs to a queue, and the
+application processes downloads in the background while providing real-time
+progress updates.
 
 **Key Features:**
 
@@ -35,7 +39,8 @@ This is a Node.js web application that provides a queue-based system for downloa
 
 ### 1. QueueProcessor (`lib/queueProcessor.js`)
 
-**Purpose**: The heart of the application - handles background download processing.
+**Purpose**: The heart of the application - handles background download
+processing.
 
 **Key Responsibilities:**
 
@@ -186,7 +191,8 @@ downloads/                # Completed video files
 
 ### Key API Endpoints
 
-- `GET /api/state`: Returns current application state (jobs, progress, notifications)
+- `GET /api/state`: Returns current application state (jobs, progress,
+  notifications)
 - `POST /job/add`: Adds new job to queue
 - `DELETE /job/:id`: Removes job from queue
 - `POST /api/notifications/dismiss`: Dismisses notifications
@@ -202,14 +208,16 @@ downloads/                # Completed video files
 
 ### Front-end JavaScript Architecture
 
-The application uses a modular JavaScript architecture with centralized, cacheable libraries.
+The application uses a modular JavaScript architecture with centralized,
+cacheable libraries.
 
 #### JavaScript Libraries (`public/js/`)
 
 **Core Libraries:**
 
 - `websocket.js`: WebSocket connection management and real-time updates
-- `utils.js`: Utility functions (file size formatting, HTML escaping, debouncing, etc.)
+- `utils.js`: Utility functions (file size formatting, HTML escaping,
+  debouncing, etc.)
 - `toast.js`: Centralized toast notification system with XSS protection
 - `modal.js`: Modal management with keyboard and click-outside-to-close
 - `notifications.js`: Notification checking and state management
@@ -262,7 +270,7 @@ ws.onmessage = (event) => {
 ### Test Patterns
 
 ```javascript
-import { test, before, after } from 'node:test';
+import { after, before, test } from 'node:test';
 import assert from 'node:assert';
 
 test('should process queued jobs', async () => {

@@ -59,7 +59,12 @@
       "Bash(wc:*)",
       "Bash(tree:*)",
       "Bash(cloc:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(cat:*)",
+      "Bash(deno task:*)",
+      "Bash(tee:*)",
+      "Bash(deno lint:*)",
+      "Bash(deno fmt:*)"
     ],
     "deny": [],
     "defaultMode": "plan"

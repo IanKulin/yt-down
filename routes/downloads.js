@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { formatFileSize } from '../lib/utils.js';
 import { renderWithContext } from '../lib/ejsHelper.js';
-import { createReadStream } from 'fs';
 
 const router = new Hono();
 
@@ -29,8 +28,9 @@ router.get('/download/:filename', async (c) => {
     c.header(key, value);
   });
 
-  const fileStream = createReadStream(fileInfo.filePath);
-  return c.body(fileStream);
+  // Open file and stream using Deno
+  const file = await Deno.open(fileInfo.filePath, { read: true });
+  return c.body(file.readable);
 });
 
 router.post('/file/delete', async (c) => {

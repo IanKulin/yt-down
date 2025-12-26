@@ -1,5 +1,6 @@
-import { test, describe } from 'node:test';
-import { strict as assert } from 'node:assert';
+// deno-lint-ignore-file require-await -- Test mocks need to match async signatures
+import { describe, it as test } from '@std/testing/bdd';
+import { assert, assertEquals } from '@std/assert';
 import { VersionService } from '../lib/services/versionService.js';
 
 describe('VersionService', () => {
@@ -8,16 +9,16 @@ describe('VersionService', () => {
       const logger = { debug: () => {}, info: () => {} };
       const service = new VersionService({ logger });
 
-      assert.ok(service instanceof VersionService);
-      assert.strictEqual(service.logger, logger);
+      assert(service instanceof VersionService);
+      assertEquals(service.logger, logger);
     });
 
     test('should initialize with null versions', () => {
       const service = new VersionService({ logger: null });
       const versions = service.getVersions();
 
-      assert.strictEqual(versions.ytDlp, null);
-      assert.strictEqual(versions.ffmpeg, null);
+      assertEquals(versions.ytDlp, null);
+      assertEquals(versions.ffmpeg, null);
     });
   });
 
@@ -29,37 +30,37 @@ describe('VersionService', () => {
       service.versions.ytDlp = '2023.07.06';
       service.versions.ffmpeg = '4.4.2';
 
-      assert.strictEqual(service.getYtDlpVersion(), '2023.07.06');
-      assert.strictEqual(service.getFfmpegVersion(), '4.4.2');
+      assertEquals(service.getYtDlpVersion(), '2023.07.06');
+      assertEquals(service.getFfmpegVersion(), '4.4.2');
 
       const versions = service.getVersions();
-      assert.strictEqual(versions.ytDlp, '2023.07.06');
-      assert.strictEqual(versions.ffmpeg, '4.4.2');
+      assertEquals(versions.ytDlp, '2023.07.06');
+      assertEquals(versions.ffmpeg, '4.4.2');
     });
 
     test('should return availability status', () => {
       const service = new VersionService({ logger: null });
 
       // Initially both should be unavailable
-      assert.strictEqual(service.isYtDlpAvailable(), false);
-      assert.strictEqual(service.isFfmpegAvailable(), false);
+      assertEquals(service.isYtDlpAvailable(), false);
+      assertEquals(service.isFfmpegAvailable(), false);
 
       // Set one version
       service.versions.ytDlp = '2023.07.06';
-      assert.strictEqual(service.isYtDlpAvailable(), true);
-      assert.strictEqual(service.isFfmpegAvailable(), false);
+      assertEquals(service.isYtDlpAvailable(), true);
+      assertEquals(service.isFfmpegAvailable(), false);
 
       // Set both versions
       service.versions.ffmpeg = '4.4.2';
-      assert.strictEqual(service.isYtDlpAvailable(), true);
-      assert.strictEqual(service.isFfmpegAvailable(), true);
+      assertEquals(service.isYtDlpAvailable(), true);
+      assertEquals(service.isFfmpegAvailable(), true);
     });
 
     test('should return null for missing versions', () => {
       const service = new VersionService({ logger: null });
 
-      assert.strictEqual(service.getYtDlpVersion(), null);
-      assert.strictEqual(service.getFfmpegVersion(), null);
+      assertEquals(service.getYtDlpVersion(), null);
+      assertEquals(service.getFfmpegVersion(), null);
     });
   });
 
@@ -68,9 +69,7 @@ describe('VersionService', () => {
       const service = new VersionService({ logger: null });
 
       // This will try to detect real versions but should not throw
-      await assert.doesNotReject(async () => {
-        await service.initialize();
-      });
+      await service.initialize();
     });
 
     test('should set versions to null or string after initialization', async () => {
@@ -81,9 +80,9 @@ describe('VersionService', () => {
       const versions = service.getVersions();
 
       // Versions should be either null or string
-      assert.ok(versions.ytDlp === null || typeof versions.ytDlp === 'string');
-      assert.ok(
-        versions.ffmpeg === null || typeof versions.ffmpeg === 'string'
+      assert(versions.ytDlp === null || typeof versions.ytDlp === 'string');
+      assert(
+        versions.ffmpeg === null || typeof versions.ffmpeg === 'string',
       );
     });
   });
@@ -106,7 +105,7 @@ describe('VersionService', () => {
       };
 
       const version = await service.detectYtDlpVersion();
-      assert.strictEqual(version, null);
+      assertEquals(version, null);
 
       // Restore original method
       service.detectYtDlpVersion = originalDetectYtDlpVersion;
@@ -132,7 +131,7 @@ describe('VersionService', () => {
       };
 
       const version = await service.detectFfmpegVersion();
-      assert.strictEqual(version, '4.4.2-0ubuntu0.22.04.1');
+      assertEquals(version, '4.4.2-0ubuntu0.22.04.1');
 
       // Restore original method
       service.detectFfmpegVersion = originalDetectFfmpegVersion;
@@ -157,7 +156,7 @@ describe('VersionService', () => {
       };
 
       const version = await service.detectFfmpegVersion();
-      assert.strictEqual(version, null);
+      assertEquals(version, null);
 
       // Restore original method
       service.detectFfmpegVersion = originalDetectFfmpegVersion;

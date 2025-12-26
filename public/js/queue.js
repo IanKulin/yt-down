@@ -16,7 +16,7 @@ class QueueManager {
       .then((response) => response.json())
       .then((data) => {
         // Mark connection as successful
-        window.updateConnectionState(true);
+        globalThis.updateConnectionState(true);
 
         const currentDownloads = data.processor.currentDownloads;
 
@@ -30,25 +30,24 @@ class QueueManager {
 
           // Update progress bar and text
           const percentage = download.percentage || 0;
-          document.getElementById('progressFill').style.width =
-            percentage + '%';
+          document.getElementById('progressFill').style.width = percentage +
+            '%';
           document.getElementById('progressText').textContent =
             percentage.toFixed(1) + '%';
 
           // Update speed and ETA
           const speed = download.speed || 'N/A';
           const eta = download.eta || 'N/A';
-          document.getElementById('downloadSpeed').textContent =
-            'Speed: ' + speed;
+          document.getElementById('downloadSpeed').textContent = 'Speed: ' +
+            speed;
           document.getElementById('downloadEta').textContent = 'ETA: ' + eta;
 
           // Update file size
           const filesize = download.filesize || download.fileSize;
           if (filesize) {
-            document.getElementById('downloadFilesize').textContent =
-              'Size: ' +
+            document.getElementById('downloadFilesize').textContent = 'Size: ' +
               (typeof filesize === 'number'
-                ? window.formatFileSize(filesize)
+                ? globalThis.formatFileSize(filesize)
                 : filesize);
           } else {
             document.getElementById('downloadFilesize').textContent =
@@ -70,7 +69,7 @@ class QueueManager {
       })
       .catch((error) => {
         console.error('Error fetching download status:', error);
-        window.updateConnectionState(false);
+        globalThis.updateConnectionState(false);
       });
   }
 
@@ -87,7 +86,9 @@ class QueueManager {
     const queueCountElement = queueSection.querySelector('h2');
     const totalCount = queuedJobs.length + activeJobs.length;
     if (totalCount > 0) {
-      queueCountElement.textContent = `Current Queue (${totalCount === 1 ? '1 job' : totalCount + ' jobs'})`;
+      queueCountElement.textContent = `Current Queue (${
+        totalCount === 1 ? '1 job' : totalCount + ' jobs'
+      })`;
     } else {
       queueCountElement.textContent = 'Current Queue';
     }
@@ -135,28 +136,34 @@ class QueueManager {
    */
   createQueueItem(item, status, statusText) {
     const queueItem = document.createElement('div');
-    queueItem.className =
-      status === 'active' ? 'queue-item active' : 'queue-item';
+    queueItem.className = status === 'active'
+      ? 'queue-item active'
+      : 'queue-item';
     queueItem.dataset.hash = item.hash;
 
     // Determine what to display - title if available, otherwise URL
     const displayText = item.title
-      ? window.escapeHtml(item.title)
-      : window.escapeHtml(item.url);
+      ? globalThis.escapeHtml(item.title)
+      : globalThis.escapeHtml(item.url);
     const displayClass = item.title ? 'title' : 'url';
-    const loadingIndicator =
-      !item.title && status === 'queued'
-        ? '<span class="title-loading">Fetching title...</span>'
-        : '';
+    const loadingIndicator = !item.title && status === 'queued'
+      ? '<span class="title-loading">Fetching title...</span>'
+      : '';
 
     queueItem.innerHTML = `
       <div class="queue-item-content">
         <div class="${displayClass}">${displayText}</div>
         ${loadingIndicator}
-        <div class="file-size">Size: ${item.filesize ? window.formatFileSize(item.filesize) : 'calculating...'}</div>
+        <div class="file-size">Size: ${
+      item.filesize
+        ? globalThis.formatFileSize(item.filesize)
+        : 'calculating...'
+    }</div>
         <div class="status ${status}">${statusText}</div>
       </div>
-      <button class="delete-btn" data-hash="${window.escapeHtml(item.hash)}" data-url="${window.escapeHtml(item.url)}" data-status="${status}">
+      <button class="delete-btn" data-hash="${
+      globalThis.escapeHtml(item.hash)
+    }" data-url="${globalThis.escapeHtml(item.url)}" data-status="${status}">
         ${status === 'active' ? 'Cancel' : 'Delete'}
       </button>
     `;
@@ -168,33 +175,33 @@ class QueueManager {
    * Setup WebSocket-based updates with polling fallback
    */
   setupWebSocketUpdates() {
-    if (window.wsClient) {
+    if (globalThis.wsClient) {
       console.log('WebSocket client available, setting up real-time updates');
-      window.wsClient.addListener(() => this.updateCurrentDownload());
+      globalThis.wsClient.addListener(() => this.updateCurrentDownload());
 
       // Listen for connection state changes
-      window.wsClient.addConnectionListener((isConnected) => {
-        window.updateConnectionState(isConnected);
+      globalThis.wsClient.addConnectionListener((isConnected) => {
+        globalThis.updateConnectionState(isConnected);
       });
     } else {
       // Retry in a moment if WebSocket client is still loading
       setTimeout(() => {
-        if (window.wsClient) {
+        if (globalThis.wsClient) {
           console.log('WebSocket client loaded, setting up real-time updates');
-          window.wsClient.addListener(() => this.updateCurrentDownload());
+          globalThis.wsClient.addListener(() => this.updateCurrentDownload());
 
           // Listen for connection state changes
-          window.wsClient.addConnectionListener((isConnected) => {
-            window.updateConnectionState(isConnected);
+          globalThis.wsClient.addConnectionListener((isConnected) => {
+            globalThis.updateConnectionState(isConnected);
           });
         } else {
           // Fallback to polling if WebSocket client is not available
           console.warn(
-            'WebSocket client not available, falling back to polling'
+            'WebSocket client not available, falling back to polling',
           );
           this.updateInterval = setInterval(
             () => this.updateCurrentDownload(),
-            2000
+            2000,
           );
         }
       }, 100);
@@ -206,7 +213,7 @@ class QueueManager {
    */
   initialize() {
     // Setup delete modal
-    window.modalSystem.setupDeleteModal({
+    globalThis.modalSystem.setupDeleteModal({
       modalId: 'deleteModal',
       triggerSelector: '.delete-btn',
       formId: 'deleteForm',
@@ -221,7 +228,7 @@ class QueueManager {
     this.setupWebSocketUpdates();
 
     // Initialize notification system
-    window.notificationSystem.initialize();
+    globalThis.notificationSystem.initialize();
   }
 
   /**
@@ -231,22 +238,22 @@ class QueueManager {
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
     }
-    if (window.wsClient) {
-      window.wsClient.removeListener(() => this.updateCurrentDownload());
+    if (globalThis.wsClient) {
+      globalThis.wsClient.removeListener(() => this.updateCurrentDownload());
     }
-    window.notificationSystem.cleanup();
+    globalThis.notificationSystem.cleanup();
   }
 }
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function () {
-  window.queueManager = new QueueManager();
-  window.queueManager.initialize();
+  globalThis.queueManager = new QueueManager();
+  globalThis.queueManager.initialize();
 });
 
 // Clean up when page is unloaded
-window.addEventListener('beforeunload', function () {
-  if (window.queueManager) {
-    window.queueManager.cleanup();
+globalThis.addEventListener('beforeunload', function () {
+  if (globalThis.queueManager) {
+    globalThis.queueManager.cleanup();
   }
 });

@@ -21,8 +21,10 @@ class WebSocketClient {
    */
   connect() {
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}`;
+      const protocol = globalThis.location.protocol === 'https:'
+        ? 'wss:'
+        : 'ws:';
+      const wsUrl = `${protocol}//${globalThis.location.host}`;
 
       this.ws = new WebSocket(wsUrl);
 
@@ -71,7 +73,7 @@ class WebSocketClient {
   scheduleReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.warn(
-        'Max reconnection attempts reached, enabling fallback polling'
+        'Max reconnection attempts reached, enabling fallback polling',
       );
       this.enableFallbackPolling();
       return;
@@ -80,11 +82,11 @@ class WebSocketClient {
     this.reconnectAttempts++;
     const delay = Math.min(
       this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
-      this.maxReconnectDelay
+      this.maxReconnectDelay,
     );
 
     console.log(
-      `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
     );
 
     setTimeout(() => {
@@ -196,7 +198,9 @@ class WebSocketClient {
     const statusElement = document.getElementById('connection-status');
     if (statusElement) {
       statusElement.textContent = connected ? 'Connected' : 'Disconnected';
-      statusElement.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
+      statusElement.className = `connection-status ${
+        connected ? 'connected' : 'disconnected'
+      }`;
     }
   }
 
@@ -234,16 +238,16 @@ class WebSocketClient {
 }
 
 // Create global WebSocket client instance
-window.wsClient = new WebSocketClient();
+globalThis.wsClient = new WebSocketClient();
 
 // Auto-connect when page loads
 document.addEventListener('DOMContentLoaded', () => {
-  window.wsClient.connect();
+  globalThis.wsClient.connect();
 });
 
 // Clean up when page unloads
-window.addEventListener('beforeunload', () => {
-  window.wsClient.close();
+globalThis.addEventListener('beforeunload', () => {
+  globalThis.wsClient.close();
 });
 
 // Handle page visibility changes (pause/resume connection)
@@ -254,10 +258,10 @@ document.addEventListener('visibilitychange', () => {
   } else {
     // Page is visible again, ensure connection is active
     if (
-      !window.wsClient.isWebSocketConnected() &&
-      !window.wsClient.isFallbackEnabled()
+      !globalThis.wsClient.isWebSocketConnected() &&
+      !globalThis.wsClient.isFallbackEnabled()
     ) {
-      window.wsClient.connect();
+      globalThis.wsClient.connect();
     }
   }
 });
