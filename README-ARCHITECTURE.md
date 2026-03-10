@@ -180,7 +180,7 @@ downloads/                # Completed video files
 ### Routes (`routes/`)
 
 - `queue.js`: Main queue management interface (`/`)
-- `downloads.js`: Downloaded files browser (`/downloads`)
+- `downloads.js`: Downloaded files browser (`/downloads`), file serving (`/download/:filename`), and Apache-style directory listing (`/download/`)
 - `settings.js`: Configuration page (`/settings`)
 - `api.js`: REST API endpoints (`/api/state`, `/api/notifications`)
 
@@ -190,6 +190,8 @@ downloads/                # Completed video files
 - `POST /job/add`: Adds new job to queue
 - `DELETE /job/:id`: Removes job from queue
 - `POST /api/notifications/dismiss`: Dismisses notifications
+- `GET /download/`: Apache-style HTML directory listing (machine-parseable; compatible with `wget --mirror`)
+- `GET /download/:filename`: Serves individual downloaded files
 
 ## UI Architecture
 
