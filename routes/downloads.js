@@ -18,6 +18,40 @@ router.get('/downloads', async (c) => {
   return c.html(html);
 });
 
+router.get('/download/', async (c) => {
+  const files = await c.get('services').downloads.getDownloadedFiles();
+
+  const rows = files
+    .map((f) => {
+      const date = new Date(f.modified)
+        .toISOString()
+        .slice(0, 16)
+        .replace('T', ' ');
+      const size = formatFileSize(f.size);
+      const name = f.name;
+      return `<a href="/download/${encodeURIComponent(name)}">${name}</a>${' '.repeat(Math.max(1, 50 - name.length))}${date}  ${size}`;
+    })
+    .join('\n');
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Index of /download/</title>
+</head>
+<body>
+<h1>Index of /download/</h1>
+<hr>
+<pre>
+<a href="../">../</a>
+${rows}
+</pre>
+<hr>
+</body>
+</html>`;
+
+  return c.html(html);
+});
+
 router.get('/download/:filename', async (c) => {
   const filename = c.req.param('filename');
   const fileInfo = await c

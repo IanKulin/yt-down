@@ -59,7 +59,8 @@
       "Bash(wc:*)",
       "Bash(tree:*)",
       "Bash(cloc:*)",
-      "WebSearch"
+      "WebSearch",
+      "mcp__playwright__playwright_get_visible_text"
     ],
     "deny": [],
     "defaultMode": "plan"
