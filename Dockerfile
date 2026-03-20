@@ -1,5 +1,5 @@
 # ---- Base ----
-FROM node:24-alpine AS base
+FROM node:25-alpine AS base
 WORKDIR /app
 COPY package.json package-lock.json ./
 
@@ -9,7 +9,7 @@ FROM base AS dependencies
 RUN npm ci --omit=dev
 
 # ---- Release ----
-FROM node:24-alpine AS release
+FROM node:25-alpine AS release
 WORKDIR /app
 
 # Install OS-level dependencies and Python packages for yt-dlp
