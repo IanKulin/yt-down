@@ -132,6 +132,24 @@ describe('settings.js', () => {
           description: 'no height restriction for unlimited quality',
         },
         {
+          quality: '270p',
+          shouldIncludeHeight: true,
+          expectedHeight: '270',
+          description: 'height restriction for 270p',
+        },
+        {
+          quality: '432p',
+          shouldIncludeHeight: true,
+          expectedHeight: '432',
+          description: 'height restriction for 432p',
+        },
+        {
+          quality: '576p',
+          shouldIncludeHeight: true,
+          expectedHeight: '576',
+          description: 'height restriction for 576p',
+        },
+        {
           quality: '720p',
           shouldIncludeHeight: true,
           expectedHeight: '720',
