@@ -18,6 +18,7 @@ import {
   SettingsService,
   TitleEnhancementService,
   VersionService,
+  LogService,
 } from './lib/services/index.js';
 
 import queueRoutes from './routes/queue.js';
@@ -26,6 +27,7 @@ import settingsRoutes from './routes/settings.js';
 import apiRoutes from './routes/api.js';
 import creditsRoutes from './routes/credits.js';
 import failuresRoutes from './routes/failures.js';
+import logsRoutes from './routes/logs.js';
 import { handleError, notFoundHandler } from './lib/errorHandler.js';
 
 const execAsync = promisify(exec);
@@ -62,9 +64,15 @@ const app = new Hono();
 const PORT = process.env.PORT || 3001;
 
 // Initialize queue processor and job manager
+const logService = new LogService({
+  logger,
+  baseDir: __dirname,
+});
+
 const queueProcessor = new QueueProcessor({
   logger,
   baseDir: __dirname,
+  logService,
 });
 
 const jobManager = new JobManager({
@@ -147,6 +155,7 @@ app.use(async (c, next) => {
     settings: settingsService,
     titleEnhancement: titleEnhancementService,
     versions: versionService,
+    logs: logService,
   });
   c.set('viewData', {
     appVersion,
@@ -192,6 +201,7 @@ app.route('/', downloadsRoutes);
 app.route('/', settingsRoutes);
 app.route('/', creditsRoutes);
 app.route('/', failuresRoutes);
+app.route('/', logsRoutes);
 
 // API routes
 app.route('/api', apiRoutes);

@@ -1141,3 +1141,13 @@ button:not([class]):hover {
   font-style: italic;
   padding: 40px;
 }
+
+.log-output {
+  overflow-x: auto;
+  white-space: pre;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: 4px;
+}
