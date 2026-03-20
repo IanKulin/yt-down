@@ -1039,3 +1039,105 @@ button:not([class]):hover {
   color: var(--accent-primary-hover);
   text-decoration: underline;
 }
+
+/* Nav Badge */
+.nav-link-badge {
+  position: relative;
+}
+
+.nav-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: var(--error-color, #e74c3c);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+/* Failures Styles */
+.failures-section {
+  margin-top: 20px;
+}
+
+.failure-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.failure-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-dark);
+  border-radius: 4px;
+}
+
+.failure-item:last-child {
+  margin-bottom: 0;
+}
+
+.failure-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.failure-url {
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.failure-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.failure-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.failure-error {
+  color: var(--error-color, #e74c3c);
+  word-break: break-all;
+}
+
+.failure-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.retry-btn {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.retry-btn:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+.empty-failures {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 40px;
+}

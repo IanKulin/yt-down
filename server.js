@@ -25,6 +25,7 @@ import downloadsRoutes from './routes/downloads.js';
 import settingsRoutes from './routes/settings.js';
 import apiRoutes from './routes/api.js';
 import creditsRoutes from './routes/credits.js';
+import failuresRoutes from './routes/failures.js';
 import { handleError, notFoundHandler } from './lib/errorHandler.js';
 
 const execAsync = promisify(exec);
@@ -186,6 +187,7 @@ app.route('/', queueRoutes);
 app.route('/', downloadsRoutes);
 app.route('/', settingsRoutes);
 app.route('/', creditsRoutes);
+app.route('/', failuresRoutes);
 
 // API routes
 app.route('/api', apiRoutes);

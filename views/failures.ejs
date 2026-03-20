@@ -1,0 +1,155 @@
+<%- include('partials/header', { currentPage: 'failures', pageTitle: 'Failures', failedCount: failedJobs.length }) %>
+
+        <div class="stats" role="status" aria-live="polite">
+            <strong id="failure-count"><%= failedJobs.length %></strong> failed job<%= failedJobs.length !== 1 ? 's' : '' %>
+        </div>
+
+        <section class="failures-section" aria-label="Failed downloads">
+            <% if (failedJobs.length === 0) { %>
+                <div class="empty-failures" id="empty-state">No failed jobs</div>
+            <% } else { %>
+                <ul class="failure-list" role="list" id="failure-list">
+                <% failedJobs.forEach(function(job) { %>
+                    <li class="failure-item" role="listitem" data-job-id="<%= job.hash %>">
+                        <div class="failure-info">
+                            <div class="failure-url" title="<%= job.url %>">
+                                <%= job.url.length > 80 ? job.url.substring(0, 80) + '...' : job.url %>
+                            </div>
+                            <% if (job.title) { %>
+                                <div class="failure-title"><%= job.title %></div>
+                            <% } %>
+                            <div class="failure-meta">
+                                <span class="failure-date">Failed: <%= job.failedAt ? new Date(job.failedAt).toLocaleString() : 'Unknown' %></span>
+                                <% if (job.lastError) { %>
+                                    <span class="failure-error" title="<%= job.lastError %>">
+                                        Error: <%= job.lastError.length > 100 ? job.lastError.substring(0, 100) + '...' : job.lastError %>
+                                    </span>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="failure-actions">
+                            <form action="/failures/<%= job.hash %>/delete" method="POST">
+                                <button type="submit" class="btn delete-btn" aria-label="Delete failed job for <%= job.url %>">Delete</button>
+                            </form>
+                            <form action="/failures/<%= job.hash %>/retry" method="POST">
+                                <button type="submit" class="btn retry-btn" aria-label="Retry download for <%= job.url %>">Retry</button>
+                            </form>
+                        </div>
+                    </li>
+                <% }) %>
+                </ul>
+            <% } %>
+        </section>
+
+        <%- include('partials/footer') %>
+    </div>
+
+    <script src="/js/websocket.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script>
+        function refreshFailures() {
+            fetch('/api/failed')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    const jobs = data.failed || [];
+                    const countEl = document.getElementById('failure-count');
+                    const listEl = document.getElementById('failure-list');
+                    const emptyEl = document.getElementById('empty-state');
+                    const statsEl = document.querySelector('.stats');
+
+                    if (countEl) {
+                        countEl.textContent = jobs.length;
+                    }
+                    if (statsEl) {
+                        statsEl.innerHTML = '<strong id="failure-count">' + jobs.length + '</strong> failed job' + (jobs.length !== 1 ? 's' : '');
+                    }
+
+                    if (jobs.length === 0) {
+                        if (listEl) listEl.remove();
+                        if (!document.getElementById('empty-state')) {
+                            const section = document.querySelector('.failures-section');
+                            const empty = document.createElement('div');
+                            empty.className = 'empty-failures';
+                            empty.id = 'empty-state';
+                            empty.textContent = 'No failed jobs';
+                            section.appendChild(empty);
+                        }
+                    } else {
+                        const emptyState = document.getElementById('empty-state');
+                        if (emptyState) emptyState.remove();
+
+                        const section = document.querySelector('.failures-section');
+                        let list = document.getElementById('failure-list');
+                        if (!list) {
+                            list = document.createElement('ul');
+                            list.className = 'failure-list';
+                            list.id = 'failure-list';
+                            list.setAttribute('role', 'list');
+                            section.appendChild(list);
+                        }
+
+                        // Track existing job IDs
+                        const existingIds = new Set(
+                            Array.from(list.querySelectorAll('[data-job-id]')).map(function(el) { return el.dataset.jobId; })
+                        );
+                        const newIds = new Set(jobs.map(function(j) { return j.hash; }));
+
+                        // Remove jobs no longer in failed state
+                        existingIds.forEach(function(id) {
+                            if (!newIds.has(id)) {
+                                const el = list.querySelector('[data-job-id="' + id + '"]');
+                                if (el) el.remove();
+                            }
+                        });
+
+                        // Add new jobs
+                        jobs.forEach(function(job) {
+                            if (!existingIds.has(job.hash)) {
+                                const url = job.url || '';
+                                const displayUrl = url.length > 80 ? url.substring(0, 80) + '...' : url;
+                                const failedAt = job.failedAt ? new Date(job.failedAt).toLocaleString() : 'Unknown';
+                                const lastError = job.lastError || '';
+                                const displayError = lastError.length > 100 ? lastError.substring(0, 100) + '...' : lastError;
+
+                                const li = document.createElement('li');
+                                li.className = 'failure-item';
+                                li.setAttribute('role', 'listitem');
+                                li.dataset.jobId = job.hash;
+                                li.innerHTML =
+                                    '<div class="failure-info">' +
+                                        '<div class="failure-url" title="' + window.escapeHtml(url) + '">' + window.escapeHtml(displayUrl) + '</div>' +
+                                        (job.title ? '<div class="failure-title">' + window.escapeHtml(job.title) + '</div>' : '') +
+                                        '<div class="failure-meta">' +
+                                            '<span class="failure-date">Failed: ' + failedAt + '</span>' +
+                                            (lastError ? '<span class="failure-error" title="' + window.escapeHtml(lastError) + '">Error: ' + window.escapeHtml(displayError) + '</span>' : '') +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<div class="failure-actions">' +
+                                        '<form action="/failures/' + window.escapeHtml(job.hash) + '/delete" method="POST">' +
+                                            '<button type="submit" class="btn delete-btn" aria-label="Delete failed job for ' + window.escapeHtml(url) + '">Delete</button>' +
+                                        '</form>' +
+                                        '<form action="/failures/' + window.escapeHtml(job.hash) + '/retry" method="POST">' +
+                                            '<button type="submit" class="btn retry-btn" aria-label="Retry download for ' + window.escapeHtml(url) + '">Retry</button>' +
+                                        '</form>' +
+                                    '</div>';
+                                list.appendChild(li);
+                            }
+                        });
+                    }
+                })
+                .catch(function(err) { console.error('Failed to refresh failures:', err); });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            window.notificationSystem.initialize();
+            window.wsClient.addListener(refreshFailures);
+        });
+
+        window.addEventListener('beforeunload', function() {
+            window.notificationSystem.cleanup();
+        });
+    </script>
+</body>
+</html>

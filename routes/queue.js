@@ -10,6 +10,7 @@ router.get('/', async (c) => {
   const html = await renderWithContext(c, 'queue', {
     queuedJobs: jobs.queued,
     activeJobs: jobs.active,
+    failedCount: jobs.failed.length,
     formatFileSize,
   });
 
