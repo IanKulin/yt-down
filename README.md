@@ -64,3 +64,4 @@ AI coding tools were used in the production of this app
 - 1.2.1 - bugfix API not returning JSON for settings
 - 1.2.2 - add `/download/` apache type directory listing, bugfix 404 footer
 - 1.2.3 - extend resolution choices for lower res
+- 1.2.4 - `/failures` page for retrying failed jobs
