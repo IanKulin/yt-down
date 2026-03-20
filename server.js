@@ -106,6 +106,10 @@ const notificationService = new NotificationService({
   broadcastChange,
 });
 
+queueProcessor.setAddNotification(
+  notificationService.addNotification.bind(notificationService)
+);
+
 const jobService = new JobService({
   jobManager,
   queueProcessor,
