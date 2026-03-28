@@ -60,7 +60,8 @@
       "Bash(tree:*)",
       "Bash(cloc:*)",
       "WebSearch",
-      "mcp__playwright__playwright_get_visible_text"
+      "mcp__playwright__playwright_get_visible_text",
+      "Bash(docker compose:*)"
     ],
     "deny": [],
     "defaultMode": "plan"

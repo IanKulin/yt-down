@@ -11,8 +11,13 @@
 1.1.7 - fix error code related to favicon
 1.1.8 - Dockerfile improvements, title fetching
 1.1.9 - bugfix - move completed file on Docker
-1.1.10 -filesize
+1.1.10 - filesize
 1.1.11 - fix cleanup before retry
-1.1.12 - refactor front end js
+1.1.12 - refactor frontend js
 1.1.13 - simplify partials cleanup, remove concurrent download code, remove delete download success toast, ignore dot files when moving downloads
 1.1.14 - credits, semantic html, aria, body size limit, url length limit, fix filenames with '..' being treated as path traversal attempts, fix green toast error messages
+1.2.0 - Convert to Hono
+1.2.1 - bugfix API not returning JSON for settings
+1.2.2 - add `/download/` apache type directory listing, bugfix 404 footer
+1.2.3 - extend resolution choices for lower res
+1.2.4 - `/failures` page for retrying failed jobs, notification for failed jobs, `/logs` page

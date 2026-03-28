@@ -6,6 +6,8 @@
 class QueueManager {
   constructor() {
     this.updateInterval = null;
+    this.connectivityToastId = null;
+    this.isShowingConnectivityWarning = false;
   }
 
   /**
@@ -65,6 +67,9 @@ class QueueManager {
           document.getElementById('downloadFilesize').textContent = 'Size: N/A';
         }
 
+        // Handle connectivity pause state
+        this.updateConnectivityWarning(data.processor);
+
         // Update queue list in real-time
         this.updateQueueList(data.queued || [], data.active || []);
       })
@@ -72,6 +77,31 @@ class QueueManager {
         console.error('Error fetching download status:', error);
         window.updateConnectionState(false);
       });
+  }
+
+  /**
+   * Show or dismiss the connectivity pause warning toast
+   * @param {Object} processor - Processor status from API state
+   */
+  updateConnectivityWarning(processor) {
+    if (!processor) return;
+
+    if (processor.isPaused && !this.isShowingConnectivityWarning) {
+      this.isShowingConnectivityWarning = true;
+      if (window.showToast) {
+        this.connectivityToastId = window.showToast(
+          'error',
+          'Queue paused: no internet connectivity. Retrying automatically...',
+          0 // Persistent
+        );
+      }
+    } else if (!processor.isPaused && this.isShowingConnectivityWarning) {
+      this.isShowingConnectivityWarning = false;
+      if (this.connectivityToastId && window.dismissToastById) {
+        window.dismissToastById(this.connectivityToastId);
+        this.connectivityToastId = null;
+      }
+    }
   }
 
   /**
