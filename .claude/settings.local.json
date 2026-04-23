@@ -62,7 +62,11 @@
       "WebSearch",
       "mcp__playwright__playwright_get_visible_text",
       "Bash(docker compose:*)",
-      "Bash(xargs -I{} cat {})"
+      "Bash(xargs -I{} cat {})",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); p=d['parent']; print\\('parent keys:', list\\(p.keys\\(\\)\\)\\); print\\('identifier:', p.get\\('identifier'\\)\\); print\\('lineage:', p.get\\('lineage'\\)\\); c=d.get\\('content',[]\\); print\\('content count:', len\\(c\\)\\); [print\\('item keys:', list\\(i.keys\\(\\)\\)\\) for i in c[:1]]\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); p=d['parent']; print\\('cid:', p.get\\('cid'\\)\\); print\\('lineage:', p.get\\('lineage'\\)\\); print\\('title:', p.get\\('title'\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('keys:', list\\(d.keys\\(\\)\\)\\); print\\('analytics3Config:', d.get\\('analytics3Config'\\)\\); print\\('url:', str\\(d.get\\('url',''\\)\\)[:60]\\)\")"
     ],
     "deny": [],
     "defaultMode": "plan"
