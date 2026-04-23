@@ -15,10 +15,13 @@ export default [
         __dirname: 'readonly',
         __filename: 'readonly',
         global: 'readonly',
+        globalThis: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        fetch: 'readonly',
+        crypto: 'readonly',
       },
     },
     rules: {

@@ -61,7 +61,8 @@
       "Bash(cloc:*)",
       "WebSearch",
       "mcp__playwright__playwright_get_visible_text",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(xargs -I{} cat {})"
     ],
     "deny": [],
     "defaultMode": "plan"
