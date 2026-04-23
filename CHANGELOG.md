@@ -22,3 +22,4 @@
 1.2.3 - extend resolution choices for lower res
 1.2.4 - `/failures` page for retrying failed jobs, notification for failed jobs, `/logs` page
 1.3.0 - fix for SBS OnDemand requiring login
+1.3.1 - add Brollie resolver
