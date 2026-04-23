@@ -512,6 +512,90 @@ describe('TitleEnhancementService', () => {
 
       assert.strictEqual(service.processingQueue.has('test-job'), false);
     });
+
+    it('should use SBS catalogue API for SBS URLs', async () => {
+      const SBS_URL =
+        'https://www.sbs.com.au/ondemand/watch/normal-people/2225048643868';
+      const testJob = {
+        id: 'sbs-job',
+        url: SBS_URL,
+        title: null,
+        state: JobState.QUEUED,
+      };
+
+      mockJobManager.getJob.mock.mockImplementation(async () => testJob);
+
+      const catalogueMeta = {
+        title: 'Episode 8',
+        seriesTitle: 'Normal People',
+        seasonNumber: 1,
+        episodeNumber: 8,
+        duration: 'PT42M20S',
+        description: 'A coming-of-age story.',
+      };
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async () => ({
+        ok: true,
+        status: 200,
+        json: async () => catalogueMeta,
+      });
+
+      const extractMetadataSpy = mock.method(
+        service,
+        'extractVideoMetadata',
+        async () => ({ title: 'should not be called' })
+      );
+
+      await service.enhanceJobTitle(testJob);
+
+      globalThis.fetch = originalFetch;
+
+      assert.strictEqual(
+        extractMetadataSpy.mock.calls.length,
+        0,
+        'extractVideoMetadata should not be called for SBS URLs'
+      );
+      assert.strictEqual(mockJobManager.updateJob.mock.calls.length, 1);
+      const updateArgs = mockJobManager.updateJob.mock.calls[0].arguments;
+      assert.strictEqual(updateArgs[0], 'sbs-job');
+      assert.strictEqual(updateArgs[1].title, 'Normal People S1 Ep8');
+    });
+
+    it('should use title-only format for SBS content without series info', async () => {
+      const SBS_URL =
+        'https://www.sbs.com.au/ondemand/watch/some-doco/1234567890';
+      const testJob = {
+        id: 'sbs-doco-job',
+        url: SBS_URL,
+        title: null,
+        state: JobState.QUEUED,
+      };
+
+      mockJobManager.getJob.mock.mockImplementation(async () => testJob);
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          title: 'The Great Barrier Reef',
+          seriesTitle: null,
+          seasonNumber: null,
+          episodeNumber: null,
+          duration: 'PT1H',
+          description: 'A documentary.',
+        }),
+      });
+
+      await service.enhanceJobTitle(testJob);
+
+      globalThis.fetch = originalFetch;
+
+      assert.strictEqual(mockJobManager.updateJob.mock.calls.length, 1);
+      const updateArgs = mockJobManager.updateJob.mock.calls[0].arguments;
+      assert.strictEqual(updateArgs[1].title, 'The Great Barrier Reef');
+    });
   });
 
   describe('extractVideoMetadata', () => {

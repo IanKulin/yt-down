@@ -1,6 +1,10 @@
 import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { getYtDlpArgs, getAvailableOptions } from '../lib/settings.js';
+import {
+  getYtDlpArgs,
+  getAvailableOptions,
+  loadSettings,
+} from '../lib/settings.js';
 
 describe('settings.js', () => {
   describe('getAvailableOptions', () => {
@@ -234,6 +238,21 @@ describe('settings.js', () => {
       for (const arg of args) {
         assert.ok(arg.length > 0, 'Should not have empty arguments');
       }
+    });
+  });
+
+  describe('SBS defaults', () => {
+    test('loadSettings should include sbs defaults', async () => {
+      const settings = await loadSettings();
+      assert.ok(
+        typeof settings.sbs === 'object' && settings.sbs !== null,
+        'sbs should be an object'
+      );
+      assert.ok('email' in settings.sbs, 'sbs should have an email property');
+      assert.ok(
+        'password' in settings.sbs,
+        'sbs should have a password property'
+      );
     });
   });
 

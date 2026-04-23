@@ -2,6 +2,10 @@
 
 A web application for queueing and managing video downloads from various sources with `yt-dlp`. Particularly suitable for self-hosting.
 
+## Alternates
+
+If you're looking for a more established project with similar features, consider [MeTube](https://github.com/alexta69/metube) with 13K GitHub stars and 78 contributors. If I had known that existed, I probably would not have started this.
+
 ## Features
 
 - **Web Interface**: Manage your download queue, view completed downloads, and adjust settings from a web UI.
@@ -60,8 +64,4 @@ AI coding tools were used in the production of this app
 
 ## Version History
 
-- 1.2.0 - convert to Hono
-- 1.2.1 - bugfix API not returning JSON for settings
-- 1.2.2 - add `/download/` apache type directory listing, bugfix 404 footer
-- 1.2.3 - extend resolution choices for lower res
-- 1.2.4 - `/failures` page for retrying failed jobs
+See [CHANGELOG.md](./CHANGELOG.md)

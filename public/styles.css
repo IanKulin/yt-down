@@ -903,6 +903,26 @@ button:not([class]):hover {
   box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
 }
 
+.settings-group input[type='email'],
+.settings-group input[type='password'] {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.settings-group input[type='email']:focus,
+.settings-group input[type='password']:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+}
+
 /* Checkbox styling */
 .checkbox-group {
   display: flex;
@@ -1140,4 +1160,14 @@ button:not([class]):hover {
   color: var(--text-muted);
   font-style: italic;
   padding: 40px;
+}
+
+.log-output {
+  overflow-x: auto;
+  white-space: pre;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: 4px;
 }

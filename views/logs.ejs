@@ -1,0 +1,19 @@
+<%- include('partials/header', { currentPage: 'logs', pageTitle: 'yt-dlp Logs' }) %>
+
+        <div class="stats" role="status">
+            <strong><%= lines.length %></strong> log line<%= lines.length !== 1 ? 's' : '' %> (last 500)
+        </div>
+
+        <section aria-label="yt-dlp stderr log">
+            <% if (lines.length === 0) { %>
+                <div class="empty-failures">No log output yet</div>
+            <% } else { %>
+                <pre class="log-output"><% lines.forEach(function(line) { %><%- line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>
+<% }); %></pre>
+            <% } %>
+        </section>
+
+        <%- include('partials/footer') %>
+    </div>
+</body>
+</html>
