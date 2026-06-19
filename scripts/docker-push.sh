@@ -29,9 +29,9 @@ MINOR_VERSION="${VERSION%.*}"
 
 echo -e "${GREEN}Tags: latest, ${VERSION}, ${MINOR_VERSION}, ${MAJOR_VERSION}${NC}"
 
-# Build and push multi-arch images
-echo -e "${YELLOW}Building and pushing multi-arch images...${NC}"
-docker buildx build --push --platform linux/amd64,linux/arm64 \
+# Build and push image
+echo -e "${YELLOW}Building and pushing image...${NC}"
+docker buildx build --push --platform linux/amd64 \
   -t "${IMAGE_NAME}:latest" \
   -t "${IMAGE_NAME}:${VERSION}" \
   -t "${IMAGE_NAME}:${MINOR_VERSION}" \

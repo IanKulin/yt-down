@@ -10,6 +10,8 @@ test
 
 # Local data (should be mounted as a volume)
 data
+downloads
+temp
 
 # IDE / Editor
 .claude

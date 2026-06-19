@@ -17,7 +17,12 @@ RUN apk add --no-cache python3 py3-pip ffmpeg && \
     pip install yt-dlp pycryptodomex --break-system-packages
 
 # Copy application code
-COPY . .
+COPY server.js .
+COPY lib ./lib
+COPY routes ./routes
+COPY views ./views
+COPY public ./public
+COPY package.json package-lock.json ./
 
 # Copy only production node_modules from the dependencies stage
 COPY --from=dependencies /app/node_modules ./node_modules
