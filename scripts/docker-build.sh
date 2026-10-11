@@ -29,8 +29,9 @@ MINOR_VERSION="${VERSION%.*}"
 
 echo -e "${GREEN}Tags: latest, ${VERSION}, ${MINOR_VERSION}, ${MAJOR_VERSION}${NC}"
 
-# Build the image with all tags (local build for testing - single arch only)
-docker buildx build --load \
+# Build the image with all tags (amd64 to match the production server).
+# Extra arguments (e.g. --no-cache) are passed through to buildx.
+docker buildx build --platform linux/amd64 --load "$@" \
   -t "${IMAGE_NAME}:latest" \
   -t "${IMAGE_NAME}:${VERSION}" \
   -t "${IMAGE_NAME}:${MINOR_VERSION}" \

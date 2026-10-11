@@ -1,6 +1,6 @@
 {
   "name": "yt-down",
-  "version": "1.3.2",
+  "version": "1.3.3c",
   "description": "Web app for queueing downloads for yt-dlp",
   "main": "server.js",
   "type": "module",
@@ -9,6 +9,7 @@
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "docker:build": "./scripts/docker-build.sh",
+    "docker:build-nocache": "./scripts/docker-build.sh --no-cache",
     "docker:push": "./scripts/docker-push.sh",
     "docker:run": "docker run -p 3001:3001 -v ./data:/app/data -v ./downloads:/app/downloads -e LOG_LEVEL=info ghcr.io/iankulin/yt-down:latest"
   },

@@ -29,13 +29,15 @@ MINOR_VERSION="${VERSION%.*}"
 
 echo -e "${GREEN}Tags: latest, ${VERSION}, ${MINOR_VERSION}, ${MAJOR_VERSION}${NC}"
 
-# Build and push image
-echo -e "${YELLOW}Building and pushing image...${NC}"
-docker buildx build --push --platform linux/amd64 \
-  -t "${IMAGE_NAME}:latest" \
-  -t "${IMAGE_NAME}:${VERSION}" \
-  -t "${IMAGE_NAME}:${MINOR_VERSION}" \
-  -t "${IMAGE_NAME}:${MAJOR_VERSION}" .
+# Push the images built by docker-build.sh (run `npm run docker:build` first)
+if ! docker image inspect "${IMAGE_NAME}:${VERSION}" > /dev/null 2>&1; then
+    echo -e "${RED}Error: ${IMAGE_NAME}:${VERSION} not found locally. Run 'npm run docker:build' first.${NC}"
+    exit 1
+fi
+
+for TAG in latest "${VERSION}" "${MINOR_VERSION}" "${MAJOR_VERSION}"; do
+    docker push "${IMAGE_NAME}:${TAG}"
+done
 
 echo -e "${GREEN}Successfully pushed Docker images:${NC}"
 echo -e "  - ${IMAGE_NAME}:latest"
