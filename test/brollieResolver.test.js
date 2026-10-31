@@ -142,9 +142,7 @@ describe('resolveSlug', () => {
   });
 
   it('throws when cid is missing', async () => {
-    globalThis.fetch = makeFetchMock([
-      { body: { parent: { title: 'Kids' } } },
-    ]);
+    globalThis.fetch = makeFetchMock([{ body: { parent: { title: 'Kids' } } }]);
 
     await assert.rejects(() => resolveSlug('home/kids'), /no cid/);
   });
