@@ -639,4 +639,106 @@ describe('queueProcessor.js', () => {
       );
     });
   });
+
+  describe('connectivity detection', () => {
+    function createProcessor(reachable) {
+      const processor = new QueueProcessor({ logger: createMockLogger() });
+      processor.isProcessing = true;
+      processor.getQueuedJobs = async () => [{ hash: 'abc' }];
+      processor.startDownload = async () => {};
+      processor.checkCalls = 0;
+      processor.checkConnectivity = async () => {
+        processor.checkCalls++;
+        return reachable.value;
+      };
+      processor._startReconnectLoop = () => {};
+      return processor;
+    }
+
+    test('should not pause on a single failed check', async () => {
+      const reachable = { value: false };
+      const processor = createProcessor(reachable);
+
+      await processor.processQueue();
+
+      assert.equal(processor.isPaused, false, 'Should not be paused');
+      assert.equal(processor.connectivityFailures, 1);
+    });
+
+    test('should pause after consecutive failures reach threshold', async () => {
+      const reachable = { value: false };
+      const processor = createProcessor(reachable);
+
+      for (let i = 0; i < processor.CONNECTIVITY_FAILURE_THRESHOLD; i++) {
+        await processor.processQueue();
+        if (i < processor.CONNECTIVITY_FAILURE_THRESHOLD - 1) {
+          assert.equal(processor.isPaused, false);
+        }
+      }
+
+      assert.equal(processor.isPaused, true, 'Should be paused');
+    });
+
+    test('should reset failure count after a successful check', async () => {
+      const reachable = { value: false };
+      const processor = createProcessor(reachable);
+
+      await processor.processQueue();
+      await processor.processQueue();
+      reachable.value = true;
+      await processor.processQueue();
+
+      assert.equal(processor.connectivityFailures, 0);
+      assert.equal(processor.isPaused, false);
+    });
+
+    test('should skip the check when download progress is recent', async () => {
+      const reachable = { value: false };
+      const processor = createProcessor(reachable);
+      processor.isDownloadActive = true;
+      processor.lastProgressAt = Date.now();
+
+      await processor.processQueue();
+
+      assert.equal(processor.checkCalls, 0, 'Should not probe');
+      assert.equal(processor.isPaused, false);
+    });
+
+    test('should check when active download progress is stale', async () => {
+      const reachable = { value: true };
+      const processor = createProcessor(reachable);
+      processor.isDownloadActive = true;
+      processor.lastProgressAt =
+        Date.now() - processor.PROGRESS_FRESH_WINDOW - 1000;
+
+      await processor.processQueue();
+
+      assert.equal(processor.checkCalls, 1, 'Should probe');
+    });
+
+    test('parseProgressLine should record progress time', () => {
+      const processor = new QueueProcessor({ logger: createMockLogger() });
+
+      processor.parseProgressLine(
+        '[download]  12.3% of 123.45MB at 456.78KiB/s ETA 10:21',
+        'abc'
+      );
+
+      assert.ok(processor.lastProgressAt > 0);
+    });
+
+    test('checkConnectivity should be true if any target succeeds', async () => {
+      const processor = new QueueProcessor({ logger: createMockLogger() });
+      processor._probe = async (host) => host === '1.1.1.1';
+
+      assert.equal(await processor.checkConnectivity(), true);
+    });
+
+    test('checkConnectivity should be false if all targets fail', async () => {
+      const processor = new QueueProcessor({ logger: createMockLogger() });
+      processor._probe = async () => false;
+
+      assert.equal(await processor.checkConnectivity(), false);
+    });
+  });
 });
